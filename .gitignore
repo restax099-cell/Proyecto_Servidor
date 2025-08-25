@@ -1,0 +1,15 @@
+
+.env
+
+
+__pycache__/
+
+
+*.sqlite3
+db.sqlite3
+
+.vscode/
+venv/
+Env_Servidor_Django/
+/static/
+/media/
