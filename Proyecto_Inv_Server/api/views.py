@@ -1,7 +1,7 @@
 from django.http import JsonResponse
 from .models import PruebaTest 
 
-def consulta_general(request):
+def consulta_general_test(request):
 
     items = PruebaTest.objects.all().values()
 
