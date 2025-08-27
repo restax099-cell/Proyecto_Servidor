@@ -12,6 +12,7 @@ class BarCode(models.Model):
     id_bar_code = models.AutoField(db_column='id_bar-code', primary_key=True)  # Field renamed to remove unsuitable characters.
     name = models.CharField(max_length=100, blank=True, null=True)
     img = models.TextField(blank=True, null=True)
+    code = models.CharField(max_length=255, blank=True, null=True)
     status = models.IntegerField(blank=True, null=True)
 
     class Meta:
