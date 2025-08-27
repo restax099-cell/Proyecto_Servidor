@@ -28,7 +28,7 @@ def add_barcode(request):
                     status=400
                 )
 
-            barcode_data = barcodes[0]["text"]
+            barcode_data = barcodes
 
             barcode = BarCode.objects.create(
                 name=name,
