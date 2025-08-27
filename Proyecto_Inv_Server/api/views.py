@@ -11,7 +11,6 @@ import json
 def add_barcode(request):
     if request.method == "POST":
         try:
-            import json
             data = json.loads(request.body)
 
             name = data.get("name")
@@ -24,18 +23,24 @@ def add_barcode(request):
             image_bytes = base64.b64decode(img_base64)
             image = Image.open(BytesIO(image_bytes))
 
-            # Leer código de barras con pyzbar
+            # Leer códigos en la imagen
             decoded_objects = decode(image)
             if not decoded_objects:
-                return JsonResponse({"error": "No se detectó ningún código de barras"}, status=400)
+                return JsonResponse({"error": "No se detectó ningún código"}, status=400)
 
-            barcode_data = decoded_objects[0].data.decode("utf-8")
+            # Filtrar solo códigos de barra (excluyendo QR)
+            barcodes = [obj for obj in decoded_objects if obj.type != "QRCODE"]
 
-         
+            if not barcodes:
+                return JsonResponse({"error": "Solo se detectaron QR, no códigos de barra"}, status=400)
+
+            # Tomar el primer código de barra válido
+            barcode_data = barcodes[0].data.decode("utf-8")
+
             barcode = BarCode.objects.create(
                 name=name,
-                img=image_bytes,   # Se guarda binario en LONGBLOB
-                code=barcode_data,  # <- necesitas un campo "code" en el modelo
+                img=image_bytes,   # Guardamos binario
+                code=barcode_data, 
                 status=1
             )
 
@@ -51,6 +56,3 @@ def add_barcode(request):
             return JsonResponse({"error": str(e)}, status=500)
 
     return JsonResponse({"error": "Método no permitido"}, status=405)
-
-
-
