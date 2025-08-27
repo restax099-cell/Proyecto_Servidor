@@ -1,27 +1,28 @@
-from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 import json
+import base64
 from .models import BarCode
 
 @csrf_exempt
 def add_barcode(request):
     if request.method == "POST":
         try:
-            body = json.loads(request.body) 
+            data = json.loads(request.body)
 
-        
-            new_item = BarCode.objects.create(
-                name=body.get("name"),
-                img=body.get("img"),
+            name = data.get("name", "")
+            img_base64 = data.get("img", "")
+            img_bytes = base64.b64decode(img_base64) if img_base64 else None
+
+            BarCode.objects.create(
+                name=name,
+                img=img_bytes,
                 status=1
             )
 
-            return JsonResponse({
-                "status": "success",
-                "id": new_item.id_bar_code
-            })
+            return JsonResponse({"success": True, "message": "Registro agregado correctamente"})
+
         except Exception as e:
-            return JsonResponse({"status": "error", "message": str(e)}, status=400)
+            return JsonResponse({"success": False, "error": str(e)})
 
-
-    return JsonResponse({"status": "error", "message": "Método no permitido"}, status=405)
+    return JsonResponse({"success": False, "error": "Método no permitido"}, status=405)
