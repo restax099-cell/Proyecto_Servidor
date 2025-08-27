@@ -13,6 +13,6 @@ def decode_barcodes(image_bytes):
 
     results = zxingcpp.read_barcodes(img)
 
-    results = [r for r in results if r.format != zxingcpp.BarcodeFormat.QR_CODE]
+    results = [r for r in results if r.format != zxingcpp.BarcodeFormat.QRCode]
 
     return results
