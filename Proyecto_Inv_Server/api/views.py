@@ -1,9 +1,11 @@
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+from .models import BarCode
 import base64
 from io import BytesIO
 from PIL import Image
 from pyzbar.pyzbar import decode
-from django.http import JsonResponse
-from .models import BarCode
+import json
 
 @csrf_exempt
 def add_barcode(request):
