@@ -17,18 +17,18 @@ def add_barcode(request):
 
             if not img_base64:
                 return JsonResponse({"error": "No se envió la imagen"}, status=400)
-
-            # Decodificar imagen Base64 a bytes
+     
             image_bytes = base64.b64decode(img_base64)
 
-            # Detectar códigos de barra (ignora QR)
             barcodes = decode_barcodes(image_bytes)
 
             if not barcodes:
-                return JsonResponse({"error": "No se detectó ningún código de barras"}, status=400)
+                return JsonResponse(
+                    {"error": "No se detectó o no se pudo leer ningún código de barras"},
+                    status=400
+                )
 
-            # Tomar el primero válido
-            barcode_data = barcodes[0].data.decode("utf-8")
+            barcode_data = barcodes[0]["text"]
 
             barcode = BarCode.objects.create(
                 name=name,
