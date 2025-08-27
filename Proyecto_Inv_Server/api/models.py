@@ -8,14 +8,12 @@
 from django.db import models
 
 
-class PruebaTest(models.Model):
-    id_prueba = models.AutoField(primary_key=True)
-    nombre = models.CharField(max_length=100, blank=True, null=True)
-    descripcion = models.CharField(max_length=100, blank=True, null=True)
-    precio = models.FloatField(blank=True, null=True)
-    fecha = models.DateField(blank=True, null=True)
+class BarCode(models.Model):
+    id_bar_code = models.AutoField(db_column='id_bar-code', primary_key=True)  # Field renamed to remove unsuitable characters.
+    name = models.CharField(max_length=100, blank=True, null=True)
+    img = models.TextField(blank=True, null=True)
     status = models.IntegerField(blank=True, null=True)
 
     class Meta:
         managed = False
-        db_table = 'prueba_test'
+        db_table = 'bar-code'

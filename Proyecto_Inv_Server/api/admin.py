@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import PruebaTest
+from .models import BarCode
 
-admin.site.register(PruebaTest)
+admin.site.register(BarCode)
 # Register your models here.
