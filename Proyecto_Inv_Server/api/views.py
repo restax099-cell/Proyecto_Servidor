@@ -5,6 +5,7 @@ from pyzbar.pyzbar import decode
 from django.http import JsonResponse
 from .models import BarCode
 
+@csrf_exempt
 def add_barcode(request):
     if request.method == "POST":
         try:
@@ -32,14 +33,16 @@ def add_barcode(request):
             barcode = BarCode.objects.create(
                 name=name,
                 img=image_bytes,   # Se guarda binario en LONGBLOB
-                code=barcode_data  # <- necesitas un campo "code" en el modelo
+                code=barcode_data,  # <- necesitas un campo "code" en el modelo
+                status=1
             )
 
             return JsonResponse({
                 "success": True,
                 "id": barcode.id_bar_code,
                 "name": barcode.name,
-                "code": barcode.code
+                "code": barcode.code,
+                "status": barcode.status
             })
 
         except Exception as e:
