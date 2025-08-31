@@ -1,6 +1,6 @@
 from django.urls import path
-from . import views 
+from .views import codes_views 
 
 urlpatterns = [
-    path('add_barcode/', views.add_barcode, name='add_barcode'),
+    path('get-folio/', codes_views.get_folio_from_url, name='get_folio'),
 ]
