@@ -27,12 +27,13 @@ def get_folio(url):
 
     try:
         driver.get(url)
-        
+        print(url)
         celda_label = WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.XPATH, "//td[span[contains(text(),'Folio:')]]"))
         )
-
+        print(url)
         celda_valor = celda_label.find_element(By.XPATH, "following-sibling::td")
+        print(url)
         folio = celda_valor.text.strip()
         
     except Exception as e:
