@@ -24,6 +24,9 @@ def get_folio_from_url(request):
 
     try:
         # Pasa la URL recibida a tu función de web scraping
+        print("----------- URL RECIBIDA -----------")
+        print(url_recibida)
+        print("----------- FIN URL RECIBIDA -----------")
         folio = get_folio(url_recibida)
         
         if folio.startswith("Error"):
