@@ -5,6 +5,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.service import Service
 
 def get_folio(url):
 
@@ -17,11 +18,12 @@ def get_folio(url):
     driver_path = '/usr/local/bin/chromedriver' 
 
     try:
-  
-        driver = webdriver.Chrome(executable_path=driver_path, options=opciones)
+        service = Service(executable_path=driver_path)
+        driver = webdriver.Chrome(service=service, options=opciones)
     except Exception as e:
         print(f"Error al iniciar el driver de Chrome: {e}")
         return "Error al iniciar el navegador"
+      
 
     try:
         driver.get(url)
