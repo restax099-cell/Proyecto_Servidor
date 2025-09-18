@@ -8,6 +8,8 @@ from .models.xml_models import (
 
 admin.site.register([VlxSatCfdiRaw, VlxDataXml, VlxTotalDataXml])
 
+
+
 #from .models import BarCode
 
 #admin.site.register(BarCode)
