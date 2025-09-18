@@ -1,6 +1,14 @@
 from django.contrib import admin
 
-from .models import BarCode
+from .models.xml_models import (
+    VlxSatCfdiRaw, 
+    VlxDataXml, 
+    VlxTotalDataXml,
+)
 
-admin.site.register(BarCode)
+admin.site.register([VlxSatCfdiRaw, VlxDataXml, VlxTotalDataXml])
+
+#from .models import BarCode
+
+#admin.site.register(BarCode)
 # Register your models here.
