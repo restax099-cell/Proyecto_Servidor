@@ -88,8 +88,8 @@ DATABASES = {
         'HOST': os.getenv('HOST_DB'),
         'PORT': os.getenv('PORT_DB'),
         'OPTIONS': {
-            'ssl': False
-        }
+            'ssl': {'disabled': True},  # Fuerza a NO usar SSL
+        },
     }
 }
 
