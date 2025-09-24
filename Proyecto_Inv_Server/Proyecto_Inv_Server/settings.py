@@ -87,6 +87,9 @@ DATABASES = {
         'PASSWORD': os.getenv('PASSWORD_DB'),
         'HOST': os.getenv('HOST_DB'),
         'PORT': os.getenv('PORT_DB'),
+        'OPTIONS': {
+            'ssl': False
+        }
     }
 }
 
