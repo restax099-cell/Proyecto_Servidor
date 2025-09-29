@@ -27,7 +27,6 @@ def get_xml_file(request):
     else:
         return JsonResponse({"error": "Método no permitido"}, status=405)
 
-
 @csrf_exempt
 def get_xml_data(request):
     if request.method == "GET":

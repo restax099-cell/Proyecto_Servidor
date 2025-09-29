@@ -56,7 +56,7 @@ MIDDLEWARE = [
     
 ]
 
-ROOT_URLCONF = 'Proyecto_Inv_Server.urls'
+ROOT_URLCONF = 'Settings_Inv_Server.urls'
 
 TEMPLATES = [
     {
@@ -73,7 +73,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'Proyecto_Inv_Server.wsgi.application'
+WSGI_APPLICATION = 'Settings_Inv_Server.wsgi.application'
 
 
 # Database
