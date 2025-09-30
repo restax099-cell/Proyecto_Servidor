@@ -1,7 +1,9 @@
+
 .data-table-container {
-    max-height: 70vh; 
+    max-height: 70vh;
     overflow-y: auto;
-    border-radius: 0.75rem; 
+    overflow-x: auto; 
+    border-radius: 0.75rem;
 }
 
 .data-table-container table {
@@ -15,10 +17,25 @@
     z-index: 10;
 }
 
+.table-data-cell {
+    padding: 12px 16px;
+    font-size: 0.875rem;
+    color: #4a5568;
+    border-bottom: 1px solid #e2e8f0;
+    text-align: left;
+    transition: background-color 0.15s ease-in-out;
+}
 
 .truncate-cell {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 200px; 
+    max-width: 200px;
+}
+
+.xml-content-cell {
+    max-width: 250px;
+    overflow-x: auto;
+    white-space: nowrap;
+    overflow-y: hidden;
 }

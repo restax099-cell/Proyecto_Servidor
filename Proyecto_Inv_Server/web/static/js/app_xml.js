@@ -1,4 +1,12 @@
-const BASE_API_URL = 'http://3.139.90.118/api/';
+/**
+ * Lógica principal para el panel administrativo de datos XML.
+ *
+ * Esta aplicación interactúa con la API de Django para cargar datos paginados 
+ * y dinámicos basados en la tabla seleccionada.
+ */
+
+// NOTA: BASE_API_URL debe ser relativa si el JS está en el mismo dominio
+const BASE_API_URL = window.location.origin + '/api/';
 const DEFAULT_LIMIT = 500;
 
 const TABLES_CONFIG = {
@@ -6,7 +14,8 @@ const TABLES_CONFIG = {
         name: 'VlxSatCfdiRaw (CFDI Crudos)', 
         endpoint: 'get-all-raw/', 
         orderKey: 'id', 
-        description: 'Contiene los datos XML completos de los CFDI.'
+        description: 'Contiene los datos XML completos de los CFDI.',
+        xmlColumn: 'XMLCONTENT' 
     },
     data_xml: { 
         name: 'VlxDataXml (Conceptos)', 
@@ -37,7 +46,7 @@ function renderLoading() {
             <p class="mt-3 text-gray-600">Cargando datos de ${TABLES_CONFIG[activeTable].name}...</p>
         </div>
     `;
-    lucide.createIcons();
+    lucide.createIcons(); 
 }
 
 function renderError(message) {
@@ -49,13 +58,32 @@ function renderError(message) {
     `;
 }
 
+function formatXmlContent(value) {
+    if (typeof value !== 'string') return String(value);
+
+    const cleanedValue = value.replace(/\s+/g, ' ').trim();
+    
+    const preview = cleanedValue.substring(0, 100);
+    
+    return preview + (cleanedValue.length > 100 ? '... [Scroll para ver más]' : '');
+}
+
 function formatCellValue(colName, value) {
     if (value === null) return '-';
+    
+    const currentConfig = TABLES_CONFIG[activeTable];
+    if (currentConfig.xmlColumn && colName.toUpperCase() === currentConfig.xmlColumn.toUpperCase()) {
+        return formatXmlContent(value);
+    }
     
     const dateFields = ['fecha', 'created_at', 'updated_at', 'void_at'];
     if (dateFields.some(field => colName.includes(field))) {
         try {
-            return new Date(value).toLocaleString();
+            return new Date(value).toLocaleString('es-ES', { 
+                 day: '2-digit', month: '2-digit', year: 'numeric', 
+                 hour: '2-digit', minute: '2-digit', second: '2-digit', 
+                 hour12: false
+             });
         } catch (e) {
             return String(value);
         }
@@ -71,7 +99,7 @@ function renderPaginationControls() {
     const isNextDisabled = currentPage >= totalPages || isLoading;
 
     return `
-        <div class="flex justify-between items-center p-4 bg-white border-t rounded-b-xl shadow-md">
+        <div id="pagination-controls" class="flex justify-between items-center p-4 bg-white border-t rounded-b-xl shadow-md">
             <p class="text-sm text-gray-600">
                 Mostrando ${DEFAULT_LIMIT} registros (Página ${currentPage.toLocaleString()}) de ${totalRecords.toLocaleString()} registros (${totalPages.toLocaleString()} páginas totales).
             </p>
@@ -80,7 +108,7 @@ function renderPaginationControls() {
                     id="prev-page"
                     onclick="changePage(${currentPage - 1})"
                     ${isPrevDisabled ? 'disabled' : ''}
-                    class="p-2 border rounded-full bg-gray-50 hover:bg-gray-200 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    class="p-2 border rounded-full bg-gray-50 hover:bg-gray-200 transition ${isPrevDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}"
                 >
                     <i data-lucide="chevron-left" class="w-5 h-5"></i>
                 </button>
@@ -91,7 +119,7 @@ function renderPaginationControls() {
                     id="next-page"
                     onclick="changePage(${currentPage + 1})"
                     ${isNextDisabled ? 'disabled' : ''}
-                    class="p-2 border rounded-full bg-gray-50 hover:bg-gray-200 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    class="p-2 border rounded-full bg-gray-50 hover:bg-gray-200 transition ${isNextDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}"
                 >
                     <i data-lucide="chevron-right" class="w-5 h-5"></i>
                 </button>
@@ -105,17 +133,17 @@ function renderDataTable(data) {
     const container = document.getElementById('data-container');
 
     if (data.length === 0 && totalRecords > 0) {
-         renderError(`La página ${currentPage} no contiene datos.`);
-         return;
+          renderError(`La página ${currentPage} no contiene datos.`);
+          return;
     }
 
     if (data.length === 0 && totalRecords === 0 && !isLoading) {
-         container.innerHTML = `
+          container.innerHTML = `
             <div class="p-6 text-center text-gray-600 bg-white border border-gray-300 rounded-xl mt-6">
                 No se encontraron registros para esta tabla: ${config.name}.
             </div>
-         `;
-         return;
+          `;
+          return;
     }
     
     const columns = Object.keys(data[0] || {});
@@ -126,11 +154,11 @@ function renderDataTable(data) {
         
         ${renderPaginationControls()}
 
-        <div class="data-table-container shadow-xl">
-            <table class="text-sm text-left text-gray-500 border-collapse">
+        <div class="data-table-container shadow-xl overflow-x-auto rounded-t-xl mt-4">
+            <table class="text-sm text-left text-gray-500 border-collapse min-w-full">
                 
                 <!-- Encabezados -->
-                <thead class="text-xs text-gray-700 uppercase bg-gray-200">
+                <thead class="text-xs text-gray-700 uppercase bg-gray-200 sticky top-0 z-10">
                     <tr>
                         ${columns.map(col => `<th scope="col" class="px-6 py-3 border-r border-gray-300 last:border-r-0">${col.replace(/_/g, ' ')}</th>`).join('')}
                     </tr>
@@ -140,11 +168,20 @@ function renderDataTable(data) {
                 <tbody>
                     ${data.map((row, rowIndex) => `
                         <tr class="bg-white border-b hover:bg-gray-50 transition-colors duration-150">
-                            ${columns.map(col => `
-                                <td class="px-6 py-4 truncate-cell border-r border-gray-100 last:border-r-0 ${col === config.orderKey ? 'font-bold text-blue-800' : 'text-gray-900'}" title="${String(row[col] === null ? '' : row[col])}">
+                            ${columns.map(col => {
+                                const isXmlColumn = config.xmlColumn && col.toUpperCase() === config.xmlColumn.toUpperCase();
+                                let cellClass = `px-6 py-4 truncate-cell border-r border-gray-100 last:border-r-0 ${col === config.orderKey ? 'font-bold text-blue-800' : 'text-gray-900'}`;
+                                
+                                if (isXmlColumn) {
+                                    cellClass += ' xml-content-cell font-mono text-xs'; 
+                                }
+                                
+                                return `
+                                <td class="${cellClass}" title="${String(row[col] === null ? '' : row[col])}">
                                     ${formatCellValue(col, row[col])}
                                 </td>
-                            `).join('')}
+                                `;
+                            }).join('')}
                         </tr>
                     `).join('')}
                 </tbody>
@@ -160,7 +197,8 @@ function renderDataTable(data) {
     // Mantiene la posición de scroll
     const tableContainer = document.querySelector('.data-table-container');
     if (tableContainer) {
-         tableContainer.scrollTop = 0;
+        tableContainer.scrollLeft = 0; 
+        tableContainer.scrollTop = 0; 
     }
 }
 
@@ -195,7 +233,7 @@ async function fetchData(page) {
         const response = await fetch(url);
 
         if (response.status === 404) {
-            throw new Error(`Página ${page} fuera de rango o vacía.`);
+             throw new Error(`Página ${page} fuera de rango o vacía. El endpoint responde 404.`);
         }
         
         if (!response.ok) {
@@ -232,8 +270,7 @@ function changePage(newPage) {
     if (newPage < 1 || newPage > totalPages || newPage === currentPage || isLoading) {
         return;
     }
-    currentPage = newPage;
-    fetchData(currentPage);
+    fetchData(newPage);
 }
 
 function changeTable(newTableKey) {
