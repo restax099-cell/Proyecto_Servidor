@@ -1,8 +1,3 @@
-// ==========================================================
-// CONFIGURACIÓN GLOBAL
-// ==========================================================
-console.log("hola");
-
 const BASE_API_URL = 'http://3.139.90.118/api/';
 const DEFAULT_LIMIT = 500;
 
@@ -10,19 +5,19 @@ const TABLES_CONFIG = {
     cfdi_raw: { 
         name: 'VlxSatCfdiRaw (CFDI Crudos)', 
         endpoint: 'get-all-raw/', 
-        orderKey: 'id', // Clave PK correcta para ordenación
+        orderKey: 'id', 
         description: 'Contiene los datos XML completos de los CFDI.'
     },
     data_xml: { 
         name: 'VlxDataXml (Conceptos)', 
         endpoint: 'get-all-data/', 
-        orderKey: 'id_data_xml', // Clave PK correcta para ordenación
+        orderKey: 'id_data_xml', 
         description: 'Contiene los conceptos y detalles de cada CFDI.'
     },
     total_xml: { 
         name: 'VlxTotalDataXml (Totales/Encabezados)', 
         endpoint: 'get-all-total/', 
-        orderKey: 'id_total_data_xml', // Clave PK correcta para ordenación
+        orderKey: 'id_total_data_xml', 
         description: 'Contiene el encabezado y los totales resumidos del CFDI.'
     }
 };
@@ -33,11 +28,7 @@ let totalPages = 1;
 let totalRecords = 0;
 let isLoading = false;
 
-// ==========================================================
-// RENDERIZADO (FUNCIONES QUE RELLENAN LOS DIVS)
-// ==========================================================
 
-/** Renderiza un estado de carga con un spinner */
 function renderLoading() {
     const container = document.getElementById('data-container');
     container.innerHTML = `
@@ -49,7 +40,6 @@ function renderLoading() {
     lucide.createIcons();
 }
 
-/** Renderiza un mensaje de error */
 function renderError(message) {
     const container = document.getElementById('data-container');
     container.innerHTML = `
@@ -59,7 +49,6 @@ function renderError(message) {
     `;
 }
 
-/** Formatea fechas o valores nulos para la tabla */
 function formatCellValue(colName, value) {
     if (value === null) return '-';
     
@@ -77,7 +66,6 @@ function formatCellValue(colName, value) {
     return String(value);
 }
 
-/** Renderiza el componente de paginación */
 function renderPaginationControls() {
     const isPrevDisabled = currentPage <= 1 || isLoading;
     const isNextDisabled = currentPage >= totalPages || isLoading;
@@ -112,7 +100,6 @@ function renderPaginationControls() {
     `;
 }
 
-/** Renderiza la tabla completa, paginación, y mensajes de carga/error dentro de #data-container. */
 function renderDataTable(data) {
     const config = TABLES_CONFIG[activeTable];
     const container = document.getElementById('data-container');
@@ -133,7 +120,6 @@ function renderDataTable(data) {
     
     const columns = Object.keys(data[0] || {});
     
-    // Contenido de la tabla con encabezado, filas, y paginación
     const tableContent = `
         <h2 class="text-2xl font-semibold text-gray-800 mb-3">${config.name}</h2>
         <p class="text-sm text-gray-500 mb-4">${config.description}</p>
@@ -178,10 +164,9 @@ function renderDataTable(data) {
     }
 }
 
-/** Renderiza los botones de selección de tabla dentro de #table-selector. */
 function renderSelector() {
     const selectorDiv = document.getElementById('table-selector');
-    // Genera un botón para cada tabla en TABLES_CONFIG
+
     selectorDiv.innerHTML = Object.entries(TABLES_CONFIG).map(([key, config]) => {
         const isActive = key === activeTable;
         return `
@@ -199,12 +184,6 @@ function renderSelector() {
     }).join('');
 }
 
-
-// ==========================================================
-// LÓGICA DE DATOS Y EVENTOS
-// ==========================================================
-
-/** Llama a la API para obtener datos paginados */
 async function fetchData(page) {
     isLoading = true;
     renderLoading();
@@ -230,12 +209,10 @@ async function fetchData(page) {
             throw new Error(`Error de la aplicación: ${result.error}`);
         }
 
-        // Actualizar estado global
         currentPage = result.current_page || page;
         totalPages = result.total_pages || 1;
         totalRecords = result.total_records || 0;
 
-        // Renderizar la tabla con los nuevos datos
         renderDataTable(result.results || []);
         
     } catch (error) {
@@ -251,7 +228,6 @@ async function fetchData(page) {
     }
 }
 
-/** Cambia la página actual y recarga los datos. */
 function changePage(newPage) {
     if (newPage < 1 || newPage > totalPages || newPage === currentPage || isLoading) {
         return;
@@ -260,7 +236,6 @@ function changePage(newPage) {
     fetchData(currentPage);
 }
 
-/** Cambia la tabla activa, resetea la página y recarga los datos. */
 function changeTable(newTableKey) {
     if (activeTable === newTableKey || isLoading) return;
     activeTable = newTableKey;
@@ -271,15 +246,10 @@ function changeTable(newTableKey) {
     fetchData(currentPage);
 }
 
-// ==========================================================
-// INICIALIZACIÓN: Asegura que se dibuje todo al cargar la página
-// ==========================================================
-
 window.onload = function() {
     renderSelector(); 
     fetchData(currentPage); 
 };
 
-// Exponer funciones globales para onclick
 window.changePage = changePage;
 window.changeTable = changeTable;
