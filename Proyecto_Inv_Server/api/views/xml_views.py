@@ -10,6 +10,8 @@ from ..models.xml_models import (
     VlxTotalDataXml
 )
 
+# Devuelve los datos más importantes solicitando un uuid #
+
 @csrf_exempt
 def get_xml_file(request):
     if request.method == "GET":
@@ -60,3 +62,46 @@ def get_xml_head(request):
         # No se pasó UUID → devolver solo la lista de UUIDs
         uuids = list(VlxTotalDataXml.objects.values_list("uuid", flat=True))
         return JsonResponse({"uuids": uuids})
+    
+
+# Devuelve todos los datos de las tablas #
+
+@csrf_exempt
+def get_all_raw_cfdi(request):
+    if request.method != "GET":
+        return JsonResponse({"error": "Método no permitido"}, status=405)
+    
+    # 🚨 Lógica de consulta simple, directo en la vista 🚨
+    records = VlxSatCfdiRaw.objects.all()
+    
+    # Convertir a lista de diccionarios
+    data = [model_to_dict(record) for record in records]
+    
+    # safe=False es necesario porque data es una lista (aunque la envolvamos en un dict)
+    return JsonResponse({"results": data}, safe=False)
+
+@csrf_exempt
+def get_all_data_xml(request):
+    if request.method != "GET":
+        return JsonResponse({"error": "Método no permitido"}, status=405)
+    
+    # 🚨 Lógica de consulta simple, directo en la vista 🚨
+    records = VlxDataXml.objects.all()
+    
+    # Convertir a lista de diccionarios
+    data = [model_to_dict(record) for record in records]
+    
+    return JsonResponse({"results": data}, safe=False)
+
+@csrf_exempt
+def get_all_total_data_xml(request):
+    if request.method != "GET":
+        return JsonResponse({"error": "Método no permitido"}, status=405)
+    
+    # 🚨 Lógica de consulta simple, directo en la vista 🚨
+    records = VlxTotalDataXml.objects.all()
+    
+    # Convertir a lista de diccionarios
+    data = [model_to_dict(record) for record in records]
+    
+    return JsonResponse({"results": data}, safe=False)
