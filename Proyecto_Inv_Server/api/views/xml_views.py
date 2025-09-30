@@ -10,8 +10,6 @@ from ..models.xml_models import (
     VlxTotalDataXml
 )
 
-
-
 @csrf_exempt
 def get_xml_file(request):
     if request.method == "GET":
