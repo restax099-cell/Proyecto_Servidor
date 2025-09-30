@@ -14,10 +14,18 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+"""
+URL configuration for Proyecto_Inv_Server project.
+"""
+
 from django.contrib import admin
 from django.urls import path, include
+
+from web import views as web_views
+import os
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('api.urls')),
+    path('', web_views.home, name='home'),
 ]
