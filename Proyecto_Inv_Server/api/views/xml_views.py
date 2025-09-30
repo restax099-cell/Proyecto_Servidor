@@ -12,7 +12,7 @@ from ..models.xml_models import (
     VlxTotalDataXml
 )
 
-from utils.pagination import paginate_and_respond
+from ..utils.pagination import paginate_and_respond
 
 # Devuelve los datos más importantes solicitando un uuid #
 
