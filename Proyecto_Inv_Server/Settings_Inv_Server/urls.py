@@ -28,4 +28,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('api.urls')),
     path('', web_views.home, name='home'),
+    path('admin-panel', web_views.admin_panel, name='admin_panel'),
 ]
