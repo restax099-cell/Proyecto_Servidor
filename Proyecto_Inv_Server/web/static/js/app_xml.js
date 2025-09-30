@@ -58,27 +58,43 @@ function renderError(message) {
     `;
 }
 
+/**
+ * Aplica formato, limpieza y truncamiento al contenido XML.
+ * @param {string} value - El contenido XML crudo.
+ * @returns {string} El contenido truncado para la vista previa.
+ */
 function formatXmlContent(value) {
     if (typeof value !== 'string') return String(value);
 
-    const cleanedValue = value.replace(/\s+/g, ' ').trim();
+    // 1. Limpiar el XML (eliminar saltos de línea y espacios excesivos)
+    // Se eliminó .trim() para evitar cortar etiquetas iniciales.
+    const cleanedValue = value.replace(/\s+/g, ' '); 
     
+    // 2. Truncar a una vista previa de 100 caracteres
     const preview = cleanedValue.substring(0, 100);
     
-    return preview + (cleanedValue.length > 100 ? '... [Scroll para ver más]' : '');
+    // Se utiliza '<*>' para indicar que es contenido XML.
+    return (cleanedValue.length > 0 ? '<*>' : '-') + ' ' + preview + (cleanedValue.length > 100 ? '... [Scroll para ver más]' : '');
 }
 
+/**
+ * Formatea el valor de una celda basado en el nombre de la columna.
+ */
 function formatCellValue(colName, value) {
-    if (value === null) return '-';
+    if (value === null || value === undefined) return '-';
     
     const currentConfig = TABLES_CONFIG[activeTable];
+    
+    // Manejo de la columna XML 
     if (currentConfig.xmlColumn && colName.toUpperCase() === currentConfig.xmlColumn.toUpperCase()) {
         return formatXmlContent(value);
     }
     
+    // Manejo de fechas
     const dateFields = ['fecha', 'created_at', 'updated_at', 'void_at'];
-    if (dateFields.some(field => colName.includes(field))) {
+    if (dateFields.some(field => colName.toLowerCase().includes(field.toLowerCase()))) {
         try {
+            // Manejo de fechas que vienen como string de la API (ej: '2023-10-27T10:00:00')
             return new Date(value).toLocaleString('es-ES', { 
                  day: '2-digit', month: '2-digit', year: 'numeric', 
                  hour: '2-digit', minute: '2-digit', second: '2-digit', 
@@ -88,9 +104,12 @@ function formatCellValue(colName, value) {
             return String(value);
         }
     }
+    
+    // Manejo de números (con decimales)
     if (typeof value === 'number' && !isNaN(value)) {
         return value.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
+    
     return String(value);
 }
 
@@ -132,21 +151,21 @@ function renderDataTable(data) {
     const config = TABLES_CONFIG[activeTable];
     const container = document.getElementById('data-container');
 
-    if (data.length === 0 && totalRecords > 0) {
-          renderError(`La página ${currentPage} no contiene datos.`);
-          return;
-    }
-
-    if (data.length === 0 && totalRecords === 0 && !isLoading) {
-          container.innerHTML = `
-            <div class="p-6 text-center text-gray-600 bg-white border border-gray-300 rounded-xl mt-6">
-                No se encontraron registros para esta tabla: ${config.name}.
-            </div>
-          `;
-          return;
+    if (!data || data.length === 0) {
+        if (totalRecords > 0) {
+            renderError(`La página ${currentPage} no contiene datos. Total de registros conocidos: ${totalRecords.toLocaleString()}.`);
+        } else if (!isLoading) {
+            container.innerHTML = `
+                <div class="p-6 text-center text-gray-600 bg-white border border-gray-300 rounded-xl mt-6">
+                    No se encontraron registros para esta tabla: ${config.name}.
+                </div>
+            `;
+        }
+        return;
     }
     
-    const columns = Object.keys(data[0] || {});
+    // OBTENER COLUMNAS DEL PRIMER REGISTRO PARA DEFINIR EL ORDEN
+    const columns = Object.keys(data[0]); 
     
     const tableContent = `
         <h2 class="text-2xl font-semibold text-gray-800 mb-3">${config.name}</h2>
@@ -166,22 +185,29 @@ function renderDataTable(data) {
                 
                 <!-- Cuerpo (filas de datos) -->
                 <tbody>
-                    ${data.map((row, rowIndex) => `
+                    ${data.map(row => `
                         <tr class="bg-white border-b hover:bg-gray-50 transition-colors duration-150">
-                            ${columns.map(col => {
-                                const isXmlColumn = config.xmlColumn && col.toUpperCase() === config.xmlColumn.toUpperCase();
-                                let cellClass = `px-6 py-4 truncate-cell border-r border-gray-100 last:border-r-0 ${col === config.orderKey ? 'font-bold text-blue-800' : 'text-gray-900'}`;
-                                
-                                if (isXmlColumn) {
-                                    cellClass += ' xml-content-cell font-mono text-xs'; 
-                                }
-                                
-                                return `
-                                <td class="${cellClass}" title="${String(row[col] === null ? '' : row[col])}">
-                                    ${formatCellValue(col, row[col])}
-                                </td>
-                                `;
-                            }).join('')}
+                            ${
+                                // RECORRER LAS COLUMNAS EN EL ORDEN DEFINIDO EN 'columns'
+                                columns.map(col => {
+                                    // Se verifica que la clave exista en la fila, si no existe es null
+                                    const value = row[col] !== undefined ? row[col] : null; 
+                                    const isXmlColumn = config.xmlColumn && col.toUpperCase() === config.xmlColumn.toUpperCase();
+                                    
+                                    // Aplicación de clases CSS
+                                    let cellClass = `table-data-cell truncate-cell border-r border-gray-100 last:border-r-0 ${col === config.orderKey ? 'font-bold text-blue-800' : 'text-gray-900'}`;
+                                    
+                                    if (isXmlColumn) {
+                                        cellClass += ' xml-content-cell font-mono text-xs'; 
+                                    }
+                                    
+                                    return `
+                                    <td class="${cellClass}" title="${String(value === null ? '' : value)}">
+                                        ${formatCellValue(col, value)}
+                                    </td>
+                                    `;
+                                }).join('')
+                            }
                         </tr>
                     `).join('')}
                 </tbody>
@@ -194,11 +220,15 @@ function renderDataTable(data) {
     container.innerHTML = tableContent;
     lucide.createIcons();
     
-    // Mantiene la posición de scroll
+    // Mantiene la posición de scroll en la tabla
     const tableContainer = document.querySelector('.data-table-container');
     if (tableContainer) {
         tableContainer.scrollLeft = 0; 
-        tableContainer.scrollTop = 0; 
+        // Solo resetear scroll vertical si la página cambia
+        if (tableContainer.dataset.currentPage !== String(currentPage)) {
+            tableContainer.scrollTop = 0; 
+            tableContainer.dataset.currentPage = String(currentPage);
+        }
     }
 }
 
@@ -223,17 +253,34 @@ function renderSelector() {
 }
 
 async function fetchData(page) {
+    if (isLoading) return; // Evita llamadas duplicadas
+    
     isLoading = true;
     renderLoading();
     
     const config = TABLES_CONFIG[activeTable];
-    const url = `${BASE_API_URL}${config.endpoint}?page=${page}&limit=${DEFAULT_LIMIT}`;
+    // Asegúrate de usar la página correcta para la solicitud
+    const pageToFetch = page || currentPage;
+    const url = `${BASE_API_URL}${config.endpoint}?page=${pageToFetch}&limit=${DEFAULT_LIMIT}`;
     
     try {
         const response = await fetch(url);
 
         if (response.status === 404) {
-             throw new Error(`Página ${page} fuera de rango o vacía. El endpoint responde 404.`);
+             // 404 puede significar que no hay más páginas
+             if (pageToFetch > 1 && pageToFetch > totalPages) {
+                 throw new Error(`Página ${pageToFetch} fuera de rango o vacía.`);
+             } else if (pageToFetch === 1 && totalRecords === 0) {
+                 // Si es la página 1 y la API devuelve 404, asumimos que no hay registros
+                 totalRecords = 0;
+                 totalPages = 1;
+                 currentPage = 1;
+                 renderDataTable([]);
+                 return;
+             }
+             
+             // Si es un 404 inesperado, se muestra el error general
+             throw new Error(`El endpoint respondió 404 (No Encontrado)`);
         }
         
         if (!response.ok) {
@@ -246,20 +293,26 @@ async function fetchData(page) {
         if (result.error) {
             throw new Error(`Error de la aplicación: ${result.error}`);
         }
+        
+        // El campo 'results' es MANDATORIO y debe ser un array
+        if (!Array.isArray(result.results)) {
+             throw new Error("La respuesta de la API no contiene el array 'results' o es inválida.");
+        }
 
-        currentPage = result.current_page || page;
+        currentPage = result.current_page || pageToFetch;
         totalPages = result.total_pages || 1;
         totalRecords = result.total_records || 0;
 
-        renderDataTable(result.results || []);
+        renderDataTable(result.results);
         
     } catch (error) {
         console.error("Error al cargar datos:", error);
         renderError(`Error al cargar ${config.name}: ${error.message}`);
         
-        if (error.message.includes('fuera de rango') && page !== 1) {
-            currentPage = 1;
-            fetchData(1);
+        // Si la página es inaccesible o fuera de rango, intenta volver a la página 1.
+        if (error.message.includes('fuera de rango') && pageToFetch !== 1) {
+            console.log("Intentando volver a la página 1...");
+            changePage(1); 
         }
     } finally {
         isLoading = false;
