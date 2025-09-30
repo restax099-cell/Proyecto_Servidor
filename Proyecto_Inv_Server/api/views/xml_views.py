@@ -1,7 +1,7 @@
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from django.forms.models import model_to_dict
-
+from django.core.paginator import Paginator, EmptyPage
 import json
 
 from ..models.xml_models import (
@@ -68,17 +68,44 @@ def get_xml_head(request):
 
 @csrf_exempt
 def get_all_raw_cfdi(request):
+
     if request.method != "GET":
         return JsonResponse({"error": "Método no permitido"}, status=405)
     
-    # 🚨 Lógica de consulta simple, directo en la vista 🚨
-    records = VlxSatCfdiRaw.objects.all()
+    try:
     
-    # Convertir a lista de diccionarios
-    data = [model_to_dict(record) for record in records]
+        page_size = int(request.GET.get('limit', 500)) 
+
+        if page_size > 1000: 
+            page_size = 1000 
+            
+        page_number = request.GET.get('page', 1)
+        
+    except ValueError:
+        return JsonResponse({"error": "Los parámetros 'page' y 'limit' deben ser números enteros."}, status=400)
+
+    records = VlxSatCfdiRaw.objects.all().order_by('id') 
+    paginator = Paginator(records, page_size)
     
-    # safe=False es necesario porque data es una lista (aunque la envolvamos en un dict)
-    return JsonResponse({"results": data}, safe=False)
+    try:
+        page_obj = paginator.get_page(page_number)
+    except EmptyPage:
+        return JsonResponse({
+            "results": [], 
+            "error": f"Página {page_number} fuera de rango. Total de páginas: {paginator.num_pages}"
+        }, status=404, safe=False)
+    except Exception as e:
+        return JsonResponse({"error": f"Error al procesar la página: {str(e)}"}, status=400)
+
+    data = [model_to_dict(record) for record in page_obj]
+    
+    return JsonResponse({
+        "results": data,
+        "current_page": page_obj.number,
+        "total_pages": paginator.num_pages,
+        "total_records": paginator.count,
+        "has_next": page_obj.has_next(),
+    }, safe=False)
 
 @csrf_exempt
 def get_all_data_xml(request):
