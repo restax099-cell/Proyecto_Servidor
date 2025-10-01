@@ -9,6 +9,7 @@
     min-width: 1200px;
     width: 100%;
     border-collapse: collapse;
+    table-layout: auto; 
 }
 
 .responsive-table-wrapper thead {
@@ -27,20 +28,30 @@
     vertical-align: top;
 }
 
+.w-min-sm { min-width: 80px; }  
+.w-min-md { min-width: 120px; }
+.w-min-lg { min-width: 200px; } 
+
 .truncate-cell {
-    max-width: 200px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
 .xml-content-cell {
-    max-width: 30rem;
-    white-space: nowrap;
-    overflow-x: auto;
-    overflow-y: hidden;
+    min-width: 300px; 
+    max-width: 450px; 
+    white-space: nowrap; 
+    overflow-x: auto; 
+    overflow-y: hidden; 
     text-overflow: clip; 
     font-family: monospace;
     font-size: 0.75rem;
     vertical-align: top;
+    line-height: 1.4; 
+}
+
+.xml-content-cell > span {
+    display: block; 
+    padding-right: 2px; 
 }

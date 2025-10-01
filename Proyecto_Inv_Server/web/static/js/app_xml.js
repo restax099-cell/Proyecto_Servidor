@@ -76,6 +76,63 @@ function formatCellValue(colName, value) {
     return String(value);
 }
 
+function escapeHtmlNative(str) {
+    if (typeof str !== 'string') return str;
+    const temp = document.createElement('div');
+    temp.textContent = str;
+    return temp.innerHTML;
+}
+
+function getMinWidthClass(colName) {
+    const nameLower = colName.toLowerCase();
+    
+    if (nameLower.includes('descripcion') || nameLower.includes('uuid')) {
+        return 'w-min-lg'; 
+    }
+    
+    if (nameLower.includes('clave') || nameLower.includes('unidad') || nameLower.includes('fecha')) {
+        return 'w-min-md'; 
+    }
+    
+    if (nameLower.includes('valorunitario') || nameLower.includes('importe') || nameLower.includes('tasa') || nameLower.includes('descuento') || nameLower.includes('base') || nameLower.includes('id')) {
+        return 'w-min-sm'; 
+    }
+    
+    return 'w-min-md'; 
+}
+
+function formatCellValue(colName, value, isXmlContent) {
+    if (value === null) return '-';
+    
+    const strValue = String(value);
+
+    if (isXmlContent) {
+        const escapedContent = escapeHtmlNative(strValue);
+        return `<span>${escapedContent}</span>`;
+    }
+
+    const dateFields = ['fecha', 'created_at', 'updated_at', 'void_at'];
+    if (dateFields.some(field => colName.includes(field))) {
+        try {
+            const date = new Date(strValue);
+            if (!isNaN(date)) {
+                return date.toLocaleString('es-MX', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: false
+                }); 
+            }
+        } catch (e) { /* Fallthrough */ }
+    }
+    
+    // Para el resto del texto, devolvemos el valor normal (no contiene < o > relevantes)
+    return strValue;
+}
+
 function renderPaginationControls() {
     const isPrevDisabled = currentPage <= 1 || isLoading;
     const isNextDisabled = currentPage >= totalPages || isLoading;
@@ -110,12 +167,23 @@ function renderPaginationControls() {
     `;
 }
 
+function updatePaginationButtons() {
+    const prevBtn = document.getElementById('prev-page');
+    const nextBtn = document.getElementById('next-page');
+
+    if (!prevBtn || !nextBtn) return;
+
+    prevBtn.disabled = currentPage <= 1 || isLoading;
+    nextBtn.disabled = currentPage >= totalPages || isLoading;
+}
+
 function renderDataTable(data) {
     const config = TABLES_CONFIG[activeTable];
     const container = document.getElementById('data-container');
 
     if (data.length === 0 && totalRecords > 0) {
             renderError(`La página ${currentPage} no contiene datos.`);
+            container.innerHTML = renderPaginationControls();
             return;
     }
 
@@ -141,11 +209,23 @@ function renderDataTable(data) {
                 
                 <thead class="text-xs text-gray-700 uppercase bg-gray-200">
                     <tr>
-                        ${columns.map(col => `
-                            <th scope="col" class="px-6 py-3 border-r border-gray-300 last:border-r-0 whitespace-nowrap">
-                                ${col.replace(/_/g, ' ')}
-                            </th>
-                        `).join('')}
+                        ${columns.map(col => {
+                            const isXmlColumn = config.xmlColumn && col.toLowerCase() === config.xmlColumn.toLowerCase();
+                            
+                            let headerClass = ' whitespace-nowrap';
+                            if (isXmlColumn) {
+                                headerClass = ' xml-content-cell';
+                            } else if (activeTable === 'data_xml' || activeTable === 'total_xml') {
+                                // Aplicar anchos mínimos solo a las tablas de Conceptos y Totales
+                                headerClass += ' ' + getMinWidthClass(col);
+                            }
+
+                            return `
+                                <th scope="col" class="px-6 py-3 border-r border-gray-300 last:border-r-0 ${headerClass}">
+                                    ${col.replace(/_/g, ' ')}
+                                </th>
+                            `;
+                        }).join('')}
                     </tr>
                 </thead>
                 
@@ -169,14 +249,19 @@ function renderDataTable(data) {
                                         cellClass += ' xml-content-cell';
                                     } else {
                                         cellClass += ' truncate-cell';
+                                        if (activeTable === 'data_xml' || activeTable === 'total_xml') {
+                                                cellClass += ' ' + getMinWidthClass(col);
+                                        }
                                     }
+
+                                    const titleAttribute = isXmlColumn ? '' : `title="${String(value === null ? '' : value)}"`;
 
                                     return `
                                         <td 
                                             class="${cellClass}"
-                                            title="${String(value === null ? '' : value)}" 
+                                            ${titleAttribute}
                                         >
-                                            ${formatCellValue(col, value)}
+                                            ${formatCellValue(col, value, isXmlColumn)}
                                         </td>
                                     `;
                                 }).join('')}
@@ -205,17 +290,17 @@ function renderDataTable(data) {
 async function fetchData(page) {
     isLoading = true;
     renderLoading();
-    
+
     const config = TABLES_CONFIG[activeTable];
     const url = `${BASE_API_URL}${config.endpoint}?page=${page}&limit=${DEFAULT_LIMIT}`;
-    
+
     try {
         const response = await fetch(url);
 
         if (response.status === 404) {
             throw new Error(`Página ${page} fuera de rango o vacía.`);
         }
-        
+
         if (!response.ok) {
             const errorText = await response.text();
             throw new Error(`Error en el servidor: HTTP ${response.status}. Detalle: ${errorText.substring(0, 100)}...`);
@@ -232,17 +317,22 @@ async function fetchData(page) {
         totalRecords = result.total_records || 0;
 
         renderDataTable(result.results || []);
-        
+
     } catch (error) {
         console.error("Error al cargar datos:", error);
         renderError(`Error al cargar ${config.name}: ${error.message}`);
-        
+
         if (error.message.includes('fuera de rango') && page !== 1) {
             currentPage = 1;
-            fetchData(1);
+            await fetchData(1); // await asegura que isLoading se maneje correctamente
         }
     } finally {
         isLoading = false;
+        updatePaginationButtons();
+
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
     }
 }
 
