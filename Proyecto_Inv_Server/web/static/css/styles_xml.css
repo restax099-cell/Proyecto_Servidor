@@ -1,17 +1,17 @@
-
-.data-table-container {
+.responsive-table-wrapper {
     max-height: 70vh;
     overflow-y: auto;
     overflow-x: auto; 
     border-radius: 0.75rem;
 }
 
-.data-table-container table {
+.responsive-table-wrapper table {
     min-width: 1200px;
     width: 100%;
+    border-collapse: collapse;
 }
 
-.data-table-container thead {
+.responsive-table-wrapper thead {
     position: sticky;
     top: 0;
     z-index: 10;
@@ -24,18 +24,23 @@
     border-bottom: 1px solid #e2e8f0;
     text-align: left;
     transition: background-color 0.15s ease-in-out;
+    vertical-align: top;
 }
 
 .truncate-cell {
+    max-width: 200px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 200px;
 }
 
 .xml-content-cell {
-    max-width: 250px;
-    overflow-x: auto;
+    max-width: 30rem;
     white-space: nowrap;
+    overflow-x: auto;
     overflow-y: hidden;
+    text-overflow: clip; 
+    font-family: monospace;
+    font-size: 0.75rem;
+    vertical-align: top;
 }
