@@ -24,6 +24,10 @@
             <p class="text-gray-600 mt-1">
                 Visualización de datos relacionados con las facturas XML CFDI
             </p>
+            <form action="/accounts/logout/" method="post" class="mt-4">
+                {% csrf_token %}
+                <button type="submit" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">Cerrar sesión</button>
+            </form>
         </header>
 
         <div id="table-selector" class="flex flex-wrap gap-4 mb-6 p-4 bg-white shadow-md rounded-xl"></div>

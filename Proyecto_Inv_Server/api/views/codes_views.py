@@ -1,11 +1,13 @@
 # api/views/codes_views.py
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
+from rest_framework.decorators import api_view
 import json
 from ..utils.code_utils import get_folio
 import urllib.parse
 
 @csrf_exempt
+@api_view(["GET", "POST"])
 def get_folio_from_url(request):
     # La lógica para el método GET y POST es casi la misma, simplifiquemos
     if request.method == 'GET':

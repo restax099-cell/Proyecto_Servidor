@@ -43,6 +43,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'api',
+    'rest_framework',       
+    'rest_framework.authtoken', 
 ]
 
 MIDDLEWARE = [
@@ -158,4 +160,14 @@ LOGGING = {
             'level': 'INFO',
         },
     },
+}
+
+# Configuración de seguridad para las APIs REST
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAdminUser',
+    ]
 }

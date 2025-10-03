@@ -1,29 +1,36 @@
-
-
 body {
     background-color: rgb(20, 20, 20);
-    
-
     display: flex; 
-    
-
     justify-content: center; 
-    
-
     align-items: center; 
-    
     min-height: 100vh;
-    
     margin: 0;
-    
     flex-direction: column; 
 }
 
 h1 {
     font-family: 'Courier New', Courier, monospace;
     color: aquamarine;
-    
     text-align: center;
-    
     margin-top: 0; 
+}
+
+.go_panel {
+    margin-top: 20px;
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    height: 80vh;
+}
+
+#admin-panel-link {
+    padding: 1rem 2rem; 
+    background: #007bff; 
+    color: #fff; 
+    border-radius: 8px; 
+    text-decoration: none; 
+    font-size: 1.2rem; 
+    font-weight: bold; 
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1); 
+    transition: background 0.2s;
 }

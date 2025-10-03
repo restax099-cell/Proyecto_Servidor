@@ -4,6 +4,8 @@ from django.forms.models import model_to_dict
 
 import json
 
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAdminUser
 
 
 from ..models.xml_models import (
@@ -17,6 +19,7 @@ from ..utils.pagination import paginate_and_respond
 # Devuelve los datos más importantes solicitando un uuid #
 
 @csrf_exempt
+@api_view(["GET"])
 def get_xml_file(request):
     if request.method == "GET":
         uuid = request.GET.get("uuid")
@@ -32,6 +35,7 @@ def get_xml_file(request):
         return JsonResponse({"error": "Método no permitido"}, status=405)
 
 @csrf_exempt
+@api_view(["GET"])
 def get_xml_data(request):
     if request.method == "GET":
         uuid = request.GET.get("uuid")
@@ -48,6 +52,7 @@ def get_xml_data(request):
         return JsonResponse({"error": "Método no permitido"}, status=405)
     
 @csrf_exempt
+@api_view(["GET"])
 def get_xml_head(request):
     if request.method != "GET":
         return JsonResponse({"error": "Método no permitido"}, status=405)
@@ -55,7 +60,6 @@ def get_xml_head(request):
     uuid = request.GET.get("uuid")
 
     if uuid:
-        # Buscar registros que coincidan con el UUID
         records = VlxTotalDataXml.objects.filter(uuid=uuid)
         if not records.exists():
             return JsonResponse({"error": "UUID no encontrado"}, status=404)
@@ -63,7 +67,6 @@ def get_xml_head(request):
         data = [model_to_dict(record) for record in records]
         return JsonResponse({"results": data})
     else:
-        # No se pasó UUID → devolver solo la lista de UUIDs
         uuids = list(VlxTotalDataXml.objects.values_list("uuid", flat=True))
         return JsonResponse({"uuids": uuids})
     
@@ -71,20 +74,20 @@ def get_xml_head(request):
 # Devuelve todos los datos de las tablas #
 
 @csrf_exempt
+@api_view(["GET"])
 def get_all_raw_cfdi(request):
-    # Modelo: VlxSatCfdiRaw. PK: id
     records = VlxSatCfdiRaw.objects.all() 
     return paginate_and_respond(request, records, id_order='id') 
 
 @csrf_exempt
+@api_view(["GET"])
 def get_all_data_xml(request):
-    # Modelo: VlxDataXml. PK: id_data_xml
-    records = VlxDataXml.objects.all() 
-    return paginate_and_respond(request, records, id_order='id_data_xml') 
+    records = VlxDataXml.objects.all()
+    return paginate_and_respond(request, records, id_order='id_data_xml')
 
 @csrf_exempt
+@api_view(["GET"])
 def get_all_total_data_xml(request):
-    # Modelo: VlxTotalDataXml. PK: id_total_data_xml
     records = VlxTotalDataXml.objects.all() 
     return paginate_and_respond(request, records, id_order='id_total_data_xml')
    
