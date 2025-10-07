@@ -73,20 +73,23 @@ def get_xml_head(request):
 
 # Devuelve todos los datos de las tablas #
 
-@csrf_exempt
+
 @api_view(["GET"])
+@permission_classes([IsAdminUser])
 def get_all_raw_cfdi(request):
     records = VlxSatCfdiRaw.objects.all() 
     return paginate_and_respond(request, records, id_order='id') 
 
 @csrf_exempt
 @api_view(["GET"])
+@permission_classes([IsAdminUser])
 def get_all_data_xml(request):
     records = VlxDataXml.objects.all()
     return paginate_and_respond(request, records, id_order='id_data_xml')
 
 @csrf_exempt
 @api_view(["GET"])
+@permission_classes([IsAdminUser])
 def get_all_total_data_xml(request):
     records = VlxTotalDataXml.objects.all() 
     return paginate_and_respond(request, records, id_order='id_total_data_xml')

@@ -1,4 +1,5 @@
 const BASE_API_URL = 'http://3.139.90.118/api/';
+//const BASE_API_URL = 'http://127.0.0.1:8000/api/';
 const DEFAULT_LIMIT = 500;
 
 const TABLES_CONFIG = {
@@ -197,11 +198,42 @@ function renderDataTable(data) {
     }
     
     const columns = Object.keys(data[0] || {});
-    
+    rawData = data; 
+
+    const searchBar = `
+        <div class="mb-4">
+            <input 
+                type="text" 
+                id="search-input"
+                placeholder="Buscar en todos los campos..."
+                class="w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                oninput="handleSearch(this.value)"
+            />
+        </div>
+    `;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const searchInput = document.getElementById('search-input');
+
+        if (searchInput) {
+            searchInput.addEventListener('keydown', (e) => {
+                e.stopPropagation(); // ← Evita que otros scripts intercepten la tecla
+            });
+
+            searchInput.addEventListener('keyup', (e) => {
+                e.stopPropagation();
+            });
+
+            searchInput.addEventListener('keypress', (e) => {
+                e.stopPropagation();
+            });
+        }
+    });
+
     const tableContent = `
         <h2 class="text-2xl font-semibold text-gray-800 mb-3">${config.name}</h2>
         <p class="text-sm text-gray-500 mb-4">${config.description}</p>
-        
+        ${searchBar}
         ${renderPaginationControls()}
 
         <div class="responsive-table-wrapper shadow-xl bg-white rounded-xl">
@@ -229,7 +261,7 @@ function renderDataTable(data) {
                     </tr>
                 </thead>
                 
-                <tbody>
+                <tbody id="table-body">
                     ${data.map((row, rowIndex) => { 
                         return `
                             <tr class="bg-white border-b hover:bg-gray-50 transition-colors duration-150">
@@ -274,8 +306,27 @@ function renderDataTable(data) {
 
         ${renderPaginationControls()}
     `;
-    
+
+ 
+    // Ahora que el input existe, conecta los eventos
     container.innerHTML = tableContent;
+    const searchInput = document.getElementById('search-input');
+    
+    if (searchInput) {
+        searchInput.removeAttribute('readonly');
+        searchInput.removeAttribute('disabled');
+        searchInput.focus();
+
+        ['keydown', 'keyup', 'keypress', 'input'].forEach(evt => {
+            searchInput.addEventListener(evt, e => {
+                console.log(evt, e.key || e.target.value);
+                e.stopPropagation();
+            });
+        });
+    }
+    
+    
+
     if (typeof lucide !== 'undefined') {
         lucide.createIcons();
     }
@@ -287,6 +338,69 @@ function renderDataTable(data) {
     }
 }
 
+function handleSearch(query) {
+    const lowerQuery = query.toLowerCase();
+    const filtered = rawData.filter(row => {
+        return Object.values(row).some(val => 
+            String(val).toLowerCase().includes(lowerQuery)
+        );
+    });
+
+    renderTableBody(filtered, query);
+}
+
+function renderTableBody(data, query = '') {
+    const config = TABLES_CONFIG[activeTable];
+    const columns = Object.keys(data[0] || {});
+    const tbody = document.getElementById('table-body');
+    if (!tbody) return;
+
+    const lowerQuery = query.toLowerCase();
+
+    const rowsHtml = data.map(row => {
+        return `
+            <tr class="bg-white border-b hover:bg-gray-50 transition-colors duration-150">
+                ${columns.map(col => {
+                    const value = row[col];
+                    const isXmlColumn = config.xmlColumn && col.toLowerCase() === config.xmlColumn.toLowerCase();
+
+                    let cellClass = `table-data-cell border-r border-gray-100 last:border-r-0`;
+                    if (col === config.orderKey) {
+                        cellClass += ' font-bold text-blue-800';
+                    } else {
+                        cellClass += ' text-gray-900';
+                    }
+
+                    if (isXmlColumn) {
+                        cellClass += ' xml-content-cell';
+                    } else {
+                        cellClass += ' truncate-cell';
+                        if (activeTable === 'data_xml' || activeTable === 'total_xml') {
+                            cellClass += ' ' + getMinWidthClass(col);
+                        }
+                    }
+
+                    const titleAttribute = isXmlColumn ? '' : `title="${String(value === null ? '' : value)}"`;
+
+                    // 🔍 Resaltar coincidencias
+                    const rawText = String(value ?? '');
+                    const highlighted = lowerQuery
+                        ? rawText.replace(new RegExp(`(${query})`, 'gi'), '<mark class="bg-yellow-200 px-1 rounded">$1</mark>')
+                        : rawText;
+
+                    return `
+                        <td class="${cellClass}" ${titleAttribute}>
+                            ${formatCellValue(col, highlighted, isXmlColumn)}
+                        </td>
+                    `;
+                }).join('')}
+            </tr>
+        `;
+    }).join('');
+
+    tbody.innerHTML = rowsHtml;
+}
+
 async function fetchData(page) {
     isLoading = true;
     renderLoading();
@@ -295,7 +409,15 @@ async function fetchData(page) {
     const url = `${BASE_API_URL}${config.endpoint}?page=${page}&limit=${DEFAULT_LIMIT}`;
 
     try {
-        const response = await fetch(url);
+        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+
+        const response = await fetch(url, {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'X-CSRFToken': getCSRFToken()
+            }
+        });
 
         if (response.status === 404) {
             throw new Error(`Página ${page} fuera de rango o vacía.`);
@@ -335,6 +457,11 @@ async function fetchData(page) {
         }
     }
 }
+
+function getCSRFToken() {
+    return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+}
+
 
 function changePage(newPage) {
     if (newPage < 1 || newPage > totalPages || newPage === currentPage || isLoading) {
