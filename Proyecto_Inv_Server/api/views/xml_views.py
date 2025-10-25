@@ -114,42 +114,45 @@ def get_all_total_data_xml(request):
 @csrf_exempt
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
-@renderer_classes([JSONRenderer]) # O [IsAuthenticated] si es para usuarios logueados
-def get_cfdi_consolidados(request):
-    """
-    API para consultar los CFDI consolidados.
-    Solo acepta paginación (limit y offset) porque el SP es simple.
-    
-    Ej: /api/cfdi_consolidados?limit=50&offset=0
-    """
-    
-    # --- 1. Obtener Parámetros de Paginación ---
+@renderer_classes([JSONRenderer]) 
+def get_cfdi_consultas(request):
+
     try:
         p_limit = int(request.query_params.get('limit', 50))
         p_offset = int(request.query_params.get('offset', 0))
     except ValueError:
         return Response({"error": "limit y offset deben ser números."}, status=400)
 
-    # --- 2. Crear la lista de parámetros ---
-    # Solo son 2 parámetros, en este orden
-    params = [p_limit, p_offset]
+    p_fecha_desde = request.query_params.get('fecha_desde', None)
+    p_fecha_hasta = request.query_params.get('fecha_hasta', None)
+    p_importe_min = request.query_params.get('importe_min', None)
+    p_importe_max = request.query_params.get('importe_max', None)
+    p_rfc_emisor = request.query_params.get('rfc_emisor', None)
+    p_nombre_emisor = request.query_params.get('nombre_emisor', None)
+    p_rfc_receptor = request.query_params.get('rfc_receptor', None)
+    p_tipo_comprobante = request.query_params.get('tipo_comprobante', None)
+
+    params = [
+        p_fecha_desde,
+        p_fecha_hasta,
+        p_importe_min,
+        p_importe_max,
+        p_rfc_emisor,
+        p_nombre_emisor,
+        p_rfc_receptor,
+        p_tipo_comprobante,
+        p_limit,
+        p_offset
+    ]
 
     try:
         with connection.cursor() as cursor:
-            # --- 3. Ejecutar el Stored Procedure ---
-            sql_query = "CALL sp_get_cfdi_consolidados(%s, %s);"
+            sql_query = "CALL sp_get_cfdi_consultas(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"
             cursor.execute(sql_query, params)
-            
-            # --- 4. Convertir resultados a JSON ---
             results = dictfetchall(cursor)
-
-        # --- 5. Devolver la Respuesta ---
         return Response(results)
 
     except Exception as e:
-        # Capturar cualquier error de la base de datos
-        # (Aquí es donde probablemente verías el 'Communications link failure' 
-        # si los índices no están creados)
         return Response(
             {"error": "Error al consultar la base de datos.", "detalle": str(e)},
             status=500
