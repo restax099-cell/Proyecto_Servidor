@@ -6,4 +6,4 @@ def home(request):
 
 @login_required
 def admin_panel(request):
-    return render(request, "admin_panel.html")
+    return render(request, 'admin_panel_xml/main_panel.html')

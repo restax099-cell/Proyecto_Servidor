@@ -1,0 +1,14 @@
+{% load static %} 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% include 'admin_panel_xml/head_panel.html' %}
+</head>
+<body>
+    <main>
+        {% block content_panel%}
+        {% endblock %}
+    </main>
+    {% include 'admin_panel_xml/scripts_panel.html' %}
+</body>
+</html>
