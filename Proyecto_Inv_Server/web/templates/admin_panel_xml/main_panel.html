@@ -2,7 +2,7 @@
 
 
 {% block content_panel %}   
-    
+    <!-- Tablas -->
     <div class="container-fluid my-4">
 
         <header class="d-flex justify-content-between align-items-center mb-3">
@@ -99,141 +99,8 @@
         </div> 
     </div>
     
-    <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasFiltros" aria-labelledby="offcanvasFiltrosLabel">
-        
-        <div class="offcanvas-header border-bottom">
-            <h5 class="offcanvas-title" id="offcanvasFiltrosLabel">Filtros</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button>
-        </div>
-        
-        <div class="offcanvas-body d-flex flex-column p-0">
+    {% include 'admin_panel_xml/filtros_panel.html' %}
+
     
-            <form id="formFiltros" class="flex-grow-1">
-                
-                <div class="accordion accordion-flush" id="accordionFiltros">
-
-                    <div class="accordion-item">
-                        <h2 class="accordion-header" id="headingFechas">
-                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFechas" aria-expanded="true" aria-controls="collapseFechas">
-                                Rango de Fechas
-                            </button>
-                        </h2>
-                        <div id="collapseFechas" class="accordion-collapse collapse show" aria-labelledby="headingFechas" data-bs-parent="#accordionFiltros">
-                            <div class="accordion-body">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="filtroFechaTipo" id="filtroSemana" value="semana" checked>
-                                    <label class="form-check-label" for="filtroSemana">Última Semana</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="filtroFechaTipo" id="filtroMes" value="mes">
-                                    <label class="form-check-label" for="filtroMes">Último Mes</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="filtroFechaTipo" id="filtroAnio" value="anio">
-                                    <label class="form-check-label" for="filtroAnio">Último Año</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="filtroFechaTipo" id="filtroPersonalizado" value="personalizado">
-                                    <label class="form-check-label" for="filtroPersonalizado">Rango personalizado</label>
-                                </div>
-                                
-                                <fieldset id="camposFechaPersonalizada" disabled class="mt-3">
-                                    <div class="mb-2">
-                                        <label for="fechaInicio" class="form-label mb-1 small">Desde:</label>
-                                        <input type="date" class="form-control form-control-sm" id="fechaInicio">
-                                    </div>
-                                    <div>
-                                        <label for="fechaFin" class="form-label mb-1 small">Hasta:</label>
-                                        <input type="date" class="form-control form-control-sm" id="fechaFin">
-                                    </div>
-                                </fieldset>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="accordion-item">
-                        <h2 class="accordion-header" id="headingStatus">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseStatus" aria-expanded="false" aria-controls="collapseStatus">
-                                Status
-                            </button>
-                        </h2>
-                        <div id="collapseStatus" class="accordion-collapse collapse" aria-labelledby="headingStatus" data-bs-parent="#accordionFiltros">
-                            <div class="accordion-body">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="filtroStatus" id="filtroStatusActive" value="active">
-                                    <label class="form-check-label" for="filtroStatusActive">
-                                        <span class="badge rounded-pill bg-success fw-semibold">Active</span>
-                                    </label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="filtroStatus" id="filtroStatusInactive" value="inactive">
-                                    <label class="form-check-label" for="filtroStatusInactive">
-                                        <span class="badge rounded-pill bg-danger fw-semibold">Inactive</span>
-                                    </label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="filtroStatus" id="filtroStatusPending" value="pending">
-                                    <label class="form-check-label" for="filtroStatusPending">
-                                        <span class="badge rounded-pill bg-warning fw-semibold">Pending</span>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="accordion-item">
-                        <h2 class="accordion-header" id="headingImporte">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseImporte" aria-expanded="false" aria-controls="collapseImporte">
-                                Importe
-                            </button>
-                        </h2>
-                        <div id="collapseImporte" class="accordion-collapse collapse" aria-labelledby="headingImporte" data-bs-parent="#accordionFiltros">
-                            <div class="accordion-body">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="filtroImporteTipo" id="filtroImporte1" value="rango1" checked>
-                                    <label class="form-check-label" for="filtroImporte1">$0 - $1,000</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="filtroImporteTipo" id="filtroImporte2" value="rango2">
-                                    <label class="form-check-label" for="filtroImporte2">$1,001 - $5,000</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="filtroImporteTipo" id="filtroImporte3" value="rango3">
-                                    <label class="form-check-label" for="filtroImporte3">$5,001 - $10,000</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="filtroImporteTipo" id="filtroImportePersonalizado" value="personalizado">
-                                    <label class="form-check-label" for="filtroImportePersonalizado">Rango personalizado</label>
-                                </div>
-
-                                <fieldset id="camposImportePersonalizado" disabled class="mt-3">
-                                    <div class="mb-2">
-                                        <label for="importeMinimo" class="form-label mb-1 small">Mínimo:</label>
-                                        <div class="input-group input-group-sm">
-                                            <span class="input-group-text">$</span>
-                                            <input type="number" class="form-control" id="importeMinimo" min="0" step="0.01" placeholder="0.00">
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label for="importeMaximo" class="form-label mb-1 small">Máximo:</label>
-                                        <div class="input-group input-group-sm">
-                                            <span class="input-group-text">$</span>
-                                            <input type="number" class="form-control" id="importeMaximo" min="0" step="0.01" placeholder="1000.00">
-                                        </div>
-                                    </div>
-                                </fieldset>
-                            </div>
-                        </div>
-                    </div>
-
-                </div> 
-            </form>
-    
-            <div class="mt-auto p-3 border-top">
-                <button type="submit" form="formFiltros" class="btn btn-primary w-100">Aplicar Filtros</button>
-                <button type="reset" form="formFiltros" class="btn btn-outline-secondary w-100 mt-2">Limpiar</button>
-            </div>
-        </div>
-    </div>
 
 {% endblock %}
