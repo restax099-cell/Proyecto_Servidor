@@ -52,6 +52,8 @@ class VlxTotalDataXml(models.Model):
     sub_total = models.FloatField(blank=True, null=True)
     descuento = models.FloatField(blank=True, null=True)
     moneda = models.CharField(max_length=100, blank=True, null=True)
+    tipo_comprobante = models.CharField(max_length=5, blank=True, null=True)
+    metodo_pago = models.CharField(max_length=5, blank=True, null=True)
     total = models.FloatField(blank=True, null=True)
 
     class Meta:

@@ -21,6 +21,8 @@ urlpatterns = [
     path('get-all-data/', xml_views.get_all_data_xml, name='get-all-data-xml'),
     path('get-all-total/', xml_views.get_all_total_data_xml, name='get-all-total-data-xml'),
 
+    path('cfdi-consolidados/', xml_views.get_cfdi_consolidados, name='api_cfdi_consolidados'),
+
     # Rutas de prueba_views
     path('get-prueba/', prueba_views.get_prueba, name='get-prueba'),
 ]
