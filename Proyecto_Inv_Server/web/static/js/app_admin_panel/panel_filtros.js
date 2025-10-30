@@ -8,7 +8,8 @@ const fechaInicioInput = document.getElementById('fechaInicio');
 const fechaFinInput = document.getElementById('fechaFin');
 const importeMinInput = document.getElementById('importeMinimo');
 const importeMaxInput = document.getElementById('importeMaximo');
-
+const offcanvasElement = document.getElementById('offcanvasFiltros');
+const offcanvasFiltros = bootstrap.Offcanvas.getOrCreateInstance(offcanvasElement);
 
 function formatDate(date) {
     return date.toISOString().split('T')[0];
@@ -102,6 +103,8 @@ export function inicializarFiltros(onFiltrosAplicados) {
             onFiltrosAplicados(filtrosCalculados); 
         }
 
+        if (offcanvasFiltros) offcanvasFiltros.hide();
+
     });
 
     formFiltros.addEventListener('reset', function() {
@@ -112,5 +115,7 @@ export function inicializarFiltros(onFiltrosAplicados) {
         if (onFiltrosAplicados) {
             onFiltrosAplicados({}); 
         }
+
+        if (offcanvasFiltros) offcanvasFiltros.hide();
     });
 }
