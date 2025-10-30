@@ -11,8 +11,15 @@
     
 </head>
 <body> 
-    <div class="go_panel">
-        <a id="admin-panel-link" href="/admin-panel/" >Ir al Panel Administrativo</a>
-    </div>
+    {% if user.is_authenticated %}
+        <div class="go_panel">
+            <a id="admin-panel-link" href="/admin-panel/">Ir al Panel Administrativo</a>
+        </div>
+    {% else %}
+        <div class="go_panel">
+            <a id="admin-panel-link" href="/accounts/login/?next=/admin-panel/">Iniciar sesión para acceder al Panel</a>
+        </div>
+    {% endif %}
+  
 </body>
 </html>

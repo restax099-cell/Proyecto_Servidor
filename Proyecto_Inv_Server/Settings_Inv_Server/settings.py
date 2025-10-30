@@ -160,6 +160,9 @@ LOGGING = {
     },
 }
 
+LOGIN_REDIRECT_URL = '/admin-panel/'
+
+
 # Configuración de seguridad para las APIs REST
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [

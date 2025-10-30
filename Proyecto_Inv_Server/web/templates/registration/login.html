@@ -14,8 +14,9 @@
         {% if form.errors %}
             <p style="color: red;">Usuario o contraseña incorrectos.</p>
         {% endif %}
-        <form action="/accounts/logout/" method="post">
+        <form action="/accounts/login/" method="post">
             {% csrf_token %}
+            <input type="hidden" name="next" value="{{ next }}">
             <div>
                 <label for="id_username">Usuario:</label>
                 {{ form.username }}
