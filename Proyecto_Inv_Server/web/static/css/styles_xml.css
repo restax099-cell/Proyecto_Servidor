@@ -3,3 +3,14 @@ body {
   padding: 0;
   background-color: #f8f9fa;
 }
+
+/* Oculta las flechas (spinners) en inputs de tipo number */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none; /* Para navegadores basados en Webkit (Chrome, Safari, Edge) */
+    margin: 0; /* Elimina cualquier margen residual */
+}
+
+input[type="number"] {
+    -moz-appearance: textfield; /* Para Firefox */
+}

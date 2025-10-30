@@ -6,6 +6,7 @@ from rest_framework.renderers import JSONRenderer
 
 
 import json
+import math
 
 from rest_framework.decorators import api_view, permission_classes, renderer_classes
 from rest_framework.permissions import IsAdminUser
@@ -123,12 +124,11 @@ def get_cfdi_consultas(request):
     except ValueError:
         return Response({"error": "limit y offset deben ser números."}, status=400)
 
+    p_search_term = request.query_params.get('search_term', None)
     p_fecha_desde = request.query_params.get('fecha_desde', None)
     p_fecha_hasta = request.query_params.get('fecha_hasta', None)
     p_importe_min = request.query_params.get('importe_min', None)
     p_importe_max = request.query_params.get('importe_max', None)
-    p_rfc_emisor = request.query_params.get('rfc_emisor', None)
-    p_nombre_emisor = request.query_params.get('nombre_emisor', None)
     p_rfc_receptor = request.query_params.get('rfc_receptor', None)
     p_tipo_comprobante = request.query_params.get('tipo_comprobante', None)
 
@@ -137,8 +137,7 @@ def get_cfdi_consultas(request):
         p_fecha_hasta,
         p_importe_min,
         p_importe_max,
-        p_rfc_emisor,
-        p_nombre_emisor,
+        p_search_term,
         p_rfc_receptor,
         p_tipo_comprobante,
         p_limit,
@@ -147,10 +146,28 @@ def get_cfdi_consultas(request):
 
     try:
         with connection.cursor() as cursor:
-            sql_query = "CALL sp_get_cfdi_consultas(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"
+            sql_query = "CALL sp_get_cfdi_consultas(%s, %s, %s, %s, %s, %s, %s, %s, %s);"
             cursor.execute(sql_query, params)
+            count_result = cursor.fetchone()
+            total_count = count_result[0] if count_result else 0
+            
+            # 2. Avanzar al siguiente set de resultados
+            cursor.nextset() 
+            
+            # 3. Leer el segundo resultado (los datos)
             results = dictfetchall(cursor)
-        return Response(results)
+        
+        total_pages = 1 # Por defecto (incluso si hay 0 resultados, es 1 página)
+        if total_count > 0 and p_limit > 0:
+            total_pages = math.ceil(total_count / p_limit)
+
+        response_data = {
+            'total_count': total_count,
+            'total_pages': total_pages,
+            'results': results
+        }
+        return Response(response_data)
+       
 
     except Exception as e:
         return Response(

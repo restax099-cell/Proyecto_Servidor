@@ -4,10 +4,10 @@ const apiData = {
   error: null       
 };
 
-export async function fetchData(url) {
+export async function fetchData(url,signal) {
   try {
     //* Validando consulta de la API 
-    const response = await fetch(url);
+    const response = await fetch(url,{ signal });
     if (!response.ok) {
       throw new Error(`Error HTTP: ${response.status} ${response.statusText}`);
     }

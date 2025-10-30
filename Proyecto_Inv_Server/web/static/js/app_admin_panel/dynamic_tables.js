@@ -1,10 +1,4 @@
-/**
- * CONSTRUCTOR DE TABLA HÍBRIDO
- *
- * Construye un <thead> y <tbody> desde JS,
- * pero aplica lógica de renderizado ESPECIAL a las 
- * columnas que lo necesiten.
- */
+
 export function buildDynamicTable(data, theadId, tbodyId) {
   
   const thead = document.getElementById(theadId);
@@ -15,19 +9,14 @@ export function buildDynamicTable(data, theadId, tbodyId) {
     return;
   }
 
-  // Limpiamos la tabla
   thead.innerHTML = '';
   tbody.innerHTML = '';
 
-  // Verificamos si hay datos
   if (!data || data.length === 0) {
     tbody.innerHTML = '<tr class="text-center p-3"><td colspan="100%">No se encontraron resultados.</td></tr>';
     return;
   }
 
-  // --- 1. DEFINIMOS NUESTRAS COLUMNAS ---
-  // (Esto reemplaza a "Object.keys()")
-  // Usamos los nombres de llave exactos de tu API
   const columnas = [
     {key: 'id', titulo: 'ID'},
     { key: 'emisor', titulo: 'Emisor' },
@@ -36,32 +25,25 @@ export function buildDynamicTable(data, theadId, tbodyId) {
     { key: 'total', titulo: 'Totales' },
     { key: 'detalle_pago', titulo: 'Detalle Pago'},
     { key: 'fecha', titulo: 'Fecha'}
-    // (Puedes agregar más columnas aquí, ej: { key: 'total', titulo: 'Total' })
   ];
 
-  // --- 2. CONSTRUIMOS EL HEAD (<thead>) ---
   const headerRow = document.createElement('tr');
   columnas.forEach(col => {
     const th = document.createElement('th');
     th.scope = 'col';
     th.className = 'py-3 px-3'; 
-    th.textContent = col.titulo; // Usamos el título que definimos
+    th.textContent = col.titulo; 
     headerRow.appendChild(th);
   });
   thead.appendChild(headerRow);
 
-  // --- 3. CONSTRUIMOS EL BODY (<tbody>) ---
   data.forEach(item => {
     const row = document.createElement('tr');
     
-    // Recorremos nuestra lista de COLUMNAS para construir la fila
     columnas.forEach(col => {
       const cell = document.createElement('td');
       cell.className = 'px-3';
-
-      // --- ¡AQUÍ ESTÁ LA LÓGICA PERSONALIZADA! ---
-      // Usamos un 'switch' para decidir cómo "dibujar" la celda
-      
+  
       switch (col.key) {
         //? --- ID ---
         case 'id':
@@ -137,7 +119,7 @@ export function buildDynamicTable(data, theadId, tbodyId) {
             metodoNormalizado = 'No Identificado';
           }
 
-          let formaPagoTexto = 'N/A'; // Valor por defecto
+          let formaPagoTexto = 'N/A'; 
           const formaPagoOriginal = (item.forma_pago || '').toString().toLowerCase().trim();
 
           if (formaPagoOriginal === '3') {
@@ -150,7 +132,7 @@ export function buildDynamicTable(data, theadId, tbodyId) {
               formaPagoTexto = 'Efectivo';
           } else if (!formaPagoOriginal || formaPagoOriginal === 'no id') {
               formaPagoTexto = 'No Identificado';
-          } else if (item.forma_pago) { // Si existe pero no lo reconocemos
+          } else if (item.forma_pago) { 
               formaPagoTexto = item.forma_pago; 
           }
 
@@ -184,7 +166,7 @@ export function buildDynamicTable(data, theadId, tbodyId) {
           `;
           break;
         */
-        // --- CASO NORMAL (Para cualquier otra columna) ---
+       //? DEFAULT
         default:
           cell.textContent = item[col.key] || 'N/A';
       }

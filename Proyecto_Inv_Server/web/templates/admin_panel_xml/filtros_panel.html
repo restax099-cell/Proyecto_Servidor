@@ -22,7 +22,11 @@
                     <div id="collapseFechas" class="accordion-collapse collapse show" aria-labelledby="headingFechas" data-bs-parent="#accordionFiltros">
                         <div class="accordion-body">
                             <div class="form-check">
-                                <input class="form-check-input" type="radio" name="filtroFechaTipo" id="filtroSemana" value="semana" checked>
+                                <input class="form-check-input" type="radio" name="filtroFechaTipo" id="filtroFechaCualquiera" value="cualquiera" checked>
+                                <label class="form-check-label" for="filtroFechaCualquiera">Cualquier fecha</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="filtroFechaTipo" id="filtroSemana" value="semana">
                                 <label class="form-check-label" for="filtroSemana">Última Semana</label>
                             </div>
                             <div class="form-check">
@@ -51,7 +55,8 @@
                         </div>
                     </div>
                 </div>
-
+                <!--
+                
                 <div class="accordion-item">
                     <h2 class="accordion-header" id="headingStatus">
                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseStatus" aria-expanded="false" aria-controls="collapseStatus">
@@ -81,17 +86,21 @@
                         </div>
                     </div>
                 </div>
-
+                -->
                 <div class="accordion-item">
                     <h2 class="accordion-header" id="headingImporte">
                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseImporte" aria-expanded="false" aria-controls="collapseImporte">
-                            Importe
+                            Importe Total
                         </button>
                     </h2>
                     <div id="collapseImporte" class="accordion-collapse collapse" aria-labelledby="headingImporte" data-bs-parent="#accordionFiltros">
                         <div class="accordion-body">
                             <div class="form-check">
-                                <input class="form-check-input" type="radio" name="filtroImporteTipo" id="filtroImporte1" value="rango1" checked>
+                                <input class="form-check-input" type="radio" name="filtroImporteTipo" id="filtroImporteCualquiera" value="cualquiera" checked>
+                                <label class="form-check-label" for="filtroImporteCualquiera">Cualquier importe</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="filtroImporteTipo" id="filtroImporte1" value="rango1">
                                 <label class="form-check-label" for="filtroImporte1">$0 - $1,000</label>
                             </div>
                             <div class="form-check">
