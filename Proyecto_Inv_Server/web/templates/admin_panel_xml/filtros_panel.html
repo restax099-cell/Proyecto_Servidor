@@ -136,6 +136,74 @@
                     </div>
                 </div>
 
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingDetallePago">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDetallePago" aria-expanded="false" aria-controls="collapseDetallePago">
+                            Detalle de Pago
+                        </button>
+                    </h2>
+                    <div id="collapseDetallePago" class="accordion-collapse collapse" aria-labelledby="headingDetallePago" data-bs-parent="#accordionFiltros">
+                        <div class="accordion-body">
+                            
+                            <h6 class="small mb-2 fw-semibold">Tipo de Comprobante</h6>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="tipo_comprobante" id="filtroTipoCualquiera" value="" checked>
+                                <label class="form-check-label" for="filtroTipoCualquiera">Cualquiera</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="tipo_comprobante" id="filtroTipoIngreso" value="I">
+                                <label class="form-check-label" for="filtroTipoIngreso">Ingreso</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="tipo_comprobante" id="filtroTipoEgreso" value="E">
+                                <label class="form-check-label" for="filtroTipoEgreso">Egreso</label>
+                            </div>
+
+                            <hr class="my-3">
+
+                            <h6 class="small mb-2 fw-semibold">Método de Pago</h6>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="metodo_pago" id="filtroMetodoCualquiera" value="" checked>
+                                <label class="form-check-label" for="filtroMetodoCualquiera">Cualquiera</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="metodo_pago" id="filtroMetodoPUE" value="PUE">
+                                <label class="form-check-label" for="filtroMetodoPUE">PUE (Pago en una sola exhibición)</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="metodo_pago" id="filtroMetodoPPD" value="PPD">
+                                <label class="form-check-label" for="filtroMetodoPPD">PPD (Pago en parcialidades o diferido)</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="metodo_pago" id="filtroMetodoNoId" value="No Identificado">
+                                <label class="form-check-label" for="filtroMetodoNoId">No Identificado</label>
+                            </div>
+
+                            <hr class="my-3">
+
+                            <h6 class="small mb-2 fw-semibold">Forma de Pago</h6>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="forma_pago" id="filtroFormaCualquiera" value="" checked>
+                                <label class="form-check-label" for="filtroFormaCualquiera">Cualquiera</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="forma_pago" id="filtroFormaEfectivo" value="1">
+                                <label class="form-check-label" for="filtroFormaEfectivo">Efectivo (01)</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="forma_pago" id="filtroFormaTransferencia" value="3">
+                                <label class="form-check-label" for="filtroFormaTransferencia">Transferencia (03)</label>
+
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="forma_pago" id="filtroFormaPorDefinir" value="99">
+                                <label class="form-check-label" for="filtroFormaPorDefinir">Por Definir (99)</label>
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
+
             </div> 
         </form>
 

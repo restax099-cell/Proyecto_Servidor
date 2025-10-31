@@ -19,12 +19,13 @@ export function buildDynamicTable(data, theadId, tbodyId) {
 
   const columnas = [
     {key: 'id', titulo: 'ID'},
+    { key: 'fecha', titulo: 'Fecha'},
     { key: 'emisor', titulo: 'Emisor' },
     { key: 'receptor', titulo: 'Receptor' },
     { key: 'importe', titulo: 'Importe' },
     { key: 'total', titulo: 'Totales' },
     { key: 'detalle_pago', titulo: 'Detalle Pago'},
-    { key: 'fecha', titulo: 'Fecha'}
+    
   ];
 
   const headerRow = document.createElement('tr');
@@ -52,6 +53,29 @@ export function buildDynamicTable(data, theadId, tbodyId) {
             <small class="text-muted">${item.uuid || 'N/A'}</small>
           `;
           break;
+        //? --- FECHA --
+        case 'fecha': { // Usamos {} para crear un nuevo alcance
+        let fechaFormateada = 'N/A';
+        
+        if (item.fecha) {
+            const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+            
+            const fecha = new Date(item.fecha);
+            
+            const dia = fecha.getDate(); 
+            const mesIndex = fecha.getMonth(); 
+            const anio = fecha.getFullYear();
+
+            fechaFormateada = `${dia}/${meses[mesIndex]}/${anio}`;
+            //console.log(fechaFormateada);
+        }
+
+        cell.innerHTML = `
+            <strong class="d-block text-nowrap">${fechaFormateada}</strong>
+            
+          `;
+        break;
+      }
         //? --- EMISOR ---
         case 'emisor':
           cell.innerHTML = `
@@ -59,6 +83,7 @@ export function buildDynamicTable(data, theadId, tbodyId) {
             <small class="text-muted">${item.rfc_emisor || 'N/A'}</small>
           `;
           break;
+        /*  
         //? --- RECEPTOR ---
         case 'receptor':
           cell.innerHTML = `
@@ -67,7 +92,7 @@ export function buildDynamicTable(data, theadId, tbodyId) {
             <small class="text-muted d-block">${item.uso_cfdi || 'N/A'}</small>
           `;
           break;
-          
+        */
         //? --- IMPORTE ---
         case 'importe':
           const importeFormateado = item.importe !== null 
@@ -110,15 +135,14 @@ export function buildDynamicTable(data, theadId, tbodyId) {
          
           let metodoNormalizado = 'No ID'; 
           const metodoOriginal = (item.metodo_pago || '').toLowerCase();
-
           if (metodoOriginal === 'pue') {
             metodoNormalizado = 'PUE';
-          } else if (metodoOriginal === 'ppd') {
+          }else if (metodoOriginal === 'ppd') {
             metodoNormalizado = 'PPD';
-          } else if (metodoOriginal === 'no id' || !item.metodo_pago) {
+          }else if (metodoOriginal === 'no id' || !item.metodo_pago) {
             metodoNormalizado = 'No Identificado';
           }
-
+          
           let formaPagoTexto = 'N/A'; 
           const formaPagoOriginal = (item.forma_pago || '').toString().toLowerCase().trim();
 
@@ -136,6 +160,9 @@ export function buildDynamicTable(data, theadId, tbodyId) {
               formaPagoTexto = item.forma_pago; 
           }
 
+          console.log(formaPagoOriginal);
+          console.log(formaPagoTexto);
+
           cell.innerHTML = `
             <strong class="d-block">${tipoNormalizado}</strong>
             <small class="text-muted d-block">${metodoNormalizado}</small>
@@ -143,13 +170,7 @@ export function buildDynamicTable(data, theadId, tbodyId) {
           `;
           break;
         }
-      case 'fecha':
-          const fechaFormateada = item.fecha ? new Date(item.fecha).toISOString().split('T')[0] : 'N/A';
-          cell.innerHTML = `
-            <span class="d-block">${fechaFormateada}</span>
-        
-          `;
-          break;
+      
 
 
         /* ? --- Status ---

@@ -112,6 +112,8 @@ def get_all_total_data_xml(request):
     return paginate_and_respond(request, records, id_order='id_total_data_xml')
    
 
+
+#? API Para consultas WEB ADMIN
 @csrf_exempt
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
@@ -131,6 +133,8 @@ def get_cfdi_consultas(request):
     p_importe_max = request.query_params.get('importe_max', None)
     p_rfc_receptor = request.query_params.get('rfc_receptor', None)
     p_tipo_comprobante = request.query_params.get('tipo_comprobante', None)
+    p_metodo_pago = request.query_params.get('metodo_pago', None)
+    p_forma_pago = request.query_params.get('forma_pago', None)
 
     params = [
         p_fecha_desde,
@@ -140,24 +144,24 @@ def get_cfdi_consultas(request):
         p_search_term,
         p_rfc_receptor,
         p_tipo_comprobante,
+        p_metodo_pago, # <-- Nuevo
+        p_forma_pago,
         p_limit,
         p_offset
     ]
 
     try:
         with connection.cursor() as cursor:
-            sql_query = "CALL sp_get_cfdi_consultas(%s, %s, %s, %s, %s, %s, %s, %s, %s);"
+            sql_query = "CALL sp_get_cfdi_consultas(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"
             cursor.execute(sql_query, params)
             count_result = cursor.fetchone()
             total_count = count_result[0] if count_result else 0
             
-            # 2. Avanzar al siguiente set de resultados
             cursor.nextset() 
             
-            # 3. Leer el segundo resultado (los datos)
             results = dictfetchall(cursor)
         
-        total_pages = 1 # Por defecto (incluso si hay 0 resultados, es 1 página)
+        total_pages = 1 
         if total_count > 0 and p_limit > 0:
             total_pages = math.ceil(total_count / p_limit)
 

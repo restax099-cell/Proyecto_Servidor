@@ -24,6 +24,8 @@ function procesarFormularioDeFiltros() {
     const hoy = new Date();
     let fechaDesde = new Date();
 
+
+    //? FILTROS DE FECHA
     switch (tipoFecha) {
         case 'semana':
             fechaDesde.setDate(hoy.getDate() - 7);
@@ -46,6 +48,7 @@ function procesarFormularioDeFiltros() {
             break;
     }
 
+    //? FILTROS DE IMPORTE TOTAL
     const tipoImporte = formData.get('filtroImporteTipo');
     switch (tipoImporte) {
         case 'rango1':
@@ -64,6 +67,23 @@ function procesarFormularioDeFiltros() {
             if (importeMinInput.value) filtros.importe_min = importeMinInput.value;
             if (importeMaxInput.value) filtros.importe_max = importeMaxInput.value;
             break;
+    }
+
+
+    //? FILTROS DE DETALLES PAGO
+    const tipoComprobante = formData.get('tipo_comprobante');
+    if (tipoComprobante) { // Si el valor no es "" (Cualquiera)
+        filtros.tipo_comprobante = tipoComprobante;
+    }
+
+    const metodoPago = formData.get('metodo_pago');
+    if (metodoPago) {
+        filtros.metodo_pago = metodoPago;
+    }
+
+    const formaPago = formData.get('forma_pago');
+    if (formaPago) {
+        filtros.forma_pago = formaPago;
     }
 
 
