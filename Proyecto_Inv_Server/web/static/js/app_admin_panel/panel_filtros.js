@@ -1,4 +1,7 @@
 
+
+
+
 const formFiltros = document.getElementById('formFiltros');
 const radiosFecha = document.querySelectorAll('input[name="filtroFechaTipo"]');
 const fieldsetFecha = document.getElementById('camposFechaPersonalizada');
@@ -113,6 +116,8 @@ export function inicializarFiltros(onFiltrosAplicados) {
         });
     }
 
+
+    //? Activar Filtros
     formFiltros.addEventListener('submit', function(event) {
         event.preventDefault(); 
         
@@ -127,6 +132,7 @@ export function inicializarFiltros(onFiltrosAplicados) {
 
     });
 
+    //? limpiar Filtros
     formFiltros.addEventListener('reset', function() {
         console.log('Borrando filtros...');
         if (fieldsetFecha) fieldsetFecha.disabled = true;

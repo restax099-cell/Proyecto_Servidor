@@ -33,7 +33,7 @@ def dictfetchall(cursor):
         for row in cursor.fetchall()
     ]
 
-# Devuelve los datos más importantes solicitando un uuid #
+#? Devuelve los datos más importantes solicitando un uuid #
 
 @csrf_exempt
 @api_view(["GET"])
@@ -53,18 +53,24 @@ def get_xml_file(request):
 
 @csrf_exempt
 @api_view(["GET"])
+@permission_classes([IsAdminUser]) 
+@renderer_classes([JSONRenderer])  
 def get_xml_data(request):
     if request.method == "GET":
         uuid = request.GET.get("uuid")
         if not uuid:
             return JsonResponse({"error": "Falta el parámetro uuid"}, status=400)
         
-        try:
-            record = VlxDataXml.objects.get(uuid=uuid)
-            record_dict = model_to_dict(record) 
-            return JsonResponse(record_dict)
-        except VlxDataXml.DoesNotExist:
+
+        records = VlxDataXml.objects.filter(uuid=uuid)
+        
+        if not records.exists():
             return JsonResponse({"error": "UUID no encontrado"}, status=404)
+
+        data_list = [model_to_dict(record) for record in records]
+
+        return JsonResponse(data_list, safe=False)
+    
     else:
         return JsonResponse({"error": "Método no permitido"}, status=405)
     
@@ -88,7 +94,7 @@ def get_xml_head(request):
         return JsonResponse({"uuids": uuids})
     
 
-# Devuelve todos los datos de las tablas #
+#? Devuelve todos los datos de las tablas #
 
 
 @api_view(["GET"])

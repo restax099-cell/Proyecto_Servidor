@@ -22,7 +22,7 @@ class VlxSatCfdiRaw(models.Model):
         db_table = 'vlx_sat_cfdi_raw'
 
 class VlxDataXml(models.Model):
-    id_data_xml = models.AutoField(primary_key=True)
+    id = models.AutoField(primary_key=True)
     uuid = models.CharField(max_length=200, blank=True, null=True)
     no_concepto = models.CharField(max_length=100, blank=True, null=True)
     clave_prod_serv = models.CharField(max_length=100, blank=True, null=True)
@@ -44,18 +44,42 @@ class VlxDataXml(models.Model):
         db_table = 'vlx_data_xml'
 
 class VlxTotalDataXml(models.Model):
-    id_total_data_xml = models.AutoField(primary_key=True)
     uuid = models.CharField(max_length=150, blank=True, null=True)
     base = models.FloatField(blank=True, null=True)
     base_iva = models.FloatField(db_column='base_IVA', blank=True, null=True)  # Field name made lowercase.
-    impuesto_total = models.FloatField(blank=True, null=True)
+    importe = models.FloatField(blank=True, null=True)
     sub_total = models.FloatField(blank=True, null=True)
     descuento = models.FloatField(blank=True, null=True)
     moneda = models.CharField(max_length=100, blank=True, null=True)
     tipo_comprobante = models.CharField(max_length=5, blank=True, null=True)
     metodo_pago = models.CharField(max_length=5, blank=True, null=True)
+    forma_pago = models.CharField(max_length=100, blank=True, null=True)
     total = models.FloatField(blank=True, null=True)
 
     class Meta:
         managed = False
         db_table = 'vlx_total_data_xml'
+
+class VlxSuppliers(models.Model):
+    uuid = models.CharField(max_length=200, blank=True, null=True)
+    rfc_emisor = models.CharField(max_length=200, blank=True, null=True)
+    nombre_emisor = models.CharField(max_length=200, blank=True, null=True)
+    regimen_fiscal = models.CharField(max_length=200, blank=True, null=True)
+    rfc_receptor = models.CharField(max_length=200, blank=True, null=True)
+    nombre_receptor = models.CharField(max_length=200, blank=True, null=True)
+    uso_cfdi = models.CharField(max_length=200, blank=True, null=True)
+    schema_location = models.CharField(max_length=200, blank=True, null=True)
+    uuid_fiscal = models.CharField(max_length=200, blank=True, null=True)
+    fecha_timbrado = models.DateTimeField(blank=True, null=True)
+    rfc_prov_certif = models.CharField(max_length=200, blank=True, null=True)
+    sello_cfd = models.CharField(max_length=200, blank=True, null=True)
+    no_certificado_sat = models.CharField(max_length=200, blank=True, null=True)
+    sello_sat = models.CharField(max_length=200, blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'vlx_suppliers'
+
+
+
+

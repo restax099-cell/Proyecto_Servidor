@@ -1,8 +1,7 @@
 {% extends 'admin_panel_xml/base_admin_panel.html' %}
-
+{% block title %}Panel Administrativo{% endblock %}
 
 {% block content_panel %}   
-    <!-- Tablas -->
     <div class="container-fluid my-4">
 
         <header class="d-flex justify-content-between align-items-center mb-3">
@@ -34,130 +33,54 @@
             </div>
         </div>
 
-        <!-- PAGINATION TOP -->
         <div class="d-flex justify-content-end align-items-center gap-2 p-3">
-        
             <label for="rowsPerPageSelect" class="form-label text-nowrap mb-0">Filas por pág:</label>
             <select class="form-select form-select-sm" id="rowsPerPageSelect_top" style="width: auto;">
                 <option value="25">25</option>
                 <option value="50" selected>50</option>
                 <option value="100">100</option>
             </select>
-
             <button class="btn btn-outline-secondary btn-sm" id="btnPrevPage_top" disabled>
                 &laquo;
             </button>
-
             <span class="text-nowrap">
                 Página
                 <input type="number" class="form-control form-control-sm" id="pageInput_top" value="1" min="1" style="width: 70px; display: inline-block;">
                 de <span id="totalPagesLabel_top">1</span>
             </span>
-
             <button class="btn btn-outline-secondary btn-sm" id="btnNextPage_top">
                 &raquo;
             </button>
         </div>
 
 
-        <!-- TABLES -->
         <div class="card shadow-sm border-0">
             <div class="table-responsive">
-                
                 <table class="table table-hover table-striped align-middle mb-0">
                     <thead class="table-dark" id="thead-panel">
-                        <tr class="">
-                            <!--
-                            
-                            <th scope="col" class="py-3 px-3 ">Emisor</th>
-                            <th scope="col" class="py-3 px-3">Fecha</th>
-                            <th scope="col" class="py-3 px-3">Importe</th>
-                            <th scope="col" class="py-3 px-3">Status</th>
-                            -->
-                        </tr>
-                    </thead>
+                        </thead>
                     <tbody id="tbody-panel">
-                        <tr>
-                            <!--
-                            
-                            <td class="px-3">
-                                <strong class="d-block">NOMBRE EMISOR</strong>
-                                <small class="text-muted">RFC</small>
-                            </td>
-                            <td class="px-3">
-                                <span class="d-block">FECHA</span>
-                                <small class="text-muted">CODIGO</small>
-                            </td>
-                            <td class="px-3">IMPORTE</td>
-                            <td class="px-3">
-                                <span class="badge rounded-pill bg-success fw-semibold">
-                                    Active
-                                </span>
-                            </td>
-                            -->
-                        </tr>
-                        <!--
-                        
-                        <tr>
-                            <td class="px-3">
-                                <strong class="d-block">NOMBRE EMISOR</strong>
-                                <small class="text-muted">RFC</small>
-                            </td>
-                            <td class="px-3">
-                                <span class="d-block">FECHA</span>
-                                <small class="text-muted">CODIGO</small>
-                            </td>
-                            <td class="px-3">IMPORTE</td>
-                            <td class="px-3">
-                                <span class="badge rounded-pill bg-danger fw-semibold">
-                                    Inactive
-                                </span>
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td class="px-3">
-                                <strong class="d-block">NOMBRE EMISOR</strong>
-                                <small class="text-muted">RFC</small>
-                            </td>
-                            <td class="px-3">
-                                <span class="d-block">FECHA</span>
-                                <small class="text-muted">CODIGO</small>
-                            </td>
-                            <td class="px-3">IMPORTE</td>
-                            <td class="px-3">
-                                <span class="badge rounded-pill bg-warning fw-semibold">
-                                    Pending
-                                </span>
-                            </td>
-                        </tr>
-                        -->
-                    </tbody>
+                        </tbody>
                 </table>
             </div>
         </div> 
 
 
-        <!-- PAGINATION DOWN -->
         <div class="d-flex justify-content-end align-items-center gap-2 p-3">
-        
             <label for="rowsPerPageSelect" class="form-label text-nowrap mb-0">Filas por pág:</label>
             <select class="form-select form-select-sm" id="rowsPerPageSelect_down" style="width: auto;">
                 <option value="25">25</option>
                 <option value="50" selected>50</option>
                 <option value="100">100</option>
             </select>
-
             <button class="btn btn-outline-secondary btn-sm" id="btnPrevPage_down" disabled>
                 &laquo;
             </button>
-
             <span class="text-nowrap">
                 Página
                 <input type="number" class="form-control form-control-sm" id="pageInput_down" value="1" min="1" style="width: 70px; display: inline-block;">
                 de <span id="totalPagesLabel_down">1</span>
             </span>
-
             <button class="btn btn-outline-secondary btn-sm" id="btnNextPage_down">
                 &raquo;
             </button>
@@ -166,6 +89,11 @@
     
     {% include 'admin_panel_xml/filtros_panel.html' %}
 
-    
 
+{% endblock %}
+
+
+{% block extra_scripts %}
+    {% load static %}
+    <script type="module" src="{% static 'js/app_admin_panel/app_xml.js' %}"></script>
 {% endblock %}

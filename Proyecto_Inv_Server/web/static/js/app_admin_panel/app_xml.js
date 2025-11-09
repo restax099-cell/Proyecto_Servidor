@@ -1,13 +1,17 @@
-// --- 1. Imports ---
+//? --- 1. Imports ---
+console.log('hola');
+
 import { fetchData } from '../../utils/get_api.js';
 import { buildDynamicTable } from './dynamic_tables.js';
 import { inicializarFiltros } from './panel_filtros.js';
-import { inicializarPaginacion, updateTotalPages, getPaginationState, resetPagination } from './panel_pagination.js';
-import { inicializarBusqueda, showSpinner, hideSpinner } from './search_panel.js';
+import { getPaginationState, inicializarPaginacion, resetPagination, updateTotalPages } from './panel_pagination.js';
+import { hideSpinner, inicializarBusqueda, showSpinner } from './search_panel.js';
 
 
 const ID_THEAD = 'thead-panel';
 const ID_TBODY = 'tbody-panel';
+const ID_MODAL = 'conceptosModal';
+const ID_MODAL_BODY = 'conceptosModalBody';
 
 
 let abortController = new AbortController();
@@ -24,7 +28,7 @@ async function loadTableData() {
     showSpinner(); 
     console.log('Cargando datos...');
     const pagination = getPaginationState();
-    
+
     const queryParams = buildQueryString(pagination.limit, pagination.page);
     const url = `http://3.139.90.118/api/cfdi-consultas/?${queryParams}`; 
 
@@ -58,9 +62,6 @@ function buildQueryString(limit, page) {
     return params.toString();
 }
 
-
-
-
 document.addEventListener('DOMContentLoaded', function() {
 
     inicializarBusqueda((searchTerm) => {
@@ -84,6 +85,22 @@ document.addEventListener('DOMContentLoaded', function() {
     inicializarPaginacion(() => {
         loadTableData();
     });
+   
+
+
+    const tbody = document.getElementById(ID_TBODY);
+    if (tbody) {
+        tbody.addEventListener('click', (event) => {
+            const fila = event.target.closest('tr');
+            
+            if (fila && fila.dataset.href) {
+                console.log('Redirigiendo a:', fila.dataset.href);
+                window.location.href = fila.dataset.href;
+            }
+        });
+    }
+
+
     loadTableData(); 
 
 });

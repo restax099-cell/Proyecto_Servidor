@@ -1,6 +1,27 @@
 
-export function buildDynamicTable(data, theadId, tbodyId) {
+function formatCurrency(value) {
+  const number = parseFloat(value);
   
+  if (isNaN(number) || number === 0) {
+    return '$0.00';
+  }
+
+  return number.toLocaleString('es-MX', {
+    style: 'currency',
+    currency: 'MXN' 
+  });
+}
+
+
+
+
+
+
+
+
+
+export function buildDynamicTable(data, theadId, tbodyId) {
+
   const thead = document.getElementById(theadId);
   const tbody = document.getElementById(tbodyId);
 
@@ -21,11 +42,11 @@ export function buildDynamicTable(data, theadId, tbodyId) {
     {key: 'id', titulo: 'ID'},
     { key: 'fecha', titulo: 'Fecha'},
     { key: 'emisor', titulo: 'Emisor' },
-    { key: 'receptor', titulo: 'Receptor' },
+    { key: 'uso_cfdi', titulo: 'Uso CFDI' },
     { key: 'importe', titulo: 'Importe' },
     { key: 'total', titulo: 'Totales' },
     { key: 'detalle_pago', titulo: 'Detalle Pago'},
-    
+
   ];
 
   const headerRow = document.createElement('tr');
@@ -40,7 +61,10 @@ export function buildDynamicTable(data, theadId, tbodyId) {
 
   data.forEach(item => {
     const row = document.createElement('tr');
-    
+    row.style.cursor = 'pointer';
+    row.dataset.href = `/admin-panel/conceptos/${item.uuid}/`;
+    row.dataset.uuid = item.uuid;
+
     columnas.forEach(col => {
       const cell = document.createElement('td');
       cell.className = 'px-3';
@@ -93,6 +117,14 @@ export function buildDynamicTable(data, theadId, tbodyId) {
           `;
           break;
         */
+
+        //? USO CFDI
+        case 'uso_cfdi':
+          cell.innerHTML =`
+          <strong class="text-muted d-block">${item.uso_cfdi || 'N/A'}</strong>
+          
+          `;
+          break;
         //? --- IMPORTE ---
         case 'importe':
           const importeFormateado = item.importe !== null 
@@ -192,6 +224,121 @@ export function buildDynamicTable(data, theadId, tbodyId) {
           cell.textContent = item[col.key] || 'N/A';
       }
       
+      row.appendChild(cell);
+    });
+    
+    tbody.appendChild(row);
+  });
+}
+
+//* Tablas dinamicas del modal (ventana emergente) de conceptos *//
+export function buildConceptosTable(data, theadId, tbodyId) {
+  const thead = document.getElementById(theadId);
+  const tbody = document.getElementById(tbodyId);
+
+  if (!thead || !tbody) {
+    console.error("Error: No se encontraron <thead> o <tbody> para el modal.");
+    return;
+  }
+
+  // 1. Limpiar
+  thead.innerHTML = '';
+  tbody.innerHTML = '';
+
+  // 2. Manejar si no hay datos
+  if (!data || data.length === 0) {
+    tbody.innerHTML = '<tr class="text-center p-3"><td colspan="12">Este CFDI no tiene conceptos.</td></tr>';
+    return;
+  }
+
+  // 3. Definimos TODAS las columnas que queremos, en orden
+  const columnas = [
+    { key: 'cantidad', titulo: 'Cantidad', type: 'number' },
+    { key: 'clave_unidad', titulo: 'Clave Unidad', type: 'text' },
+    { key: 'unidad', titulo: 'Unidad', type: 'text' },
+    { key: 'clave_prod_serv', titulo: 'Clave SAT', type: 'text' },
+    { key: 'descripcion', titulo: 'Descripción', type: 'text' },
+    { key: 'valor_unitario', titulo: 'Valor Unitario', type: 'currency' },
+    { key: 'importe', titulo: 'Importe', type: 'currency' },
+    { key: 'descuento', titulo: 'Descuento', type: 'currency' },
+    { key: 'base', titulo: 'Base (Imp)', type: 'currency' },
+    { key: 'impuesto', titulo: 'Impuesto', type: 'text' }, 
+    { key: 'tipo_factor', titulo: 'Tipo Factor', type: 'text' },
+    { key: 'tasa_cuota', titulo: 'Tasa', type: 'percent' },
+    { key: 'importe_imp', titulo: 'Imp. Importe', type: 'currency' } 
+  ];
+  
+  // 4. Construir Head
+  const headerRow = document.createElement('tr');
+  columnas.forEach(col => {
+    const th = document.createElement('th');
+    th.scope = 'col';
+    th.className = 'py-3 px-3';
+    th.textContent = col.titulo;
+    headerRow.appendChild(th);
+  });
+  thead.appendChild(headerRow);
+
+  // 5. Construir Body (con toda la lógica de formato)
+  data.forEach(item => {
+    const row = document.createElement('tr');
+    
+    columnas.forEach(col => {
+      const cell = document.createElement('td');
+      cell.className = 'px-3';
+      
+      let valor = item[col.key]; // Obtenemos el dato original
+
+      // Regla de respaldo para Importe (la que ya tenías)
+      if (col.key === 'importe') {
+          const importeNumerico = parseFloat(valor);
+          if (isNaN(importeNumerico) || valor === null) {
+              valor = item.valor_unitario; 
+          }
+      }
+      
+      let valorFormateado;
+      
+      // Aplicamos el formato según el TIPO
+      switch (col.type) {
+        
+        case 'currency':
+          if ((col.key === 'importe_imp' || col.key === 'descuento') && (parseFloat(valor) === 0 || isNaN(parseFloat(valor)))) {
+              valorFormateado = 'N/A';
+          } else {
+              valorFormateado = formatCurrency(valor); // Llama a la función de arriba
+          }
+          break;
+          
+        case 'text':
+          if (col.key === 'impuesto') {
+              const valorNum = parseFloat(valor);
+              if (valorNum === 2) valorFormateado = 'IVA (002)';
+              else if (valorNum === 1) valorFormateado = 'ISR (001)';
+              else valorFormateado = 'Exento / N/A';
+          } else {
+              valorFormateado = valor || 'no definido';
+          }
+          break;
+          
+        case 'percent':
+          const tasaNum = parseFloat(valor);
+          if (isNaN(tasaNum) || tasaNum === 0) {
+              valorFormateado = '0%';
+          } else {
+              valorFormateado = `${(tasaNum * 100).toFixed(2)}%`;
+          }
+          break;
+          
+        case 'number':
+          valorFormateado = valor || 0;
+          break;
+          
+        default:
+          valorFormateado = valor || 'no definido';
+      }
+      
+      cell.textContent = valorFormateado;
       row.appendChild(cell);
     });
     
