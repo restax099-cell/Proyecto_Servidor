@@ -6,7 +6,13 @@
 <div class="container-fluid my-4">
     
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h1 class="h3 mb-0">Detalle del CFDI</h1>
+        <div class="d-flex align-items-center gap-2">
+            <h1 class="h3 mb-0">Detalle del CFDI</h1>
+            
+            <span class="badge bg-secondary mt-1" style="font-size: 0.8rem;">
+                Version: {{ header_data.version_cfdi }}
+            </span>
+        </div>
         <a href="{% url 'web:admin_panel' %}" class="btn btn-outline-secondary btn-sm">
             &laquo; Volver al Panel
         </a>

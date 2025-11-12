@@ -253,23 +253,25 @@ export function buildConceptosTable(data, theadId, tbodyId) {
 
   // 3. Definimos TODAS las columnas que queremos, en orden
   const columnas = [
-    { key: 'cantidad', titulo: 'Cantidad', type: 'number' },
-    { key: 'clave_unidad', titulo: 'Clave Unidad', type: 'text' },
-    { key: 'unidad', titulo: 'Unidad', type: 'text' },
-    { key: 'clave_prod_serv', titulo: 'Clave SAT', type: 'text' },
     { key: 'descripcion', titulo: 'Descripción', type: 'text' },
+    { key: 'clave_prod_serv', titulo: 'Clave SAT', type: 'text' },
+    { key: 'clave_unidad', titulo: 'Clave Unidad', type: 'text' },
+    { key: 'cantidad', titulo: 'Cantidad', type: 'number' },
     { key: 'valor_unitario', titulo: 'Valor Unitario', type: 'currency' },
-    { key: 'importe', titulo: 'Importe', type: 'currency' },
     { key: 'descuento', titulo: 'Descuento', type: 'currency' },
-    { key: 'base', titulo: 'Base (Imp)', type: 'currency' },
-    { key: 'impuesto', titulo: 'Impuesto', type: 'text' }, 
-    { key: 'tipo_factor', titulo: 'Tipo Factor', type: 'text' },
     { key: 'tasa_cuota', titulo: 'Tasa', type: 'percent' },
-    { key: 'importe_imp', titulo: 'Imp. Importe', type: 'currency' } 
+    { key: 'importe', titulo: 'Importe', type: 'currency' },
   ];
   
   // 4. Construir Head
   const headerRow = document.createElement('tr');
+  const thNum = document.createElement('th');
+  thNum.scope = 'col';
+  thNum.className = 'py-3 px-3';
+  thNum.textContent = '#';
+  headerRow.appendChild(thNum);
+
+
   columnas.forEach(col => {
     const th = document.createElement('th');
     th.scope = 'col';
@@ -280,16 +282,21 @@ export function buildConceptosTable(data, theadId, tbodyId) {
   thead.appendChild(headerRow);
 
   // 5. Construir Body (con toda la lógica de formato)
-  data.forEach(item => {
+  data.forEach((item,index) => {
     const row = document.createElement('tr');
     
+    const cellNum = document.createElement('td');
+    cellNum.className = 'px-3';
+    cellNum.textContent = index + 1; 
+    row.appendChild(cellNum);
+
     columnas.forEach(col => {
       const cell = document.createElement('td');
       cell.className = 'px-3';
       
-      let valor = item[col.key]; // Obtenemos el dato original
+      let valor = item[col.key]; 
 
-      // Regla de respaldo para Importe (la que ya tenías)
+  
       if (col.key === 'importe') {
           const importeNumerico = parseFloat(valor);
           if (isNaN(importeNumerico) || valor === null) {
