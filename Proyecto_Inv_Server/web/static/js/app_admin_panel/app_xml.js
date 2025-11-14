@@ -78,7 +78,11 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     inicializarFiltros((nuevosFiltros) => {
-        currentFilters = nuevosFiltros;
+        currentFilters = {
+            ...currentFilters, 
+            ...nuevosFiltros
+        };
+
         resetPagination();
         loadTableData(); 
     });
