@@ -30,7 +30,7 @@ async function loadTableData() {
     const pagination = getPaginationState();
 
     const queryParams = buildQueryString(pagination.limit, pagination.page);
-    const url = `http://3.139.90.118/api/cfdi-consultas/?${queryParams}`; 
+    const url = `http://127.0.0.1:8000/api/cfdi-consultas/?${queryParams}`; 
 
     const responseData = await fetchData(url, abortController.signal);
 
@@ -99,7 +99,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (fila && fila.dataset.href) {
                 console.log('Redirigiendo a:', fila.dataset.href);
-                window.location.href = fila.dataset.href;
+                window.open(fila.dataset.href, '_blank', 'noopener,noreferrer');
             }
         });
     }
