@@ -10,6 +10,9 @@ def home(request):
 def admin_panel(request):
     return render(request, 'admin_panel_xml/main_panel.html')
 
+@login_required
+def gastos_panel(request):
+    return render(request, 'admin_panel_xml/gastos_panel.html')
 
 @login_required
 def conceptos_panel(request, uuid):

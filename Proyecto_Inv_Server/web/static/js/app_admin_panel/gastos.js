@@ -2,7 +2,7 @@
 console.log('hola');
 
 import { fetchData } from '../../utils/get_api.js';
-import { buildDynamicTable } from './dynamic_tables.js';
+import { buildDynamicTableGastos } from './dynamic_tables.js';
 import { inicializarFiltros } from './panel_filtros.js';
 import { getPaginationState, inicializarPaginacion, resetPagination, updateTotalPages } from './panel_pagination.js';
 import { hideSpinner, inicializarBusqueda, showSpinner } from './search_panel.js';
@@ -30,9 +30,9 @@ async function loadTableData() {
     const pagination = getPaginationState();
 
     const queryParams = buildQueryString(pagination.limit, pagination.page);
-    //const url = `http://127.0.0.1:8000/api/cfdi-consultas/?${queryParams}`;
+    //const url = `http://127.0.0.1:8000/api/cfdi-consultas/?${queryParams}`; 
+    const url = `http://127.0.0.1:8000/api/cfdi-consultas/?tipo_comprobante=E&${queryParams}`;
 
-    const url = `http://127.0.0.1:8000/api/cfdi-consultas/?tipo_comprobante=I&${queryParams}`;
     const responseData = await fetchData(url, abortController.signal);
 
     if (!responseData) {
@@ -43,7 +43,7 @@ async function loadTableData() {
     }
 
     if (responseData.results) {
-        buildDynamicTable(responseData.results, ID_THEAD, ID_TBODY);
+        buildDynamicTableGastos(responseData.results, ID_THEAD, ID_TBODY);
         updateTotalPages(responseData.total_pages);
     } else {
         const tbody = document.getElementById(ID_TBODY);
@@ -79,18 +79,10 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     inicializarFiltros((nuevosFiltros) => {
-        // 1. Guardamos lo que haya en el buscador
-        const busquedaGuardada = currentFilters.search_term;
-
-        // 2. Reemplazamos TODO con los nuevos filtros (esto borra los viejos)
         currentFilters = {
+            ...currentFilters, 
             ...nuevosFiltros
         };
-
-        // 3. Si había una búsqueda, la volvemos a poner
-        if (busquedaGuardada) {
-            currentFilters.search_term = busquedaGuardada;
-        }
 
         resetPagination();
         loadTableData(); 

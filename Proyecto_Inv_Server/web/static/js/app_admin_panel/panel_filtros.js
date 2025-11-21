@@ -1,16 +1,18 @@
 
-
-
-
 const formFiltros = document.getElementById('formFiltros');
+
 const radiosFecha = document.querySelectorAll('input[name="filtroFechaTipo"]');
-const fieldsetFecha = document.getElementById('camposFechaPersonalizada');
 const radiosImporte = document.querySelectorAll('input[name="filtroImporteTipo"]');
+
+const fieldsetFecha = document.getElementById('camposFechaPersonalizada');
 const fieldsetImporte = document.getElementById('camposImportePersonalizado');
+
 const fechaInicioInput = document.getElementById('fechaInicio');
 const fechaFinInput = document.getElementById('fechaFin');
+
 const importeMinInput = document.getElementById('importeMinimo');
 const importeMaxInput = document.getElementById('importeMaximo');
+
 const offcanvasElement = document.getElementById('offcanvasFiltros');
 const offcanvasFiltros = bootstrap.Offcanvas.getOrCreateInstance(offcanvasElement);
 
@@ -74,23 +76,19 @@ function procesarFormularioDeFiltros() {
 
 
     //? FILTROS DE DETALLES PAGO
-    const tipoComprobante = formData.get('tipo_comprobante');
-    if (tipoComprobante) { // Si el valor no es "" (Cualquiera)
-        filtros.tipo_comprobante = tipoComprobante;
+    const metodo = formData.get('filtroMetodoTipo');
+    if (metodo && metodo !== "") { 
+        filtros.metodo_pago = metodo; 
     }
 
-    const metodoPago = formData.get('metodo_pago');
-    if (metodoPago) {
-        filtros.metodo_pago = metodoPago;
+    // Leemos el name="filtroFormaTipo" de tu HTML
+    const forma = formData.get('filtroFormaTipo');
+    if (forma && forma !== "") {
+        filtros.forma_pago = forma; 
     }
 
-    const formaPago = formData.get('forma_pago');
-    if (formaPago) {
-        filtros.forma_pago = formaPago;
-    }
-
-
-
+    
+    console.log("Filtros generados:", filtros);
     return filtros;
 }
 
@@ -115,6 +113,8 @@ export function inicializarFiltros(onFiltrosAplicados) {
             });
         });
     }
+
+  
 
 
     //? Activar Filtros

@@ -5,10 +5,10 @@
     <div class="container-fluid my-4">
 
         <header class="d-flex justify-content-between align-items-center mb-3">
-            <h2 class="h4 mb-0">CFDI's Gastos</h2>
-            <a href="{% url 'web:gastos_panel' %}" class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1">
+            <h2 class="h4 mb-0">CFDI's Ingresos</h2>
+            <a href="{% url 'web:admin_panel' %}" class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1">
                 <i class="bi "></i> 
-                Panel de Ingresos
+                Panel de Gastos
             </a>
         </header>
 
@@ -96,5 +96,5 @@
 
 {% block extra_scripts %}
     {% load static %}
-    <script type="module" src="{% static 'js/app_admin_panel/app_xml.js' %}"></script>
+    <script type="module" src="{% static 'js/app_admin_panel/gastos.js' %}"></script>
 {% endblock %}
