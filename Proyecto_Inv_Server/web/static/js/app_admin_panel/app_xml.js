@@ -32,7 +32,7 @@ async function loadTableData() {
     const queryParams = buildQueryString(pagination.limit, pagination.page);
     //const url = `http://127.0.0.1:8000/api/cfdi-consultas/?${queryParams}`;
 
-    const url = `/api/cfdi-consultas/?tipo_comprobante=I&${queryParams}`;
+    const url = `/api/cfdi-consultas/?${queryParams}`;
     const responseData = await fetchData(url, abortController.signal);
 
     if (!responseData) {
@@ -57,6 +57,7 @@ function buildQueryString(limit, page) {
     const params = new URLSearchParams();
     params.append('limit', limit);
     params.append('offset', (page - 1) * limit);
+    params.append('nombre_emisor', 'DAMALIJE');
     for (const [key, value] of Object.entries(currentFilters)) {
         if (value) params.append(key, value);
     }

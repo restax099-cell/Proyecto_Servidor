@@ -42,6 +42,7 @@ export function buildDynamicTable(data, theadId, tbodyId) {
     {key: 'id', titulo: 'ID'},
     { key: 'fecha', titulo: 'Fecha'},
     { key: 'emisor', titulo: 'Emisor' },
+    { key: 'receptor', titulo: 'Receptor' },
     { key: 'uso_cfdi', titulo: 'Uso CFDI' },
     { key: 'importe', titulo: 'Importe' },
     { key: 'total', titulo: 'Totales' },
@@ -100,6 +101,7 @@ export function buildDynamicTable(data, theadId, tbodyId) {
           `;
         break;
       }
+    
         //? --- EMISOR ---
         case 'emisor':
           cell.innerHTML = `
@@ -107,7 +109,7 @@ export function buildDynamicTable(data, theadId, tbodyId) {
             <small class="text-muted">${item.rfc_emisor || 'N/A'}</small>
           `;
           break;
-        /*
+      
         //? --- RECEPTOR ---
         case 'receptor':
           cell.innerHTML = `
@@ -116,7 +118,7 @@ export function buildDynamicTable(data, theadId, tbodyId) {
             <small class="text-muted d-block">${item.uso_cfdi || 'N/A'}</small>
           `;
           break;
-        */
+      
 
         //? USO CFDI
         case 'uso_cfdi':
@@ -158,9 +160,9 @@ export function buildDynamicTable(data, theadId, tbodyId) {
           const tipoOriginal = (item.tipo_comprobante || '').toLowerCase(); 
 
           if (tipoOriginal === 'i' || tipoOriginal === 'ingre' || tipoOriginal === 'ingreso') {
-            tipoNormalizado = 'Gastos';
-          } else if (tipoOriginal === 'e' || tipoOriginal === 'egre' || tipoOriginal === 'egreso') {
             tipoNormalizado = 'Ingresos';
+          } else if (tipoOriginal === 'e' || tipoOriginal === 'egre' || tipoOriginal === 'egreso') {
+            tipoNormalizado = 'Gastos';
           } else if (tipoOriginal) {
             tipoNormalizado = item.tipo_comprobante; 
           }
@@ -252,7 +254,9 @@ export function buildDynamicTableGastos(data, theadId, tbodyId) {
   const columnas = [
     {key: 'id', titulo: 'ID'},
     { key: 'fecha', titulo: 'Fecha'},
-    { key: 'emisor', titulo: 'Receptor' },
+    { key: 'emisor', titulo: 'Emisor' },
+    { key: 'receptor', titulo: 'Receptor' },
+    
     { key: 'uso_cfdi', titulo: 'Uso CFDI' },
     { key: 'importe', titulo: 'Importe' },
     { key: 'total', titulo: 'Totales' },
@@ -319,7 +323,7 @@ export function buildDynamicTableGastos(data, theadId, tbodyId) {
           `;
           break;
 
-        /*
+        
         //? --- RECEPTOR ---
         case 'receptor':
           cell.innerHTML = `
@@ -328,7 +332,7 @@ export function buildDynamicTableGastos(data, theadId, tbodyId) {
             <small class="text-muted d-block">${item.uso_cfdi || 'N/A'}</small>
           `;
           break;
-        */
+        
 
         //? USO CFDI
         case 'uso_cfdi':
@@ -370,9 +374,9 @@ export function buildDynamicTableGastos(data, theadId, tbodyId) {
           const tipoOriginal = (item.tipo_comprobante || '').toLowerCase(); 
 
           if (tipoOriginal === 'i' || tipoOriginal === 'ingre' || tipoOriginal === 'ingreso') {
-            tipoNormalizado = 'Gastos';
-          } else if (tipoOriginal === 'e' || tipoOriginal === 'egre' || tipoOriginal === 'egreso') {
             tipoNormalizado = 'Ingresos';
+          } else if (tipoOriginal === 'e' || tipoOriginal === 'egre' || tipoOriginal === 'egreso') {
+            tipoNormalizado = 'Gastos';
           } else if (tipoOriginal) {
             tipoNormalizado = item.tipo_comprobante; 
           }

@@ -4,6 +4,8 @@ const formFiltros = document.getElementById('formFiltros');
 const radiosFecha = document.querySelectorAll('input[name="filtroFechaTipo"]');
 const radiosImporte = document.querySelectorAll('input[name="filtroImporteTipo"]');
 
+
+
 const fieldsetFecha = document.getElementById('camposFechaPersonalizada');
 const fieldsetImporte = document.getElementById('camposImportePersonalizado');
 
@@ -76,12 +78,15 @@ function procesarFormularioDeFiltros() {
 
 
     //? FILTROS DE DETALLES PAGO
+    const tipo = formData.get('filtroTipoComprobante');
+    if (tipo && tipo !== "") {
+        filtros.tipo_comprobante = tipo; 
+    }
     const metodo = formData.get('filtroMetodoTipo');
     if (metodo && metodo !== "") { 
         filtros.metodo_pago = metodo; 
     }
 
-    // Leemos el name="filtroFormaTipo" de tu HTML
     const forma = formData.get('filtroFormaTipo');
     if (forma && forma !== "") {
         filtros.forma_pago = forma; 

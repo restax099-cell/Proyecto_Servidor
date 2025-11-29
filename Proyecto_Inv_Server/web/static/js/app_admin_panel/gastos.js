@@ -57,6 +57,7 @@ function buildQueryString(limit, page) {
     const params = new URLSearchParams();
     params.append('limit', limit);
     params.append('offset', (page - 1) * limit);
+    params.append('nombre_receptor', 'DAMALIJE');
     for (const [key, value] of Object.entries(currentFilters)) {
         if (value) params.append(key, value);
     }
