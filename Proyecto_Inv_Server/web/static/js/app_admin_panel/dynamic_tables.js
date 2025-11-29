@@ -528,11 +528,13 @@ export function buildConceptosTable(data, theadId, tbodyId) {
       switch (col.type) {
         
         case 'currency':
-          if ((col.key === 'importe_imp' || col.key === 'descuento') && (parseFloat(valor) === 0 || isNaN(parseFloat(valor)))) {
-              valorFormateado = 'N/A';
-          } else {
-              valorFormateado = formatCurrency(valor); // Llama a la función de arriba
+          let numCurrency = parseFloat(valor);
+            
+          if (isNaN(numCurrency)) {
+              numCurrency = 0;
           }
+          
+          valorFormateado = formatCurrency(numCurrency);
           break;
           
         case 'text':
