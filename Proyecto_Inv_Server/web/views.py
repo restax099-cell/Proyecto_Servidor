@@ -7,12 +7,12 @@ def home(request):
     return render(request, "index.html")
 
 @login_required
-def admin_panel(request):
-    return render(request, 'admin_panel_xml/main_panel.html')
+def emitidos_panel(request):
+    return render(request, 'admin_panel_xml/emitidos_panel.html')
 
 @login_required
-def gastos_panel(request):
-    return render(request, 'admin_panel_xml/gastos_panel.html')
+def recibidos_panel(request):
+    return render(request, 'admin_panel_xml/recibidos_panel.html')
 
 @login_required
 def conceptos_panel(request, uuid):

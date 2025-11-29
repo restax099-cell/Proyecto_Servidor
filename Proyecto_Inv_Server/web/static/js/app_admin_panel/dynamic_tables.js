@@ -63,7 +63,7 @@ export function buildDynamicTable(data, theadId, tbodyId) {
   data.forEach(item => {
     const row = document.createElement('tr');
     row.style.cursor = 'pointer';
-    row.dataset.href = `/admin-panel/conceptos/${item.uuid}/`;
+    row.dataset.href = `/emitidos-panel/conceptos/${item.uuid}/`;
     row.dataset.uuid = item.uuid;
 
     columnas.forEach(col => {
@@ -277,7 +277,7 @@ export function buildDynamicTableGastos(data, theadId, tbodyId) {
   data.forEach(item => {
     const row = document.createElement('tr');
     row.style.cursor = 'pointer';
-    row.dataset.href = `/admin-panel/conceptos/${item.uuid}/`;
+    row.dataset.href = `/recibidos-panel/conceptos/${item.uuid}/`;
     row.dataset.uuid = item.uuid;
 
     columnas.forEach(col => {

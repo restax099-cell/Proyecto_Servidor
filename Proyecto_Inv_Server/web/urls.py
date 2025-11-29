@@ -7,8 +7,9 @@ urlpatterns = [
 
     path('', views.home, name='home'), 
 
-    path('admin-panel/', views.admin_panel, name='admin_panel'),
-    path('gastos-panel/', views.gastos_panel, name='gastos_panel'),
+    path('emitidos-panel/', views.emitidos_panel, name='emitidos_panel'),
+    path('gastos-panel/', views.recibidos_panel, name='recibidos_panel'),
 
-    path('admin-panel/conceptos/<str:uuid>/', views.conceptos_panel, name='conceptos_panel'),
+    path('emitidos-panel/conceptos/<str:uuid>/', views.conceptos_panel, name='conceptos_panel'),
+    path('recibidos-panel/conceptos/<str:uuid>/', views.conceptos_panel, name='conceptos_panel'),
 ]
