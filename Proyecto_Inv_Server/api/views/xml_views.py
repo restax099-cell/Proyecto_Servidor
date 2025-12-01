@@ -142,57 +142,84 @@ def get_cfdi_consultas(request):
     # 1. Buscador Global
     p_search_term = request.query_params.get('search_term', None)
 
-    # 2. Buscadores de Grupo (Nuevos)
+    # 2. Buscadores de Grupo
     p_search_emisor = request.query_params.get('search_emisor', None)
     p_search_receptor = request.query_params.get('search_receptor', None)
 
-    # 3. Filtros Específicos (Nuevos y existentes)
+    # 3. Filtros Específicos
     p_nombre_emisor = request.query_params.get('nombre_emisor', None)
     p_rfc_emisor = request.query_params.get('rfc_emisor', None)
     p_nombre_receptor = request.query_params.get('nombre_receptor', None)
-    p_rfc_receptor = request.query_params.get('rfc_receptor', None) # Este ya existía
+    p_rfc_receptor = request.query_params.get('rfc_receptor', None)
 
     # Control
     p_tipo_comprobante = request.query_params.get('tipo_comprobante', None)
     p_metodo_pago = request.query_params.get('metodo_pago', None)
     p_forma_pago = request.query_params.get('forma_pago', None)
 
+    # =========================================================
+    # NUEVO: PROCESAMIENTO DE ORDENAMIENTO
+    # =========================================================
+    # Recibimos algo como 'fecha' o '-importe'
+    p_ordering = request.query_params.get('ordering', '-id') # Default: ID Descendente
+
+    p_sort_dir = 'ASC'
+    p_sort_col = p_ordering
+
+    # Si empieza con guion, es descendente
+    if p_ordering and p_ordering.startswith('-'):
+        p_sort_dir = 'DESC'
+        p_sort_col = p_ordering[1:] # Quitamos el guion ('-fecha' -> 'fecha')
+    
+    # =========================================================
+
     # LISTA ORDENADA PARA EL STORED PROCEDURE
+    # NOTA: El orden debe coincidir EXACTAMENTE con el CREATE PROCEDURE
     params = [
-        p_fecha_desde,
-        p_fecha_hasta,
-        p_importe_min,
-        p_importe_max,
+        p_fecha_desde,      # 1
+        p_fecha_hasta,      # 2
+        p_importe_min,      # 3
+        p_importe_max,      # 4
         
-        p_search_term,      # 1. Global
+        p_search_term,      # 5
         
-        p_search_emisor,    # 2. Search Emisor Group
-        p_search_receptor,  # 3. Search Receptor Group
+        p_search_emisor,    # 6
+        p_search_receptor,  # 7
         
-        p_nombre_emisor,    # 4. Nombre Emisor
-        p_rfc_emisor,       # 5. RFC Emisor
-        p_nombre_receptor,  # 6. Nombre Receptor
-        p_rfc_receptor,     # 7. RFC Receptor
+        p_nombre_emisor,    # 8
+        p_rfc_emisor,       # 9
+        p_nombre_receptor,  # 10
+        p_rfc_receptor,     # 11
         
-        p_tipo_comprobante,
-        p_metodo_pago,
-        p_forma_pago,
-        p_limit,
-        p_offset
+        p_tipo_comprobante, # 12
+        p_metodo_pago,      # 13
+        p_forma_pago,       # 14
+        
+        # --- NUEVOS PARAMETROS ---
+        p_sort_col,         # 15 (Ej: 'importe')
+        p_sort_dir,         # 16 (Ej: 'DESC')
+        # -------------------------
+
+        p_limit,            # 17
+        p_offset            # 18
     ]
 
     try:
         with connection.cursor() as cursor:
-            sql_query = "CALL sp_get_cfdi_consultas(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"
+            # ACTUALIZAMOS EL SQL: Ahora son 18 placeholders (%s)
+            sql_query = "CALL sp_get_cfdi_consultas(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"
+            
             cursor.execute(sql_query, params)
             
-            # Resto de tu código (fetchone, nextset, dictfetchall)...
+            # Obtener conteo (Result Set 1)
             count_result = cursor.fetchone()
             total_count = count_result[0] if count_result else 0
+            
+            # Mover al siguiente Result Set (Los datos)
             cursor.nextset() 
             results = dictfetchall(cursor)
         
-        # ... Paginación y response ...
+        # Paginación
         total_pages = 1 
         if total_count > 0 and p_limit > 0:
             total_pages = math.ceil(total_count / p_limit)
@@ -205,5 +232,3 @@ def get_cfdi_consultas(request):
 
     except Exception as e:
         return Response({"error": "Error BD", "detalle": str(e)}, status=500)
-
-   

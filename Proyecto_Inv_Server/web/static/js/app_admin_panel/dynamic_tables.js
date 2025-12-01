@@ -19,11 +19,46 @@ function formatCurrency(value) {
 
 
 
+function applyServerSort(columnKey, onSortCallback) {
+    const currentUrl = new URL(window.location.href);
+    const searchParams = currentUrl.searchParams;
+    const currentOrder = searchParams.get('ordering');
 
-export function buildDynamicTable(data, theadId, tbodyId) {
+    let newOrder = columnKey; 
+
+ 
+    if (currentOrder === columnKey) {
+        newOrder = `-${columnKey}`;
+    } else if (currentOrder === `-${columnKey}`) {
+        newOrder = null;
+    }
+
+    if (newOrder) {
+        searchParams.set('ordering', newOrder);
+    } else {
+        searchParams.delete('ordering');
+    }
+
+    searchParams.set('page', 1);
+
+    const newRelativePathQuery = window.location.pathname + '?' + searchParams.toString();
+    window.history.pushState(null, '', newRelativePathQuery);
+
+    if (typeof onSortCallback === 'function') {
+        onSortCallback();
+    } else {
+        console.warn("No se pasó un callback para recargar la tabla.");
+    }
+}
+
+
+export function buildDynamicTable(data, theadId, tbodyId,onSortCallback) {
 
   const thead = document.getElementById(theadId);
   const tbody = document.getElementById(tbodyId);
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const currentOrdering = urlParams.get('ordering') || '';
 
   if (!thead || !tbody) {
     console.error("Error: No se encontró <thead> o <tbody>.");
@@ -38,30 +73,47 @@ export function buildDynamicTable(data, theadId, tbodyId) {
     return;
   }
 
+  
   const columnas = [
-    {key: 'id', titulo: 'ID'},
-    { key: 'fecha', titulo: 'Fecha'},
+    { key: 'id', titulo: 'ID' },
+    { key: 'fecha', titulo: 'Fecha' },
     { key: 'emisor', titulo: 'Emisor' },
     { key: 'receptor', titulo: 'Receptor' },
     { key: 'uso_cfdi', titulo: 'Uso CFDI' },
     { key: 'importe', titulo: 'Importe' },
     { key: 'total', titulo: 'Totales' },
-    { key: 'detalle_pago', titulo: 'Detalle Pago'},
-
+    { key: 'detalle_pago', titulo: 'Detalle Pago' },
   ];
 
   const headerRow = document.createElement('tr');
+  
   columnas.forEach(col => {
     const th = document.createElement('th');
     th.scope = 'col';
-    th.className = 'py-3 px-3'; 
-    th.textContent = col.titulo; 
+    th.className = 'py-3 px-3 sortable-th';
+    
+    let icon = ''; 
+    
+    if (currentOrdering === col.key) {
+        icon = ' <span style="color: black;">▲</span>'; 
+        th.classList.add('active-sort'); 
+    } else if (currentOrdering === `-${col.key}`) {
+        icon = ' <span style="color: black;">▼</span>'; 
+        th.classList.add('active-sort');
+    }
+    
+    th.innerHTML = `${col.titulo}${icon}`;
+    th.onclick = () => {
+        applyServerSort(col.key, onSortCallback);
+    };
+
     headerRow.appendChild(th);
   });
   thead.appendChild(headerRow);
 
   data.forEach(item => {
     const row = document.createElement('tr');
+    
     row.style.cursor = 'pointer';
     row.dataset.href = `/emitidos-panel/conceptos/${item.uuid}/`;
     row.dataset.uuid = item.uuid;
@@ -71,38 +123,29 @@ export function buildDynamicTable(data, theadId, tbodyId) {
       cell.className = 'px-3';
   
       switch (col.key) {
-        //? --- ID ---
         case 'id':
           cell.innerHTML = `
             <strong class="d-block">${item.id || 'N/A'}</strong>
             <small class="text-muted">${item.uuid || 'N/A'}</small>
           `;
           break;
-        //? --- FECHA --
-        case 'fecha': { // Usamos {} para crear un nuevo alcance
-        let fechaFormateada = 'N/A';
-        
-        if (item.fecha) {
-            const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-            
-            const fecha = new Date(item.fecha);
-            
-            const dia = fecha.getDate(); 
-            const mesIndex = fecha.getMonth(); 
-            const anio = fecha.getFullYear();
 
-            fechaFormateada = `${dia}/${meses[mesIndex]}/${anio}`;
-            //console.log(fechaFormateada);
+        case 'fecha': { 
+            let fechaFormateada = 'N/A';
+            if (item.fecha) {
+                const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+                const fecha = new Date(item.fecha);
+                // Ajuste para evitar desfase de zona horaria si es necesario:
+                // const fecha = new Date(item.fecha + 'T00:00:00'); 
+                const dia = fecha.getDate(); 
+                const mesIndex = fecha.getMonth(); 
+                const anio = fecha.getFullYear();
+                fechaFormateada = `${dia}/${meses[mesIndex]}/${anio}`;
+            }
+            cell.innerHTML = `<strong class="d-block text-nowrap">${fechaFormateada}</strong>`;
+            break;
         }
-
-        cell.innerHTML = `
-            <strong class="d-block text-nowrap">${fechaFormateada}</strong>
-            
-          `;
-        break;
-      }
     
-        //? --- EMISOR ---
         case 'emisor':
           cell.innerHTML = `
             <strong class="d-block">${item.emisor || 'N/A'}</strong>
@@ -110,7 +153,6 @@ export function buildDynamicTable(data, theadId, tbodyId) {
           `;
           break;
       
-        //? --- RECEPTOR ---
         case 'receptor':
           cell.innerHTML = `
             <strong class="d-block">${item.receptor || 'N/A'}</strong>
@@ -119,27 +161,20 @@ export function buildDynamicTable(data, theadId, tbodyId) {
           `;
           break;
       
-
-        //? USO CFDI
         case 'uso_cfdi':
-          cell.innerHTML =`
-          <strong class="text-muted d-block">${item.uso_cfdi || 'N/A'}</strong>
-          
-          `;
+          cell.innerHTML =`<strong class="text-muted d-block">${item.uso_cfdi || 'N/A'}</strong>`;
           break;
-        //? --- IMPORTE ---
+
         case 'importe':
           const importeFormateado = item.importe !== null 
               ? `$${parseFloat(item.importe).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')}` 
               : 'N/A';
-         
           cell.innerHTML = `
             <strong class="d-block">${importeFormateado || 'N/A'}</strong>
             <small class="text-muted">${item.moneda || 'N/A'}</small>
           `;
           break;
 
-        //? --- TOTAL ---
         case 'total':
           const totalFormateado = item.total !== null 
               ? `$${parseFloat(item.total).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')}` 
@@ -147,14 +182,12 @@ export function buildDynamicTable(data, theadId, tbodyId) {
           const subTotalFormateado = item.sub_total !== null 
               ? `$${parseFloat(item.sub_total).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')}` 
               : 'N/A';
-         
           cell.innerHTML = `
             <strong class="d-block">${totalFormateado || 'N/A'}</strong>
             <small class="text-muted">${subTotalFormateado || 'N/A'}</small>
           `;
           break;
 
-        //? --- DETALLES ---
         case 'detalle_pago': { 
           let tipoNormalizado = 'N/A'; 
           const tipoOriginal = (item.tipo_comprobante || '').toLowerCase(); 
@@ -169,33 +202,19 @@ export function buildDynamicTable(data, theadId, tbodyId) {
          
           let metodoNormalizado = 'No ID'; 
           const metodoOriginal = (item.metodo_pago || '').toLowerCase();
-          if (metodoOriginal === 'pue') {
-            metodoNormalizado = 'PUE';
-          }else if (metodoOriginal === 'ppd') {
-            metodoNormalizado = 'PPD';
-          }else if (metodoOriginal === 'no id' || !item.metodo_pago) {
-            metodoNormalizado = 'No Identificado';
-          }
+          if (metodoOriginal === 'pue') metodoNormalizado = 'PUE';
+          else if (metodoOriginal === 'ppd') metodoNormalizado = 'PPD';
+          else if (metodoOriginal === 'no id' || !item.metodo_pago) metodoNormalizado = 'No Identificado';
           
           let formaPagoTexto = 'N/A'; 
           const formaPagoOriginal = (item.forma_pago || '').toString().toLowerCase().trim();
 
-          if (formaPagoOriginal === '3') {
-              formaPagoTexto = 'Transferencia';
-          } else if (formaPagoOriginal === '99') {
-              formaPagoTexto = 'Por Definir';
-          } else if (formaPagoOriginal === 'pago en una sola exhibicion') {
-              formaPagoTexto = 'N/A (Dato PUE)';
-          } else if (formaPagoOriginal === '01' || formaPagoOriginal === '1') {
-              formaPagoTexto = 'Efectivo';
-          } else if (!formaPagoOriginal || formaPagoOriginal === 'no id') {
-              formaPagoTexto = 'No Identificado';
-          } else if (item.forma_pago) { 
-              formaPagoTexto = item.forma_pago; 
-          }
-
-          //console.log(formaPagoOriginal);
-          //console.log(formaPagoTexto);
+          if (formaPagoOriginal === '3') formaPagoTexto = 'Transferencia';
+          else if (formaPagoOriginal === '99') formaPagoTexto = 'Por Definir';
+          else if (formaPagoOriginal === 'pago en una sola exhibicion') formaPagoTexto = 'N/A (Dato PUE)';
+          else if (formaPagoOriginal === '01' || formaPagoOriginal === '1') formaPagoTexto = 'Efectivo';
+          else if (!formaPagoOriginal || formaPagoOriginal === 'no id') formaPagoTexto = 'No Identificado';
+          else if (item.forma_pago) formaPagoTexto = item.forma_pago; 
 
           cell.innerHTML = `
             <strong class="d-block">${tipoNormalizado}</strong>
@@ -205,23 +224,6 @@ export function buildDynamicTable(data, theadId, tbodyId) {
           break;
         }
       
-
-
-        /* ? --- Status ---
-        case 'status':
-          const statusText = item.status || 'Active'; 
-          let statusClass = 'bg-success';
-          if (statusText === 'Inactive') statusClass = 'bg-danger';
-          if (statusText === 'Pending') statusClass = 'bg-warning';
-          
-          cell.innerHTML = `
-            <span class="badge rounded-pill ${statusClass} fw-semibold">
-                ${statusText}
-            </span>
-          `;
-          break;
-        */
-       //? DEFAULT
         default:
           cell.textContent = item[col.key] || 'N/A';
       }
@@ -233,10 +235,13 @@ export function buildDynamicTable(data, theadId, tbodyId) {
   });
 }
 
-export function buildDynamicTableGastos(data, theadId, tbodyId) {
+export function buildDynamicTableGastos(data, theadId, tbodyId, onSortCallback) {
 
   const thead = document.getElementById(theadId);
   const tbody = document.getElementById(tbodyId);
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const currentOrdering = urlParams.get('ordering') || '';
 
   if (!thead || !tbody) {
     console.error("Error: No se encontró <thead> o <tbody>.");
@@ -268,8 +273,23 @@ export function buildDynamicTableGastos(data, theadId, tbodyId) {
   columnas.forEach(col => {
     const th = document.createElement('th');
     th.scope = 'col';
-    th.className = 'py-3 px-3'; 
-    th.textContent = col.titulo; 
+    th.className = 'py-3 px-3 sortable-th';
+    
+    let icon = ''; 
+    
+    if (currentOrdering === col.key) {
+        icon = ' <span style="color: black;">▲</span>'; 
+        th.classList.add('active-sort'); 
+    } else if (currentOrdering === `-${col.key}`) {
+        icon = ' <span style="color: black;">▼</span>'; 
+        th.classList.add('active-sort');
+    }
+    
+    th.innerHTML = `${col.titulo}${icon}`;
+    th.onclick = () => {
+        applyServerSort(col.key, onSortCallback);
+    };
+
     headerRow.appendChild(th);
   });
   thead.appendChild(headerRow);
@@ -293,7 +313,7 @@ export function buildDynamicTableGastos(data, theadId, tbodyId) {
           `;
           break;
         //? --- FECHA --
-        case 'fecha': { // Usamos {} para crear un nuevo alcance
+        case 'fecha': { 
         let fechaFormateada = 'N/A';
         
         if (item.fecha) {
@@ -493,8 +513,23 @@ export function buildConceptosTable(data, theadId, tbodyId) {
   columnas.forEach(col => {
     const th = document.createElement('th');
     th.scope = 'col';
-    th.className = 'py-3 px-3';
-    th.textContent = col.titulo;
+    th.className = 'py-3 px-3 sortable-th';
+    
+    let icon = ''; 
+    
+    if (currentOrdering === col.key) {
+        icon = ' <span style="color: black;">▲</span>'; 
+        th.classList.add('active-sort'); 
+    } else if (currentOrdering === `-${col.key}`) {
+        icon = ' <span style="color: black;">▼</span>'; 
+        th.classList.add('active-sort');
+    }
+    
+    th.innerHTML = `${col.titulo}${icon}`;
+    th.onclick = () => {
+        applyServerSort(col.key, onSortCallback);
+    };
+
     headerRow.appendChild(th);
   });
   thead.appendChild(headerRow);

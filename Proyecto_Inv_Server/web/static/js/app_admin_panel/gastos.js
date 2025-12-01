@@ -31,7 +31,7 @@ async function loadTableData() {
 
     const queryParams = buildQueryString(pagination.limit, pagination.page);
     //const url = `http://127.0.0.1:8000/api/cfdi-consultas/?${queryParams}`; 
-    const url = `/api/cfdi-consultas/?tipo_comprobante=E&${queryParams}`;
+    const url = `/api/cfdi-consultas/?${queryParams}`;
 
     const responseData = await fetchData(url, abortController.signal);
 
@@ -43,7 +43,10 @@ async function loadTableData() {
     }
 
     if (responseData.results) {
-        buildDynamicTableGastos(responseData.results, ID_THEAD, ID_TBODY);
+        buildDynamicTableGastos(responseData.results, ID_THEAD, ID_TBODY, () => {
+            resetPagination(); 
+            loadTableData();   
+        });
         updateTotalPages(responseData.total_pages);
     } else {
         const tbody = document.getElementById(ID_TBODY);
@@ -57,7 +60,11 @@ function buildQueryString(limit, page) {
     const params = new URLSearchParams();
     params.append('limit', limit);
     params.append('offset', (page - 1) * limit);
-    params.append('nombre_receptor', 'DAMALIJE');
+    params.append('rfc_receptor', 'DAM030924EI6');
+    const browserParams = new URLSearchParams(window.location.search);
+    const ordering = browserParams.get('ordering');
+    if (ordering) params.append('ordering', ordering);
+
     for (const [key, value] of Object.entries(currentFilters)) {
         if (value) params.append(key, value);
     }

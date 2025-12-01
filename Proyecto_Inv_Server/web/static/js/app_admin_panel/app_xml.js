@@ -43,7 +43,10 @@ async function loadTableData() {
     }
 
     if (responseData.results) {
-        buildDynamicTable(responseData.results, ID_THEAD, ID_TBODY);
+        buildDynamicTable(responseData.results, ID_THEAD, ID_TBODY, () => {
+            resetPagination();
+            loadTableData();   
+        });
         updateTotalPages(responseData.total_pages);
     } else {
         const tbody = document.getElementById(ID_TBODY);
@@ -58,6 +61,11 @@ function buildQueryString(limit, page) {
     params.append('limit', limit);
     params.append('offset', (page - 1) * limit);
     params.append('nombre_emisor', 'DAMALIJE');
+
+    const browserParams = new URLSearchParams(window.location.search);
+    const ordering = browserParams.get('ordering');
+    if (ordering) params.append('ordering', ordering);
+
     for (const [key, value] of Object.entries(currentFilters)) {
         if (value) params.append(key, value);
     }
