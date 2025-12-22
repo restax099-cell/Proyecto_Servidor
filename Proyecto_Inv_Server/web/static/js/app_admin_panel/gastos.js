@@ -63,7 +63,11 @@ function buildQueryString(limit, page) {
     params.append('rfc_receptor', 'DAM030924EI6');
     const browserParams = new URLSearchParams(window.location.search);
     const ordering = browserParams.get('ordering');
-    if (ordering) params.append('ordering', ordering);
+    if (ordering) {
+        params.append('ordering', ordering);
+    } else {
+        params.append('ordering', '-fecha'); 
+    }
 
     for (const [key, value] of Object.entries(currentFilters)) {
         if (value) params.append(key, value);
