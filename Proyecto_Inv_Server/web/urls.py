@@ -12,4 +12,6 @@ urlpatterns = [
 
     path('emitidos-panel/conceptos/<str:uuid>/', views.conceptos_panel, name='conceptos_panel'),
     path('recibidos-panel/conceptos/<str:uuid>/', views.conceptos_panel, name='conceptos_panel'),
+
+    path('historial-precios/', views.historial_precios, name='historial_precios'),
 ]

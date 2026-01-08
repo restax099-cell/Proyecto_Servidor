@@ -1,0 +1,17 @@
+{% load static %} 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% include 'historial_precios/head_historial.html' %}
+</head>
+<body>
+    <main>
+        {% block content_panel%}
+        {% endblock %}
+    </main>
+    {% include 'historial_precios/scripts_historial_precios.html' %}
+
+    {% block extra_scripts %}
+    {% endblock %}
+</body>
+</html>

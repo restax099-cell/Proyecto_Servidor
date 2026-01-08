@@ -22,6 +22,8 @@ urlpatterns = [
     path('get-all-total/', xml_views.get_all_total_data_xml, name='get-all-total-data-xml'),
 
     path('cfdi-consultas/', xml_views.get_cfdi_consultas, name='api_cfdi_consultas'),
+    path('history-price/', xml_views.get_precios_historicos, name='get-history-price'),
+    
 
     # Rutas de prueba_views
     path('get-prueba/', prueba_views.get_prueba, name='get-prueba'),
