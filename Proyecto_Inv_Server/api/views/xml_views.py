@@ -76,6 +76,7 @@ def get_xml_data(request):
     else:
         return JsonResponse({"error": "Método no permitido"}, status=405)
     
+
 @csrf_exempt
 @api_view(["GET"])
 def get_xml_head(request):
@@ -223,7 +224,7 @@ def get_cfdi_consultas(request):
     except Exception as e:
         return Response({"error": "Error BD", "detalle": str(e)}, status=500)
     
-
+"""
 @csrf_exempt
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
@@ -330,3 +331,50 @@ def get_precios_historicos(request):
         "current_page": page_obj.number,
         "results": list(page_obj)
     })
+
+"""
+
+
+@csrf_exempt
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+@renderer_classes([JSONRenderer]) 
+def get_precios_historicos(request):
+    fecha_inicio = request.query_params.get('fecha_desde') or None
+    fecha_fin = request.query_params.get('fecha_hasta') or None
+    termino = request.query_params.get('search_term', '').strip()
+    
+    try:
+        page = int(request.query_params.get('page', 1))
+    except ValueError:
+        page = 1
+
+    limit = 20
+    offset = (page - 1) * limit
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("CALL sp_historic_price(%s, %s, %s, %s, %s)", 
+                        [fecha_inicio, fecha_fin, termino, limit, offset])
+            
+            row = cursor.fetchone()
+            
+            if row and row[1]:
+                total_items = row[0]
+                results = json.loads(row[1])
+            else:
+                total_items, results = 0, []
+
+        total_pages = (total_items + limit - 1) // limit
+
+        return Response({
+            "total_items": total_items,
+            "total_pages": total_pages,
+            "current_page": page,
+            "results": results
+        })
+
+    except Exception as e:
+        # Esto te ayudará a ver en consola si algo sale mal con el SP
+        print(f"Error en SP: {e}")
+        return Response({"error": "Error interno al procesar los datos"}, status=500)

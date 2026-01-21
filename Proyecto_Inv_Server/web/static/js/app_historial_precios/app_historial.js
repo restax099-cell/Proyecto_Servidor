@@ -88,9 +88,9 @@ function renderizarTarjetas(productos, contenedor) {
                                             </div>
                                             
                                             <div class="d-flex flex-wrap gap-2 pt-1">
-                                                ${h.precios.map(precio => `
+                                                ${(Array.isArray(h.precios) ? h.precios : JSON.parse(h.precios || "[]")).map(precio => `
                                                     <span class="price-badge-item">
-                                                        $${precio.toLocaleString('es-MX', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                                                        $${Number(precio).toLocaleString('es-MX', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                                                     </span>
                                                 `).join('')}
                                             </div>
