@@ -14,11 +14,6 @@ function formatCurrency(value) {
 
 
 
-
-
-
-
-
 function applyServerSort(columnKey, onSortCallback) {
     const currentUrl = new URL(window.location.href);
     const searchParams = currentUrl.searchParams;
@@ -469,10 +464,12 @@ export function buildDynamicTableGastos(data, theadId, tbodyId, onSortCallback) 
 
 
 
-//* Tablas dinamicas del modal (ventana emergente) de conceptos *//
+/**  Tablas dinamicas del modal (ventana emergente) de conceptos **/
 export function buildConceptosTable(data, theadId, tbodyId) {
   const thead = document.getElementById(theadId);
   const tbody = document.getElementById(tbodyId);
+  const urlParams = new URLSearchParams(window.location.search);
+  const currentOrdering = urlParams.get('ordering');
 
   if (!thead || !tbody) {
     console.error("Error: No se encontraron <thead> o <tbody> para el modal.");
@@ -607,3 +604,4 @@ export function buildConceptosTable(data, theadId, tbodyId) {
     tbody.appendChild(row);
   });
 }
+
