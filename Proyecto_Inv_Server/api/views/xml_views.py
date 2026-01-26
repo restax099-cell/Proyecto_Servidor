@@ -5,9 +5,15 @@ from django.forms.models import model_to_dict
 from django.db.models import Prefetch
 from django.utils.dateparse import parse_date
 from django.core.paginator import Paginator
+from django.shortcuts import render
+from django.contrib import messages
+from django.db import transaction
 
 import json
 import math
+import rarfile
+import zipfile
+import io
 
 from rest_framework.decorators import api_view, permission_classes, renderer_classes
 from rest_framework.permissions import IsAdminUser
@@ -22,6 +28,7 @@ from ..models.xml_models import (
 )
 
 from ..utils.pagination import paginate_and_respond
+from ..utils.xml_extract import main_extract 
 
 
 def dictfetchall(cursor):
@@ -224,117 +231,8 @@ def get_cfdi_consultas(request):
     except Exception as e:
         return Response({"error": "Error BD", "detalle": str(e)}, status=500)
     
-"""
-@csrf_exempt
-@api_view(['GET'])
-@permission_classes([IsAdminUser])
-@renderer_classes([JSONRenderer]) 
-def get_precios_historicos(request):
-    fecha_inicio = request.query_params.get('fecha_desde')
-    fecha_fin = request.query_params.get('fecha_hasta')
-    termino_busqueda = request.query_params.get('search_term', '').strip().upper()
-    numero_pagina = request.query_params.get('page', 1)
 
-    cabeceras_qs = VlxSatCfdiRaw.objects.all()
-    if fecha_inicio and fecha_fin:
-        cabeceras_qs = cabeceras_qs.filter(fecha__date__range=[fecha_inicio, fecha_fin])
-    elif fecha_inicio:
-        cabeceras_qs = cabeceras_qs.filter(fecha__date__gte=fecha_inicio)
-    elif fecha_fin:
-        cabeceras_qs = cabeceras_qs.filter(fecha__date__lte=fecha_fin)
-
-    dict_fechas = {c['uuid']: c['fecha'] for c in cabeceras_qs.values('uuid', 'fecha')}
-    uuids_validos = set(dict_fechas.keys())
-
-    if not uuids_validos:
-        return Response({"total_items": 0, "total_pages": 0, "results": []})
-
-    conceptos_qs = VlxDataXml.objects.filter(uuid__in=uuids_validos)
-    if termino_busqueda:
-        conceptos_qs = conceptos_qs.filter(descripcion__icontains=termino_busqueda)
-    
-    data_conceptos = conceptos_qs.values('uuid', 'descripcion', 'valor_unitario')
-
-    uuids_finales = {c['uuid'] for c in data_conceptos}
-    dict_proveedores = {
-        s.uuid: s.nombre_emisor 
-        for s in VlxSuppliers.objects.filter(uuid__in=uuids_finales)
-    }
-
-    temp_agrupado = {}
-    for c in data_conceptos:
-        uuid = c['uuid']
-        producto = c['descripcion'].strip().upper() if c['descripcion'] else "SIN DESCRIPCIÓN"
-        proveedor = dict_proveedores.get(uuid, "PROVEEDOR DESCONOCIDO").upper()
-        fecha_item = dict_fechas.get(uuid)
-        year_str = str(fecha_item.year) if fecha_item else "S/A"
-        precio = round(float(c['valor_unitario'] or 0), 2)
-
-        if producto not in temp_agrupado:
-            temp_agrupado[producto] = {"proveedores": {}, "precios_globales": []}
-        
-        prod_ref = temp_agrupado[producto]
-        prod_ref["precios_globales"].append(precio)
-
-        if proveedor not in prod_ref["proveedores"]:
-            prod_ref["proveedores"][proveedor] = {}
-        
-        if year_str not in prod_ref["proveedores"][proveedor]:
-            prod_ref["proveedores"][proveedor][year_str] = set()
-
-        prod_ref["proveedores"][proveedor][year_str].add(precio)
-
-    lista_final = []
-    termino_busqueda = request.query_params.get('search_term', '').strip().upper()
-    for prod_nombre, info in temp_agrupado.items():
-        lista_provs = []
-        for prov_nombre, years_dict in info["proveedores"].items():
-            historico = [{"año": y, "precios": sorted(list(p))} for y, p in sorted(years_dict.items(), reverse=True)]
-            min_prov = min([min(p) for p in years_dict.values()])
-            lista_provs.append({"nombre": prov_nombre, "precio_min_proveedor": min_prov, "historico": historico})
-
-        lista_provs.sort(key=lambda x: x['precio_min_proveedor'])
-
-
-        es_exacto = 0 if prod_nombre.startswith(termino_busqueda) else 1
-
-        primer_char = prod_nombre[0] if prod_nombre else ""
-        
-        if primer_char.isalpha():
-            peso_tipo = 0  
-        elif primer_char.isdigit():
-            peso_tipo = 1 
-        else:
-            peso_tipo = 2 
-
-        
-        prioridad_match = 0 if prod_nombre.startswith(termino_busqueda) else 1
-
-        lista_final.append({
-            "peso_tipo": peso_tipo,
-            "prioridad_match": prioridad_match,
-            "producto": prod_nombre,
-            "precio_min_global": min(info["precios_globales"]),
-            "proveedores": lista_provs
-        })
-    
-    lista_final.sort(key=lambda x: (x['prioridad_match'], x['peso_tipo'], x['producto']))
-
- 
-
-    paginator = Paginator(lista_final, 20)
-    page_obj = paginator.get_page(numero_pagina)
-
-    return Response({
-        "total_items": paginator.count,
-        "total_pages": paginator.num_pages,
-        "current_page": page_obj.number,
-        "results": list(page_obj)
-    })
-
-"""
-
-
+#? API del Historial de Precios
 @csrf_exempt
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
@@ -343,7 +241,7 @@ def get_precios_historicos(request):
     fecha_inicio = request.query_params.get('fecha_desde') or None
     fecha_fin = request.query_params.get('fecha_hasta') or None
     termino = request.query_params.get('search_term', '').strip()
-    
+
     try:
         page = int(request.query_params.get('page', 1))
     except ValueError:
@@ -356,9 +254,7 @@ def get_precios_historicos(request):
         with connection.cursor() as cursor:
             cursor.execute("CALL sp_historic_price(%s, %s, %s, %s, %s)", 
                         [fecha_inicio, fecha_fin, termino, limit, offset])
-            
             row = cursor.fetchone()
-            
             if row and row[1]:
                 total_items = row[0]
                 results = json.loads(row[1])
@@ -373,8 +269,91 @@ def get_precios_historicos(request):
             "current_page": page,
             "results": results
         })
-
+    
     except Exception as e:
-        # Esto te ayudará a ver en consola si algo sale mal con el SP
         print(f"Error en SP: {e}")
         return Response({"error": "Error interno al procesar los datos"}, status=500)
+    
+
+
+
+@csrf_exempt
+def import_xml_zip(request):
+    if request.method == 'POST':
+        keys_to_reset = ['import_current', 'import_total']
+        for key in keys_to_reset:
+            if key in request.session:
+                del request.session[key]
+
+        request.session.modified = True
+        request.session.save() 
+
+        archivo = request.FILES.get('zip_file')
+        if not archivo:
+            messages.error(request, "No se seleccionó ningún archivo.")
+            return render(request, 'xml_import/import_xml.html')
+
+        lista_contenidos_xml = []
+
+        try:
+            if archivo.name.endswith('.zip'):
+                manejador = zipfile.ZipFile(archivo)
+            elif archivo.name.endswith('.rar'):
+                manejador = rarfile.RarFile(archivo)
+            else:
+                raise ValueError("Formato no soportado.")
+
+            with manejador as f:
+                archivos_internos = f.namelist()
+                for nombre in archivos_internos:
+                    if nombre.lower().endswith('.xml'):
+                        with f.open(nombre) as xml_file:
+                            contenido = xml_file.read().decode('utf-8')
+                            lista_contenidos_xml.append({
+                                'nombre': nombre,
+                                'contenido': contenido
+                            })
+
+            if not lista_contenidos_xml:
+                raise ValueError("El paquete no contiene archivos XML.")
+            
+   
+            request.session['import_total'] = len(lista_contenidos_xml)
+            request.session['import_current'] = 0
+            request.session.save() 
+
+            total_insertados = main_extract(lista_contenidos_xml, request=request, MAX_WORKERS=15)
+
+
+            if total_insertados > 0:
+                messages.success(request, f"¡Éxito! Se procesaron e insertaron {total_insertados} facturas en la base de datos.")
+            else:
+                messages.warning(request, "No se insertaron registros nuevos (posibles duplicados).")
+            
+            
+
+        except Exception as e:
+            messages.error(request, f"Error crítico: {str(e)}")
+    
+    
+            
+    return render(request, 'xml_import/import_xml.html')
+
+
+
+
+
+
+
+def get_import_progress(request):
+    current = request.session.get('import_current', 0)
+    total = request.session.get('import_total', 0)
+    
+    # Evitar división por cero
+    progress = int((current / total) * 100) if total > 0 else 0
+    
+    return JsonResponse({
+        'progress': progress,
+        'current': current,
+        'total': total
+    })

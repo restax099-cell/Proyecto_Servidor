@@ -1,0 +1,17 @@
+{% load static %} 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% include 'xml_import/head_xml_import.html' %}
+</head>
+<body>
+    <main>
+        {% block content_panel%}
+        {% endblock %}
+    </main>
+    {% include 'xml_import/scripts_xml_import.html' %}
+
+    {% block extra_scripts %}
+    {% endblock %}
+</body>
+</html>

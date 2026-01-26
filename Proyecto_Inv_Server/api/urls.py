@@ -23,7 +23,8 @@ urlpatterns = [
 
     path('cfdi-consultas/', xml_views.get_cfdi_consultas, name='api_cfdi_consultas'),
     path('history-price/', xml_views.get_precios_historicos, name='get-history-price'),
-    
+    path('xml_import/', xml_views.import_xml_zip, name='import_xml_zip'),
+    path('get_import_progress/', xml_views.get_import_progress, name='get_import_progress'),
 
     # Rutas de prueba_views
     path('get-prueba/', prueba_views.get_prueba, name='get-prueba'),

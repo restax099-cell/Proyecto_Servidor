@@ -6,8 +6,6 @@ from api.models.xml_models import VlxTotalDataXml, VlxSatCfdiRaw, VlxSuppliers
 def home(request):
     return render(request, "index.html")
 
-
-
 #* ----------- SECCION WEB PANEL ADMINISTRATIVO (CONSULTAS) ----------- *#
 @login_required
 def emitidos_panel(request):
@@ -60,9 +58,13 @@ def conceptos_panel(request, uuid):
     return render(request, 'admin_panel_xml/conceptos_panel.html', context)
 
 
-
 #* ----------- SECCION WEB HISTORIAL DE PRECIOS ----------- *#
-
 @login_required
 def historial_precios(request):
     return render(request, 'historial_precios/historial.html')
+
+
+#* ----------- SECCION WEB IMPORTACION DE XML-ZIP ----------- *#
+@login_required
+def xml_import(request):
+    return render(request, 'xml_import/import_xml.html')

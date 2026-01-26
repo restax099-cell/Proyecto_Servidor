@@ -1,0 +1,63 @@
+{% extends 'xml_import/base_xml_import.html' %}
+{% load static %}
+
+{% block title %}IMPORTAR XML{% endblock %}
+
+{% block content_panel %}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-body text-center">
+                    <h3 class="card-title mb-4">Carga de Archivos XML</h3>
+                    <p class="text-muted">Subir archivo .zip .rar para procesar facturas</p>
+                    
+                    <form method="POST" enctype="multipart/form-data" action="{% url 'import_xml_zip' %}">
+                        {% csrf_token %}
+                        <div class="drop-zone mb-4" id="drop-zone">
+                            <div class="drop-icon">📂</div>
+                            <p class="mt-2 fw-bold" id="file-name">Arrastra tu archivo ZIP aquí</p>
+                            <p class="text-secondary small">o haz clic para seleccionar</p>
+                            <input type="file" name="zip_file" id="zip_input" accept=".zip, .rar, .7z" required>
+                        </div>
+                        
+                        <button type="submit" id="btn-import" class="btn btn-primary btn-lg w-100" disabled>
+                            Comenzar Importación
+                        </button>
+
+                        <div id="progress-wrapper" class="mt-4" style="display: none;">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="text-primary fw-bold" id="status-text">Subiendo archivo...</span>
+                                <span class="text-primary fw-bold" id="percent-text">0%</span>
+                            </div>
+                            <div class="progress" style="height: 25px;">
+                                <div id="progress-bar" class="progress-bar progress-bar-striped progress-bar-animated bg-primary" 
+                                    role="progressbar" style="width: 0%;">
+                                </div>
+                            </div>
+                            <p class="text-muted small mt-2">Por favor, no cierres esta ventana hasta terminar.</p>
+                        </div>
+                    </form>
+
+                    <div class="mt-4">
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+{% load static %}
+<script type="module" src="{% static 'js/app_xml_import/app_xml_import.js' %}"></script>
+{% endblock %}
