@@ -275,8 +275,6 @@ def get_precios_historicos(request):
         return Response({"error": "Error interno al procesar los datos"}, status=500)
     
 
-
-
 @csrf_exempt
 def import_xml_zip(request):
     if request.method == 'POST':
@@ -338,11 +336,6 @@ def import_xml_zip(request):
     
             
     return render(request, 'xml_import/import_xml.html')
-
-
-
-
-
 
 
 def get_import_progress(request):

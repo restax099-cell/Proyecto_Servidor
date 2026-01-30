@@ -1,5 +1,3 @@
-//? --- 1. Imports ---
-console.log('hola');
 
 import { fetchData } from '../../utils/get_api.js';
 import { buildDynamicTable } from './dynamic_tables.js';
@@ -13,12 +11,9 @@ const ID_TBODY = 'tbody-panel';
 const ID_MODAL = 'conceptosModal';
 const ID_MODAL_BODY = 'conceptosModalBody';
 
-
 let abortController = new AbortController();
 
 let currentFilters = {}; 
-
-
 
 async function loadTableData() {
 
@@ -30,7 +25,6 @@ async function loadTableData() {
     const pagination = getPaginationState();
 
     const queryParams = buildQueryString(pagination.limit, pagination.page);
-    //const url = `http://127.0.0.1:8000/api/cfdi-consultas/?${queryParams}`;
 
     const url = `/api/cfdi-consultas/?${queryParams}`;
     const responseData = await fetchData(url, abortController.signal);
@@ -60,7 +54,7 @@ function buildQueryString(limit, page) {
     const params = new URLSearchParams();
     params.append('limit', limit);
     params.append('offset', (page - 1) * limit);
-    params.append('nombre_emisor', 'DAMALIJE');
+    //params.append('nombre_emisor', 'DAMALIJE');
 
     const browserParams = new URLSearchParams(window.location.search);
     const ordering = browserParams.get('ordering');
@@ -77,6 +71,13 @@ function buildQueryString(limit, page) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+    const urlBusqueda = new URLSearchParams(window.location.search);
+    const receptorUrl = urlBusqueda.get('nombre_receptor');
+
+    if (receptorUrl) {
+        currentFilters['nombre_receptor'] = receptorUrl;
+    }
+    console.log(currentFilters);
 
     inicializarBusqueda((searchTerm) => {
 

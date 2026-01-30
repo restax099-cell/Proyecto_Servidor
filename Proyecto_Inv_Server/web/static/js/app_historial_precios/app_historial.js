@@ -89,8 +89,10 @@ function renderizarTarjetas(productos, contenedor) {
                                             
                                             <div class="d-flex flex-wrap gap-2 pt-1">
                                                 ${(Array.isArray(h.precios) ? h.precios : JSON.parse(h.precios || "[]")).map(precio => `
-                                                    <span class="price-badge-item">
-                                                        $${Number(precio).toLocaleString('es-MX', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                                                    <span class="price-badge-item" 
+                                                        role="button" 
+                                                        data-proveedor="${p.nombre}"
+                                                        onclick="redirigirAContexto('${p.nombre}', true)"> $${Number(precio).toLocaleString('es-MX', {minimumFractionDigits: 2})}
                                                     </span>
                                                 `).join('')}
                                             </div>
@@ -121,7 +123,31 @@ function renderizarPaginacion(total, actual, contenedor) {
 }
 
 
+
+function redirigirAContexto(nombre, esGasto = false) {
+    const nombreLimpio = encodeURIComponent(nombre);
+    let urlDestino = '';
+
+    const pagina = esGasto ? '/gastos-panel/' : '/emitidos-panel/';
+    const parametro = esGasto ? 'nombre_emisor' : 'nombre_receptor';
+    
+    window.location.href = `${pagina}?${parametro}=${nombreLimpio}`;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+
+    const contenedor = document.getElementById('contenedorProductos');
+    if (contenedor) {
+        contenedor.addEventListener('click', (e) => {
+            const badge = e.target.closest('.price-badge-item');
+            if (badge) {
+                const nombre = badge.getAttribute('data-proveedor');
+          
+                redirigirAContexto(nombre, true); 
+            }
+        });
+    }
+
     inicializarBusqueda((searchTerm) => {
         currentFilters.search_term = searchTerm;
         currentFilters.page = 1;

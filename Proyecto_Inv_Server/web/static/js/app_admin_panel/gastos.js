@@ -60,7 +60,7 @@ function buildQueryString(limit, page) {
     const params = new URLSearchParams();
     params.append('limit', limit);
     params.append('offset', (page - 1) * limit);
-    params.append('rfc_receptor', 'DAM030924EI6');
+    //params.append('rfc_receptor', 'DAM030924EI6');
     const browserParams = new URLSearchParams(window.location.search);
     const ordering = browserParams.get('ordering');
     if (ordering) {
@@ -76,7 +76,15 @@ function buildQueryString(limit, page) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+    const urlBusqueda = new URLSearchParams(window.location.search);
+    const emisorUrl = urlBusqueda.get('nombre_emisor');
+    
+    if (emisorUrl) {
+        currentFilters['nombre_emisor'] = emisorUrl;
+    }
 
+    console.log(currentFilters);
+   
     inicializarBusqueda((searchTerm) => {
 
         if (searchTerm && searchTerm.trim() !== '') {
