@@ -126,12 +126,15 @@ function renderizarPaginacion(total, actual, contenedor) {
 
 function redirigirAContexto(nombre, esGasto = false) {
     const nombreLimpio = encodeURIComponent(nombre);
-    let urlDestino = '';
+    
 
     const pagina = esGasto ? '/gastos-panel/' : '/emitidos-panel/';
     const parametro = esGasto ? 'nombre_emisor' : 'nombre_receptor';
     
-    window.location.href = `${pagina}?${parametro}=${nombreLimpio}`;
+    const urlDestino = `${pagina}?${parametro}=${nombreLimpio}`;
+
+    // Abre en una nueva pestaña
+    window.open(urlDestino, '_blank');
 }
 
 document.addEventListener('DOMContentLoaded', () => {
