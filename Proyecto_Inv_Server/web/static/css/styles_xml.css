@@ -4,54 +4,65 @@ body {
   background-color: #f8f9fa;
 }
 
-/* Oculta las flechas (spinners) en inputs de tipo number */
+
 input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button {
-    -webkit-appearance: none; /* Para navegadores basados en Webkit (Chrome, Safari, Edge) */
-    margin: 0; /* Elimina cualquier margen residual */
+    -webkit-appearance: none; 
+    margin: 0;
 }
 
 input[type="number"] {
-    -moz-appearance: textfield; /* Para Firefox */
+    -moz-appearance: textfield; 
 }
 
-/* Estilo base para los encabezados */
 thead th.sortable-th {
     cursor: pointer !important;
     position: relative;
     user-select: none;
     
-    /* 1. Definimos el fondo base explícitamente */
     background-color: #212529; 
     color: #ffffff;
     
-    /* 2. Preparamos el borde invisible para evitar saltos de tamaño */
     border-bottom: 3px solid transparent; 
 
-    /* 3. OPTIMIZACIÓN: Solo animamos lo necesario, no 'all' */
     transition: background-color 0.2s ease-out, border-bottom-color 0.2s ease-out, color 0.2s ease-out;
     
-    /* Evita parpadeos en algunos navegadores */
     backface-visibility: hidden; 
 }
 
-/* EFECTO HOVER (Pasar el mouse) */
 thead th.sortable-th:hover {
-    /* Un gris apenas más claro, sin transparencia para evitar el flash */
     background-color: #2c3034 !important; 
     
-    /* Borde inferior blanco al pasar el mouse */
     border-bottom-color: rgba(255, 255, 255, 0.5) !important;
 }
 
-/* EFECTO ACTIVE (Columna ordenada actualmente) */
+
 thead th.sortable-th.active-sort {
     background-color: #2c3034 !important;
-    color: #ffc107 !important; /* Texto amarillo/dorado */
+    color: #ffc107 !important; 
     
-    /* Borde inferior sólido del color activo */
     border-bottom-color: #ffc107 !important;
     
-    /* Quitamos box-shadow para usar border-bottom que es más estable */
     box-shadow: none !important; 
+}
+
+/* Resaltado limpio: Sin fondo, sin negritas, sin subrayado */
+tr.fila-vinculada td {
+    /* Quitamos el fondo y bordes horizontales */
+    background-color: transparent !important; 
+    border-top: none !important;
+    border-bottom: none !important;
+    
+    /* Mantenemos el estilo de texto original del panel */
+    font-weight: normal !important;
+    color: inherit !important;
+}
+
+/* Solo la barra de acento en los extremos */
+tr.fila-vinculada td:first-child {
+    border-left: 5px solid #ffc107 !important; /* Barra lateral izquierda */
+}
+
+tr.fila-vinculada td:last-child {
+    border-right: 5px solid #ffc107 !important; /* Barra lateral derecha */
 }

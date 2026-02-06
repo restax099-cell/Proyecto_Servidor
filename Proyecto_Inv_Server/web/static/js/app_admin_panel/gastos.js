@@ -43,11 +43,32 @@ async function loadTableData() {
     }
 
     if (responseData.results) {
-        buildDynamicTableGastos(responseData.results, ID_THEAD, ID_TBODY, () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const uuidDestacado = urlParams.get('highlight_uuid') || urlParams.get('uuid');
+
+        let datosParaTabla = responseData.results;
+    
+
+        buildDynamicTableGastos(datosParaTabla, ID_THEAD, ID_TBODY, () => {
             resetPagination(); 
             loadTableData();   
         });
+        
         updateTotalPages(responseData.total_pages);
+
+        if (uuidDestacado) {
+            const tbody = document.getElementById(ID_TBODY);
+            const primeraFila = tbody ? tbody.querySelector('tr:first-child') : null;
+            
+            if (primeraFila) {
+                primeraFila.classList.add('fila-vinculada');
+                primeraFila.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                console.log("Resaltado aplicado desde el callback de la tabla");
+            }
+        }
+        /*window.history.replaceState({}, document.title, window.location.pathname + window.location.search.split('&highlight_uuid')[0]);
+*/
+
     } else {
         const tbody = document.getElementById(ID_TBODY);
         if (tbody) tbody.innerHTML = `<tr><td colspan="100%" class="text-center p-3">Error al cargar datos.</td></tr>`;
@@ -62,6 +83,13 @@ function buildQueryString(limit, page) {
     params.append('offset', (page - 1) * limit);
     //params.append('rfc_receptor', 'DAM030924EI6');
     const browserParams = new URLSearchParams(window.location.search);
+
+    const hUuid = browserParams.get('highlight_uuid');
+    
+    if (hUuid) {
+        params.append('uuid', hUuid); 
+    }
+
     const ordering = browserParams.get('ordering');
     if (ordering) {
         params.append('ordering', ordering);

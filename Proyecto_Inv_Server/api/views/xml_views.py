@@ -164,6 +164,7 @@ def get_cfdi_consultas(request):
     p_tipo_comprobante = request.query_params.get('tipo_comprobante', None)
     p_metodo_pago = request.query_params.get('metodo_pago', None)
     p_forma_pago = request.query_params.get('forma_pago', None)
+    p_uuid = request.query_params.get('uuid', None)
 
 
     p_ordering = request.query_params.get('ordering', '-id') 
@@ -208,7 +209,6 @@ def get_cfdi_consultas(request):
     try:
         with connection.cursor() as cursor:
             sql_query = "CALL sp_get_cfdi_consultas(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"
-            
             cursor.execute(sql_query, params)
             
             count_result = cursor.fetchone()
@@ -216,7 +216,28 @@ def get_cfdi_consultas(request):
             
             cursor.nextset() 
             results = dictfetchall(cursor)
-        
+        if p_uuid:
+            p_uuid = p_uuid.strip()
+            
+            index_existente = next((i for i, item in enumerate(results) 
+                                if str(item.get('uuid', '')).lower() == p_uuid.lower()), None)
+
+            if index_existente is not None:
+                # Mover al principio
+                obj = results.pop(index_existente)
+                results.insert(0, obj)
+                print(f"DEBUG: UUID encontrado en los resultados y movido al inicio.")
+            else:
+                with connection.cursor() as cursor_extra:
+                    sql_extra = "SELECT * FROM vlx_sat_cfdi_raw WHERE uuid = %s LIMIT 1"
+                    cursor_extra.execute(sql_extra, [p_uuid])
+                    factura_extra = dictfetchall(cursor_extra)
+                    
+                    if factura_extra:
+                        results.insert(0, factura_extra[0])
+                        print(f"DEBUG: UUID no estaba en la página, se consultó y se insertó al inicio.")
+                    else:
+                        print(f"DEBUG: El UUID {p_uuid} no existe en la base de datos.")
         # Paginación
         total_pages = 1 
         if total_count > 0 and p_limit > 0:
@@ -224,7 +245,7 @@ def get_cfdi_consultas(request):
 
         return Response({
             'total_count': total_count,
-            'total_pages': total_pages,
+            'total_pages': math.ceil(total_count / p_limit) if total_count > 0 else 1,
             'results': results
         })
 

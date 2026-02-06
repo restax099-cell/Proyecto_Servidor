@@ -58,54 +58,63 @@ function renderizarTarjetas(productos, contenedor) {
     }
 
     productos.forEach((item, index) => {
-        html += `
-        <div class="card shadow-sm mb-3 border-0">
-            <div class="accordion" id="acc${index}">
-                <div class="accordion-item border-0">
-                    <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#col${index}">
-                        <div class="text-start">
-                            <h6 class="mb-0 fw-bold text-dark text-uppercase" style="font-size: 0.9rem;">${item.producto}</h6>
-                            <small class="text-primary fw-bold">MEJOR PRECIO: $${item.precio_min_global.toLocaleString('es-MX', {minimumFractionDigits: 2})}</small>
-                        </div>
-                    </button>
-                    
-                    <div id="col${index}" class="accordion-collapse collapse" data-bs-parent="#acc${index}">
-                        <div class="accordion-body bg-light-subtle px-3">
-                            ${item.proveedores.map(p => `
-                                <div class="bg-white p-3 mb-3 border rounded-3 shadow-sm">
-                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <span class="fw-bold text-primary small text-uppercase">${p.nombre}</span>
-                                        <span class="badge bg-success-subtle text-success border border-success-subtle">Min: $${p.precio_min_proveedor.toFixed(2)}</span>
-                                    </div>
-                                    
-                                    <hr class="my-2 opacity-25">
-
-                                    ${p.historico.map(h => `
-                                        <div class="mt-3">
-                                            <div class="d-flex align-items-center mb-2">
-                                                <span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis fw-bold px-3">Año ${h.año}</span>
-                                                <div class="flex-grow-1 ms-2" style="height: 1px; background-color: #eee;"></div>
-                                            </div>
-                                            
-                                            <div class="d-flex flex-wrap gap-2 pt-1">
-                                                ${(Array.isArray(h.precios) ? h.precios : JSON.parse(h.precios || "[]")).map(precio => `
-                                                    <span class="price-badge-item" 
-                                                        role="button" 
-                                                        data-proveedor="${p.nombre}"
-                                                        onclick="redirigirAContexto('${p.nombre}', true)"> $${Number(precio).toLocaleString('es-MX', {minimumFractionDigits: 2})}
-                                                    </span>
-                                                `).join('')}
-                                            </div>
-                                        </div>
-                                    `).join('')}
+    html += `
+    <div class="card shadow-sm mb-3 border-0">
+        <div class="accordion" id="acc${index}">
+            <div class="accordion-item border-0">
+                <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#col${index}">
+                    <div class="text-start">
+                        <h6 class="mb-0 fw-bold text-dark text-uppercase" style="font-size: 0.9rem;">${item.producto}</h6>
+                        <small class="text-primary fw-bold">MEJOR PRECIO: $${item.precio_min_global.toLocaleString('es-MX', {minimumFractionDigits: 2})}</small>
+                    </div>
+                </button>
+                
+                <div id="col${index}" class="accordion-collapse collapse" data-bs-parent="#acc${index}">
+                    <div class="accordion-body bg-light-subtle px-3">
+                        ${item.proveedores.map(p => `
+                            <div class="bg-white p-3 mb-3 border rounded-3 shadow-sm">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="fw-bold text-primary small text-uppercase">${p.nombre}</span>
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle">Min: $${p.precio_min_proveedor.toFixed(2)}</span>
                                 </div>
-                            `).join('')}
-                        </div>
+                                
+                                <hr class="my-2 opacity-25">
+
+                                ${p.historico.map(h => {
+                                    const listaPrecios = Array.isArray(h.precios) ? h.precios : JSON.parse(h.precios || "[]");
+                                    const listaUuids = Array.isArray(h.uuids) ? h.uuids : JSON.parse(h.uuids || "[]");
+
+                                    return `
+                                    <div class="mt-3">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis fw-bold px-3">Año ${h.año}</span>
+                                            <div class="flex-grow-1 ms-2" style="height: 1px; background-color: #eee;"></div>
+                                        </div>
+                                        
+                                        <div class="d-flex flex-wrap gap-2 pt-1">
+                                            ${listaPrecios.map((precio, i) => {
+                                                const uuidIndividual = listaUuids[i] || ''; 
+                                                
+                                                return `
+                                                <span class="price-badge-item" 
+                                                    role="button" 
+                                                    data-proveedor="${p.nombre}"
+                                                    data-uuid="${uuidIndividual}"
+                                                    onclick="redirigirAContexto('${p.nombre}', '${uuidIndividual}', true)">
+                                                    $${Number(precio).toLocaleString('es-MX', {minimumFractionDigits: 2})}
+                                                </span>`;
+                                            }).join('')}
+                                        </div>
+                                    </div>`;
+                                }).join('')}
+                            </div>
+                        `).join('')}
                     </div>
                 </div>
             </div>
-        </div>`;
-    });
+        </div>
+    </div>`;
+});
     contenedor.innerHTML = html;
 }
 
@@ -123,18 +132,14 @@ function renderizarPaginacion(total, actual, contenedor) {
 }
 
 
-
-function redirigirAContexto(nombre, esGasto = false) {
+function redirigirAContexto(nombre, uuid, esGasto = false) {
     const nombreLimpio = encodeURIComponent(nombre);
-    
-
     const pagina = esGasto ? '/gastos-panel/' : '/emitidos-panel/';
     const parametro = esGasto ? 'nombre_emisor' : 'nombre_receptor';
     
-    const urlDestino = `${pagina}?${parametro}=${nombreLimpio}`;
+    const urlDestino = `${pagina}?${parametro}=${nombreLimpio}&highlight_uuid=${uuid}`;
 
-    // Abre en una nueva pestaña
-    window.open(urlDestino, '_blank');
+    window.open(urlDestino, '_blank', 'noopener,noreferrer');
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -145,8 +150,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const badge = e.target.closest('.price-badge-item');
             if (badge) {
                 const nombre = badge.getAttribute('data-proveedor');
-          
-                redirigirAContexto(nombre, true); 
+                const uuid = badge.getAttribute('data-uuid'); 
+        
+                redirigirAContexto(nombre, uuid, true); 
             }
         });
     }
