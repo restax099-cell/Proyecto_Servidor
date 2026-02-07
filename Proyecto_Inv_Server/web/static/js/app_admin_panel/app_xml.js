@@ -71,6 +71,8 @@ function buildQueryString(limit, page) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+    
+
     const urlBusqueda = new URLSearchParams(window.location.search);
     const receptorUrl = urlBusqueda.get('nombre_receptor');
 

@@ -46,23 +46,21 @@ thead th.sortable-th.active-sort {
     box-shadow: none !important; 
 }
 
-/* Resaltado limpio: Sin fondo, sin negritas, sin subrayado */
 tr.fila-vinculada td {
-    /* Quitamos el fondo y bordes horizontales */
     background-color: transparent !important; 
     border-top: none !important;
     border-bottom: none !important;
     
-    /* Mantenemos el estilo de texto original del panel */
     font-weight: normal !important;
     color: inherit !important;
 }
 
-/* Solo la barra de acento en los extremos */
 tr.fila-vinculada td:first-child {
-    border-left: 5px solid #ffc107 !important; /* Barra lateral izquierda */
+    border-left: 5px solid #ffc107 !important; 
 }
 
 tr.fila-vinculada td:last-child {
-    border-right: 5px solid #ffc107 !important; /* Barra lateral derecha */
+    border-right: 5px solid #ffc107 !important; 
 }
+
+

@@ -223,7 +223,6 @@ def get_cfdi_consultas(request):
                                 if str(item.get('uuid', '')).lower() == p_uuid.lower()), None)
 
             if index_existente is not None:
-                # Mover al principio
                 obj = results.pop(index_existente)
                 results.insert(0, obj)
                 print(f"DEBUG: UUID encontrado en los resultados y movido al inicio.")

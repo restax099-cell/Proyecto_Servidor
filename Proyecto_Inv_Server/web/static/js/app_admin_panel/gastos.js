@@ -1,5 +1,7 @@
 //? --- 1. Imports ---
-console.log('hola');
+
+
+
 
 import { fetchData } from '../../utils/get_api.js';
 import { buildDynamicTableGastos } from './dynamic_tables.js';
@@ -66,8 +68,8 @@ async function loadTableData() {
                 console.log("Resaltado aplicado desde el callback de la tabla");
             }
         }
-        /*window.history.replaceState({}, document.title, window.location.pathname + window.location.search.split('&highlight_uuid')[0]);
-*/
+        
+        window.history.replaceState({}, document.title, window.location.pathname);
 
     } else {
         const tbody = document.getElementById(ID_TBODY);
@@ -104,6 +106,9 @@ function buildQueryString(limit, page) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+
+
+
     const urlBusqueda = new URLSearchParams(window.location.search);
     const emisorUrl = urlBusqueda.get('nombre_emisor');
     

@@ -80,33 +80,53 @@ function renderizarTarjetas(productos, contenedor) {
                                 
                                 <hr class="my-2 opacity-25">
 
-                                ${p.historico.map(h => {
-                                    const listaPrecios = Array.isArray(h.precios) ? h.precios : JSON.parse(h.precios || "[]");
-                                    const listaUuids = Array.isArray(h.uuids) ? h.uuids : JSON.parse(h.uuids || "[]");
+${p.historico.map(h => {
+    // Lógica de datos intacta (NO TOCAR)
+    const precios = Array.isArray(h.precios) ? h.precios : JSON.parse(h.precios || "[]");
+    const uuids = Array.isArray(h.uuids) ? h.uuids : JSON.parse(h.uuids || "[]");
+    const cants = Array.isArray(h.cants) ? h.cants : JSON.parse(h.cants || "[]");
+    const units = Array.isArray(h.units) ? h.units : JSON.parse(h.units || "[]");
 
-                                    return `
-                                    <div class="mt-3">
-                                        <div class="d-flex align-items-center mb-2">
-                                            <span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis fw-bold px-3">Año ${h.año}</span>
-                                            <div class="flex-grow-1 ms-2" style="height: 1px; background-color: #eee;"></div>
-                                        </div>
-                                        
-                                        <div class="d-flex flex-wrap gap-2 pt-1">
-                                            ${listaPrecios.map((precio, i) => {
-                                                const uuidIndividual = listaUuids[i] || ''; 
-                                                
-                                                return `
-                                                <span class="price-badge-item" 
-                                                    role="button" 
-                                                    data-proveedor="${p.nombre}"
-                                                    data-uuid="${uuidIndividual}"
-                                                    onclick="redirigirAContexto('${p.nombre}', '${uuidIndividual}', true)">
-                                                    $${Number(precio).toLocaleString('es-MX', {minimumFractionDigits: 2})}
-                                                </span>`;
-                                            }).join('')}
-                                        </div>
-                                    </div>`;
-                                }).join('')}
+    const nombreProveedor = p.nombre || '';
+
+    return `
+    <div class="mt-3">
+        <div class="d-flex align-items-center mb-2">
+            <span class="badge rounded-pill bg-light text-secondary border px-3 py-2" style="font-weight: 600; font-size: 0.8rem; letter-spacing: 0.5px;">AÑO ${h.año}</span>
+            <div class="flex-grow-1 ms-3" style="height: 1px; background: linear-gradient(to right, #e9ecef, transparent);"></div>
+        </div>
+        
+        <div class="d-flex flex-wrap gap-2 pt-1">
+            ${precios.map((precio, i) => {
+                const uuid = uuids[i] || '';
+                const cantidad = cants[i] || 0;
+                const unitario = units[i] || 0;
+
+                return `
+                <div class="price-badge-item d-inline-flex align-items-center mb-1" 
+                    role="button" 
+                    data-proveedor="${nombreProveedor}"
+                    data-uuid="${uuid}"
+                    onclick="funClic(this)"
+                    style="cursor: pointer; transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);"
+                    onmouseover="this.style.transform='translateY(-3px)'"
+                    onmouseout="this.style.transform='translateY(0)'">
+                    
+                    <span class="rounded-start-pill border border-end-0 bg-white text-secondary px-3 py-2" 
+                        style="font-size: 0.75rem; font-weight: 500; display: flex; align-items: center; box-shadow: -2px 2px 5px rgba(0,0,0,0.02);">
+                        <span style="opacity: 0.7; margin-right: 4px;">Cant:</span> ${cantidad} &times; $${Number(unitario).toLocaleString('es-MX', {minimumFractionDigits: 2})}
+                    </span>
+
+                    <span class="rounded-end-pill text-white px-3 py-2 shadow-sm" 
+                        style="font-size: 0.95rem; font-weight: 700; background-color: #212529; border: 1px solid #212529; letter-spacing: 0.5px;">
+                        $${Number(precio).toLocaleString('es-MX', {minimumFractionDigits: 2})}
+                    </span>
+                    
+                </div>`;
+            }).join('')}
+        </div>
+    </div>`;
+}).join('')}
                             </div>
                         `).join('')}
                     </div>
@@ -131,6 +151,16 @@ function renderizarPaginacion(total, actual, contenedor) {
         </ul>`;
 }
 
+function funClic(elemento) {
+    const proveedor = elemento.getAttribute('data-proveedor');
+    const uuid = elemento.getAttribute('data-uuid');
+    
+    if (typeof redirigirAContexto === 'function') {
+        redirigirAContexto(proveedor, uuid, true);
+    } else {
+        console.error("La función redirigirAContexto no existe");
+    }
+}
 
 function redirigirAContexto(nombre, uuid, esGasto = false) {
     const nombreLimpio = encodeURIComponent(nombre);
