@@ -413,9 +413,6 @@ def tarea_subir_archivo(archivo):
     finally:
         if conn: conn.close() 
 
-
-
-
 def main_extract(lista_xmls_ram, request=None, MAX_WORKERS=15):
     total = len(lista_xmls_ram)
     if request:

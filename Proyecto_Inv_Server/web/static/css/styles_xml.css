@@ -46,21 +46,6 @@ thead th.sortable-th.active-sort {
     box-shadow: none !important; 
 }
 
-tr.fila-vinculada td {
-    background-color: transparent !important; 
-    border-top: none !important;
-    border-bottom: none !important;
-    
-    font-weight: normal !important;
-    color: inherit !important;
-}
 
-tr.fila-vinculada td:first-child {
-    border-left: 5px solid #ffc107 !important; 
-}
-
-tr.fila-vinculada td:last-child {
-    border-right: 5px solid #ffc107 !important; 
-}
 
 

@@ -178,37 +178,85 @@ def get_cfdi_consultas(request):
     
 
     params = [
-        p_fecha_desde,     
-        p_fecha_hasta,      
-        p_importe_min,     
-        p_importe_max,     
-        
-        p_search_term,     
-        
-        p_search_emisor,   
-        p_search_receptor, 
-        
-        p_nombre_emisor,   
-        p_rfc_emisor,     
-        p_nombre_receptor, 
-        p_rfc_receptor,    
-        
+        p_fecha_desde,
+        p_fecha_hasta,
+        p_importe_min,
+        p_importe_max,
+        p_search_term,
+        p_search_emisor,
+        p_search_receptor,
+        p_nombre_emisor,
+        p_rfc_emisor,
+        p_nombre_receptor,
+        p_rfc_receptor,
         p_tipo_comprobante,
-        p_metodo_pago,    
-        p_forma_pago,       
-        
-      
-        p_sort_col,         
+        p_metodo_pago,
+        p_forma_pago,
+        None,
+        p_sort_col,
         p_sort_dir,
-       
-
-        p_limit,            
-        p_offset           
+        p_limit,
+        p_offset
     ]
 
     try:
+        if p_uuid:
+            p_uuid = p_uuid.strip()
+            if p_uuid == "":
+                p_uuid = None
+
+        if p_uuid:
+            params = [
+                None, None, None, None, 
+                None,            
+                None, None,       
+                None, None, None, None, 
+                None, None, None, 
+                
+                p_uuid,          
+                
+                'id', 'ASC',     
+                1, 0              
+            ]
+        else:
+            p_ordering = request.query_params.get('ordering', '-id') 
+            p_sort_dir = 'ASC'
+            p_sort_col = p_ordering
+            if p_ordering and p_ordering.startswith('-'):
+                p_sort_dir = 'DESC'
+                p_sort_col = p_ordering[1:]
+
+            params = [
+                request.query_params.get('fecha_desde', None),     
+                request.query_params.get('fecha_hasta', None),      
+                request.query_params.get('importe_min', None),     
+                request.query_params.get('importe_max', None),     
+                
+                request.query_params.get('search_term', None),     
+                request.query_params.get('search_emisor', None),   
+                request.query_params.get('search_receptor', None), 
+                
+                request.query_params.get('nombre_emisor', None),   
+                request.query_params.get('rfc_emisor', None),     
+                request.query_params.get('nombre_receptor', None), 
+                request.query_params.get('rfc_receptor', None),    
+                
+                request.query_params.get('tipo_comprobante', None),
+                request.query_params.get('metodo_pago', None),    
+                request.query_params.get('forma_pago', None),       
+                
+                None,              
+                
+                p_sort_col,         
+                p_sort_dir,
+                p_limit,            
+                p_offset           
+            ]
+  
+        #!----------------------------------------------------------------------------------------!#
+
         with connection.cursor() as cursor:
-            sql_query = "CALL sp_get_cfdi_consultas(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"
+            sql_query = "CALL sp_get_cfdi_consultas(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"
             cursor.execute(sql_query, params)
             
             count_result = cursor.fetchone()
@@ -216,35 +264,10 @@ def get_cfdi_consultas(request):
             
             cursor.nextset() 
             results = dictfetchall(cursor)
-        if p_uuid:
-            p_uuid = p_uuid.strip()
-            
-            index_existente = next((i for i, item in enumerate(results) 
-                                if str(item.get('uuid', '')).lower() == p_uuid.lower()), None)
-
-            if index_existente is not None:
-                obj = results.pop(index_existente)
-                results.insert(0, obj)
-                print(f"DEBUG: UUID encontrado en los resultados y movido al inicio.")
-            else:
-                with connection.cursor() as cursor_extra:
-                    sql_extra = "SELECT * FROM vlx_sat_cfdi_raw WHERE uuid = %s LIMIT 1"
-                    cursor_extra.execute(sql_extra, [p_uuid])
-                    factura_extra = dictfetchall(cursor_extra)
-                    
-                    if factura_extra:
-                        results.insert(0, factura_extra[0])
-                        print(f"DEBUG: UUID no estaba en la página, se consultó y se insertó al inicio.")
-                    else:
-                        print(f"DEBUG: El UUID {p_uuid} no existe en la base de datos.")
-        # Paginación
-        total_pages = 1 
-        if total_count > 0 and p_limit > 0:
-            total_pages = math.ceil(total_count / p_limit)
 
         return Response({
             'total_count': total_count,
-            'total_pages': math.ceil(total_count / p_limit) if total_count > 0 else 1,
+            'total_pages': math.ceil(total_count / p_limit) if total_count > 0 and p_limit > 0 else 1,
             'results': results
         })
 

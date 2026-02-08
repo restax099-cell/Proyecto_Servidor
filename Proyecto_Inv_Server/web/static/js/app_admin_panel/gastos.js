@@ -59,17 +59,21 @@ async function loadTableData() {
         updateTotalPages(responseData.total_pages);
 
         if (uuidDestacado) {
+            updateTotalPages(1);
             const tbody = document.getElementById(ID_TBODY);
             const primeraFila = tbody ? tbody.querySelector('tr:first-child') : null;
             
             if (primeraFila) {
                 primeraFila.classList.add('fila-vinculada');
-                primeraFila.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                console.log("Resaltado aplicado desde el callback de la tabla");
+                console.log("Factura única cargada y resaltada");
             }
+            
+            window.history.replaceState({}, document.title, window.location.pathname);
+
+        } else {
+            updateTotalPages(responseData.total_pages);
         }
         
-        window.history.replaceState({}, document.title, window.location.pathname);
 
     } else {
         const tbody = document.getElementById(ID_TBODY);
@@ -81,27 +85,32 @@ async function loadTableData() {
 
 function buildQueryString(limit, page) {
     const params = new URLSearchParams();
-    params.append('limit', limit);
-    params.append('offset', (page - 1) * limit);
     //params.append('rfc_receptor', 'DAM030924EI6');
     const browserParams = new URLSearchParams(window.location.search);
-
     const hUuid = browserParams.get('highlight_uuid');
     
     if (hUuid) {
         params.append('uuid', hUuid); 
     }
 
-    const ordering = browserParams.get('ordering');
-    if (ordering) {
-        params.append('ordering', ordering);
-    } else {
-        params.append('ordering', '-fecha'); 
+    else{
+        params.append('limit', limit);
+        params.append('offset', (page - 1) * limit);
+        const ordering = browserParams.get('ordering');
+        if (ordering) {
+            params.append('ordering', ordering);
+        } else {
+            params.append('ordering', '-fecha'); 
+        }
+
+        for (const [key, value] of Object.entries(currentFilters)) {
+            if (value) params.append(key, value);
+        }
+
     }
 
-    for (const [key, value] of Object.entries(currentFilters)) {
-        if (value) params.append(key, value);
-    }
+
+    
     return params.toString();
 }
 
