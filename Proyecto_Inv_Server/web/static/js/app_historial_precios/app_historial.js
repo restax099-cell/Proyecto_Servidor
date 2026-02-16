@@ -86,8 +86,10 @@ function renderizarTarjetas(productos, contenedor) {
                                     const uuids = Array.isArray(h.uuids) ? h.uuids : JSON.parse(h.uuids || "[]");
                                     const cants = Array.isArray(h.cants) ? h.cants : JSON.parse(h.cants || "[]");
                                     const units = Array.isArray(h.units) ? h.units : JSON.parse(h.units || "[]");
+                                    const tasas = Array.isArray(h.tasas) ? h.tasas : JSON.parse(h.tasas || "[]");
 
                                     const nombreProveedor = p.nombre || '';
+
 
                                     return `
                                     <div class="mt-3">
@@ -101,6 +103,10 @@ function renderizarTarjetas(productos, contenedor) {
                                                 const uuid = uuids[i] || '';
                                                 const cantidad = cants[i] || 0;
                                                 const unitario = units[i] || 0;
+                                                const tasa = tasas[i] || 0;
+
+                                                const precioConImpuesto = Number(precio) * (1 + Number(tasa));
+
 
                                                 return `
                                                 <div class="price-badge-item d-inline-flex align-items-center mb-1" 
@@ -119,7 +125,7 @@ function renderizarTarjetas(productos, contenedor) {
 
                                                     <span class="rounded-end-pill text-white px-3 py-2 shadow-sm" 
                                                         style="font-size: 0.95rem; font-weight: 700; background-color: #212529; border: 1px solid #212529; letter-spacing: 0.5px;">
-                                                        $${Number(precio).toLocaleString('es-MX', {minimumFractionDigits: 2})}
+                                                        $${precioConImpuesto.toLocaleString('es-MX', {minimumFractionDigits: 2})}
                                                     </span>
                                                     
                                                 </div>`;

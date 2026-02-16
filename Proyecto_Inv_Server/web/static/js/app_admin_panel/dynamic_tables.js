@@ -496,6 +496,8 @@ export function buildConceptosTable(data, theadId, tbodyId) {
     { key: 'descuento', titulo: 'Descuento', type: 'currency' },
     { key: 'tasa_cuota', titulo: 'Tasa', type: 'percent' },
     { key: 'importe', titulo: 'Importe', type: 'currency' },
+    { key: 'iva', titulo: 'IVA', type: 'currency' },
+    { key: 'total', titulo: 'Total', type: 'currency' }
   ];
   
   // 4. Construir Head
@@ -552,7 +554,19 @@ export function buildConceptosTable(data, theadId, tbodyId) {
           if (isNaN(importeNumerico) || valor === null) {
               valor = item.valor_unitario; 
           }
+          let valor_tasa = parseFloat(item['tasa_cuota'])
+          let valor_iva  = 0
+          if (valor_tasa >= 0){
+            item.iva =  valor_tasa * importeNumerico
+            valor_iva  = parseFloat(item.iva)
+          }
+
+          
+          item.total = importeNumerico + valor_iva
+        
       }
+
+    
       
       let valorFormateado;
       
