@@ -68,3 +68,9 @@ def historial_precios(request):
 @login_required
 def xml_import(request):
     return render(request, 'xml_import/import_xml.html')
+
+#*-------------- SECCION WEB PANEL DE ASOCIACIÓN --------------*#
+
+@login_required
+def asociacion_panel(request):
+    return render(request, 'asociacion_items/asociacion.html')

@@ -15,4 +15,6 @@ urlpatterns = [
 
     path('historial-precios/', views.historial_precios, name='historial_precios'),
     path('xml_import/', views.xml_import, name='xml_import'),
+
+    path('asociacion-panel/', views.asociacion_panel, name='asociacion_panel'),
 ]
