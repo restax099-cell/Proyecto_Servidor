@@ -318,6 +318,7 @@ def get_precios_historicos(request):
         return Response({"error": "Error interno al procesar los datos"}, status=500)
     
 
+#? API para la importación de facturas .zip / .rar
 @csrf_exempt
 def import_xml_zip(request):
     if request.method == 'POST':
@@ -393,3 +394,69 @@ def get_import_progress(request):
         'current': current,
         'total': total
     })
+
+
+#? API del panel de vinculación de items y facturas
+@csrf_exempt
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+@renderer_classes([JSONRenderer]) 
+def get_items_sync_panel(request):
+    fecha_inicio = request.query_params.get('fecha_desde') or None
+    fecha_fin = request.query_params.get('fecha_hasta') or None
+    search_provider = request.query_params.get('provider', '').strip()
+    search_product = request.query_params.get('product', '').strip()
+
+    try:
+        page = int(request.query_params.get('page', 1))
+    except ValueError:
+        page = 1
+
+    limit = 20
+    offset = (page - 1) * limit
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("CALL sp_get_inventory_sync(%s, %s, %s, %s, %s, %s)", 
+                        [search_provider, search_product, fecha_inicio, fecha_fin, limit, offset])
+            
+            row = cursor.fetchone()
+            
+            if row and row[1]:
+                total_items = row[0]
+                results = json.loads(row[1])
+            else:
+                total_items, results = 0, {}
+
+        total_pages = (total_items + limit - 1) // limit
+
+        return Response({
+            "total_items": total_items,
+            "total_pages": total_pages,
+            "current_page": page,
+            "results": results
+        })
+    
+    except Exception as e:
+        print(f"Error en SP Inventory Sync: {e}")
+        return Response({"error": "Error interno al procesar la sincronización"}, status=500)
+    
+@csrf_exempt
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+@renderer_classes([JSONRenderer]) 
+def get_items_for_modal(request):
+    search_term = request.query_params.get('q', '').strip()
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.callproc('sp_get_items', [search_term])
+            
+            columns = [col[0] for col in cursor.description]
+            results = [dict(zip(columns, row)) for row in cursor.fetchall()]
+
+        return Response(results)
+    
+    except Exception as e:
+        print(f"Error en modal items: {e}")
+        return Response({"error": "Error al cargar catálogo de items"}, status=500)

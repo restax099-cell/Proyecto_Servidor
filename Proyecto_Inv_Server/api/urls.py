@@ -25,7 +25,8 @@ urlpatterns = [
     path('history-price/', xml_views.get_precios_historicos, name='get-history-price'),
     path('xml_import/', xml_views.import_xml_zip, name='import_xml_zip'),
     path('get_import_progress/', xml_views.get_import_progress, name='get_import_progress'),
-
+    path('get-items-sync/', xml_views.get_items_sync_panel, name='get_items_sync'),
+    path('get-items-modal/', xml_views.get_items_for_modal, name='get_items_for_modal'),
     # Rutas de prueba_views
     path('get-prueba/', prueba_views.get_prueba, name='get-prueba'),
 ]

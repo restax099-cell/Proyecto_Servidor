@@ -35,7 +35,7 @@
 
     <main class="max-w-6xl mx-auto px-6 py-10">
 
-        <!-- PANEL DE FILTROS -->
+        <!-- PANEL DE FILTRaOS -->
         {% include 'asociacion_items/filtros_asociacion.html' %}
 
 
@@ -55,66 +55,75 @@
 
             <!-- Lista de Proveedores -->
             <template x-for="group in groupedItems" :key="group.provider">
-                <div class="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 overflow-hidden transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)]">
+                <div x-data="{ expanded: true }" class="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 overflow-hidden transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)]">
                     
                     <!-- Header del Proveedor -->
-                    <div class="px-6 py-4 flex items-center justify-between border-b" :class="getTheme(group.provider).header">
+                    <div @click="expanded = !expanded" class="px-6 py-4 flex items-center justify-between border-b cursor-pointer hover:bg-white/50 transition-colors" :class="getTheme(group.provider).header">
                         <div class="flex items-center gap-3">
                             <div class="p-2 rounded-xl" :class="getTheme(group.provider).iconWrap">
                                 <span x-html="renderIcon(getTheme(group.provider).icon, 'w-5 h-5')"></span>
                             </div>
                             <h3 class="text-lg font-bold tracking-tight" :class="getTheme(group.provider).title" x-text="group.provider"></h3>
                         </div>
-                        <span class="text-xs font-bold uppercase tracking-wider bg-white/60 px-3 py-1 rounded-full shadow-sm text-slate-500" x-text="`${group.items.length} Productos`"></span>
+
+                        <div class="flex items-center gap-4">
+                            <span class="text-xs font-bold uppercase tracking-wider bg-white/60 px-3 py-1 rounded-full shadow-sm text-slate-500" x-text="`${group.items.length} Productos`"></span>
+                            
+                            <div class="text-slate-400 transition-transform duration-300 ease-in-out" :class="expanded ? 'rotate-180' : 'rotate-0'">
+                                <span x-html="renderIcon('chevron-down', 'w-5 h-5')"></span>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Items del Proveedor -->
-                    <div class="p-4 space-y-3 bg-slate-50/30">
-                        <template x-for="item in group.items" :key="item.id">
-                            <div class="group relative p-5 rounded-2xl flex flex-col lg:flex-row lg:items-center justify-between gap-5 transition-all duration-300"
-                                    :class="item.status === 'associated' ? 'bg-emerald-50/50 border border-emerald-100/50' : 'bg-white border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 z-0 hover:z-10 hover:border-indigo-100'">
-                                
-                                <div class="absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl transition-colors"
-                                        :class="item.status === 'associated' ? 'bg-emerald-400' : 'bg-transparent group-hover:bg-indigo-400'"></div>
-                                
-                                <div class="flex-1 pl-2">
-                                    <div class="flex items-center gap-2 mb-1">
-                                        <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md" x-text="item.invoice"></span>
-                                        <span class="text-sm font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md" x-text="`$${item.price.toFixed(2)}`"></span>
-                                    </div>
-                                    <h4 class="text-lg font-bold tracking-tight mt-2"
-                                        :class="item.status === 'associated' ? 'text-slate-400 line-through decoration-slate-300' : 'text-slate-800'" x-text="item.xmlName"></h4>
-                                </div>
-
-                                <div class="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
-                                    <div class="relative w-full sm:w-72 flex items-center">
-                                        <div class="absolute left-3 text-slate-400">
-                                            <span x-html="renderIcon('database', 'w-4 h-4')"></span>
-                                        </div>
-                                        <input type="text" readonly placeholder="Seleccionar de la base..." :value="item.associatedItem" 
-                                            class="w-full text-sm font-medium rounded-xl border block p-3.5 pl-10 pr-10 outline-none transition-all truncate"
-                                            :class="item.status === 'associated' ? 'bg-transparent border-transparent text-emerald-700' : 'bg-slate-50 border-slate-200 hover:border-indigo-300 hover:bg-white focus:ring-4 focus:ring-indigo-500/10 cursor-pointer'"
-                                            @click="if(item.status !== 'associated') openModal(item.id)">
-                                        
-                                        <template x-if="item.status !== 'associated'">
-                                            <button @click="openModal(item.id)" class="absolute right-2 p-1.5 bg-white shadow-sm border border-slate-100 rounded-lg text-slate-400 hover:text-indigo-600 hover:border-indigo-200 transition-colors">
-                                                <span x-html="renderIcon('search', 'w-4 h-4')"></span>
-                                            </button>
-                                        </template>
-                                    </div>
+                    <div x-show="expanded" x-collapse.duration.300ms>
+                        <div class="p-4 space-y-3 bg-slate-50/30">
+                            <template x-for="item in group.items" :key="item.id">
+                                <div class="group relative p-5 rounded-2xl flex flex-col lg:flex-row lg:items-center justify-between gap-5 transition-all duration-300"
+                                        :class="item.status === 'associated' ? 'bg-emerald-50/50 border border-emerald-100/50' : 'bg-white border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 z-0 hover:z-10 hover:border-indigo-100'">
                                     
-                                    <span class="hidden sm:block text-slate-300" x-html="renderIcon('chevron-right', 'w-4 h-4')"></span>
+                                    <div class="absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl transition-colors"
+                                            :class="item.status === 'associated' ? 'bg-emerald-400' : 'bg-transparent group-hover:bg-indigo-400'"></div>
+                                    
+                                    <div class="flex-1 pl-2">
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md" x-text="item.invoice"></span>
+                                            <span class="text-sm font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md" x-text="`$${item.price.toFixed(2)}`"></span>
+                                        </div>
+                                        <h4 class="text-lg font-bold tracking-tight mt-2"
+                                            :class="item.status === 'associated' ? 'text-slate-400 line-through decoration-slate-300' : 'text-slate-800'" x-text="item.xmlName"></h4>
+                                    </div>
 
-                                    <button @click="associateItem(item.id)" :disabled="item.status === 'associated' || !item.associatedItem" 
-                                        class="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-sm font-bold transition-all duration-300"
-                                        :class="item.status === 'associated' ? 'bg-emerald-100/50 text-emerald-600 border border-emerald-200 cursor-not-allowed' : (!item.associatedItem ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 hover:-translate-y-0.5')">
+                                    <div class="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
+                                        <div class="relative w-full sm:w-72 flex items-center">
+                                            <div class="absolute left-3 text-slate-400">
+                                                <span x-html="renderIcon('database', 'w-4 h-4')"></span>
+                                            </div>
+                                            <input type="text" readonly placeholder="Seleccionar item..." :value="item.associatedItem" 
+                                                class="w-full text-sm font-medium rounded-xl border block p-3.5 pl-10 pr-10 outline-none transition-all truncate"
+                                                :class="item.status === 'associated' ? 'bg-transparent border-transparent text-emerald-700' : 'bg-slate-50 border-slate-200 hover:border-indigo-300 hover:bg-white focus:ring-4 focus:ring-indigo-500/10 cursor-pointer'"
+                                                @click="if(item.status !== 'associated') openModal(item.id)">
+                                            
+                                            <template x-if="item.status !== 'associated'">
+                                                <button @click="openModal(item.id)" class="absolute right-2 p-1.5 bg-white shadow-sm border border-slate-100 rounded-lg text-slate-400 hover:text-indigo-600 hover:border-indigo-200 transition-colors">
+                                                    <span x-html="renderIcon('search', 'w-4 h-4')"></span>
+                                                </button>
+                                            </template>
+                                        </div>
                                         
-                                        <span x-html="item.status === 'associated' ? renderIcon('check', 'w-5 h-5') : renderIcon('link', 'w-4 h-4')"></span>
-                                        <span x-text="item.status === 'associated' ? 'Completado' : 'Vincular Item'"></span>
-                                    </button>
+                                        <span class="hidden sm:block text-slate-300" x-html="renderIcon('chevron-right', 'w-4 h-4')"></span>
+
+                                        <button @click="associateItem(item.id)" :disabled="item.status === 'associated' || !item.associatedItem" 
+                                            class="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-sm font-bold transition-all duration-300"
+                                            :class="item.status === 'associated' ? 'bg-emerald-100/50 text-emerald-600 border border-emerald-200 cursor-not-allowed' : (!item.associatedItem ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 hover:-translate-y-0.5')">
+                                            
+                                            <span x-html="item.status === 'associated' ? renderIcon('check', 'w-5 h-5') : renderIcon('link', 'w-4 h-4')"></span>
+                                            <span x-text="item.status === 'associated' ? 'Completado' : 'Vincular Item'"></span>
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
-                        </template>
+                            </template>
+                        </div>
                     </div>
                 </div>
             </template>
@@ -130,6 +139,7 @@
 {% block extra_scripts %}
     <script defer src="{% static 'js/app_asociacion/app_asociacion.js' %}"></script>
     
+    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 {% endblock %}
 
