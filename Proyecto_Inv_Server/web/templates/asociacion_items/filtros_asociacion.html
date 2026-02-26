@@ -1,26 +1,67 @@
 <div class="bg-white/60 backdrop-blur-sm rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white p-1 mb-10">
-    <div class="bg-white rounded-[22px] p-6">
+    <div class="bg-white rounded-[22px] p-5 sm:p-6">
         <div class="flex items-center gap-2 mb-5">
             <span x-html="renderIcon('filter', 'w-4 h-4 text-indigo-500')"></span>
             <h2 class="text-sm font-bold text-slate-700">Filtros</h2>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-5">
-            <div class="group">
+        <div class="grid grid-cols-2 lg:grid-cols-6 gap-4 sm:gap-5">
+
+            <!-- PROOVEDOR SEARCH -->
+            <div class="group col-span-2 lg:col-span-1">
                 <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 transition-colors group-focus-within:text-indigo-500">Proveedor</label>
-                <input type="text" x-model="filters.provider" placeholder="Ej. Chedraui" class="w-full bg-slate-50/50 border border-slate-200 text-slate-800 text-sm rounded-xl focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 block p-3 outline-none transition-all placeholder:text-slate-300">
+                <input type="text" x-model.debounce.500ms="filters.provider" placeholder="Ej. Chedraui" class="w-full bg-slate-50/50 border border-slate-200 text-slate-800 text-sm rounded-xl focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 block p-3 outline-none transition-all placeholder:text-slate-300">
             </div>
-            <div class="group">
+
+            <!-- PRODUCTO SEARCH -->
+            <div class="group col-span-2 lg:col-span-1">
                 <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 transition-colors group-focus-within:text-indigo-500">Producto (XML)</label>
-                <input type="text" x-model="filters.product" placeholder="Ej. Cebolla..." class="w-full bg-slate-50/50 border border-slate-200 text-slate-800 text-sm rounded-xl focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 block p-3 outline-none transition-all placeholder:text-slate-300">
+                <input type="text" x-model.debounce.500ms="filters.product" placeholder="Ej. Cebolla..." class="w-full bg-slate-50/50 border border-slate-200 text-slate-800 text-sm rounded-xl focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 block p-3 outline-none transition-all placeholder:text-slate-300">
             </div>
-            <div class="group">
+
+            <!-- STATUS SWITCH -->
+            <div class="group col-span-2 lg:col-span-2">
+                <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 transition-colors group-focus-within:text-indigo-500">
+                    Filtrar por Estado
+                </label>
+                <div class="bg-slate-100 p-1 rounded-xl flex items-center relative h-[46px]">
+                    
+                    <div class="absolute top-1 bottom-1 left-1 w-[calc(33.33%-4px)] bg-white rounded-lg shadow-sm transition-all duration-300 ease-out z-0"
+                        :style="filters.status === 0 ? 'transform: translateX(0%)' : 
+                                (filters.status === 2 ? 'transform: translateX(100%)' : 'transform: translateX(200%)')">
+                    </div>
+                    
+                    <button @click="filters.status = 0; loadFromApi(1)" 
+                            class="flex-1 text-center text-[10px] sm:text-[11px] font-bold uppercase tracking-tight transition-colors relative z-10" 
+                            :class="filters.status === 0 ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-600'">
+                        <span class="block sm:hidden">Pend.</span><span class="hidden sm:block">Pendientes</span>
+                    </button>
+
+                    <button @click="filters.status = 2; loadFromApi(1)" 
+                            class="flex-1 text-center text-[10px] sm:text-[11px] font-bold uppercase tracking-tight transition-colors relative z-10" 
+                            :class="filters.status === 2 ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-600'">
+                        Todos
+                    </button>
+
+                    <button @click="filters.status = 1; loadFromApi(1)" 
+                            class="flex-1 text-center text-[10px] sm:text-[11px] font-bold uppercase tracking-tight transition-colors relative z-10" 
+                            :class="filters.status === 1 ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-600'">
+                        <span class="block sm:hidden">Vinc.</span><span class="hidden sm:block">Vinculados</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- FECHA INICIO -->
+            <div class="group col-span-1 lg:col-span-1">
                 <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 transition-colors group-focus-within:text-indigo-500">Desde</label>
-                <input type="date" class="w-full bg-slate-50/50 border border-slate-200 text-slate-500 text-sm rounded-xl focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 block p-3 outline-none transition-all">
+                <input type="date" x-model="filters.dateFrom" class="w-full bg-slate-50/50 border border-slate-200 text-slate-500 text-sm rounded-xl focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 block p-3 outline-none transition-all">
             </div>
-            <div class="group">
+            
+            <!-- FECHA FINAL -->
+            <div class="group col-span-1 lg:col-span-1">
                 <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 transition-colors group-focus-within:text-indigo-500">Hasta</label>
-                <input type="date" class="w-full bg-slate-50/50 border border-slate-200 text-slate-500 text-sm rounded-xl focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 block p-3 outline-none transition-all">
+                <input type="date" x-model="filters.dateTo" class="w-full bg-slate-50/50 border border-slate-200 text-slate-500 text-sm rounded-xl focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 block p-3 outline-none transition-all">
             </div>
+            
         </div>
     </div>
 </div>

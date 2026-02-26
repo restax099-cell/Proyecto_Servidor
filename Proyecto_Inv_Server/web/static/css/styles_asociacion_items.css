@@ -9,3 +9,13 @@
     border-radius: 20px;
 }
 [x-cloak] { display: none !important; }
+
+
+.hide-arrows::-webkit-outer-spin-button,
+.hide-arrows::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+.hide-arrows {
+    -moz-appearance: textfield;
+}

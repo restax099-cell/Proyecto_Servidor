@@ -407,6 +407,8 @@ def get_items_sync_panel(request):
     search_provider = request.query_params.get('provider', '').strip()
     search_product = request.query_params.get('product', '').strip()
 
+    status_filter = int(request.query_params.get('status', 0))
+
     try:
         page = int(request.query_params.get('page', 1))
     except ValueError:
@@ -417,8 +419,8 @@ def get_items_sync_panel(request):
 
     try:
         with connection.cursor() as cursor:
-            cursor.execute("CALL sp_get_inventory_sync(%s, %s, %s, %s, %s, %s)", 
-                        [search_provider, search_product, fecha_inicio, fecha_fin, limit, offset])
+            cursor.execute("CALL sp_get_inventory_sync(%s, %s, %s, %s, %s, %s, %s)", 
+                        [search_provider, search_product, fecha_inicio, fecha_fin, status_filter, limit, offset])
             
             row = cursor.fetchone()
             
@@ -441,6 +443,7 @@ def get_items_sync_panel(request):
         print(f"Error en SP Inventory Sync: {e}")
         return Response({"error": "Error interno al procesar la sincronización"}, status=500)
     
+    
 @csrf_exempt
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
@@ -460,3 +463,68 @@ def get_items_for_modal(request):
     except Exception as e:
         print(f"Error en modal items: {e}")
         return Response({"error": "Error al cargar catálogo de items"}, status=500)
+    
+
+@csrf_exempt
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+@renderer_classes([JSONRenderer])
+def register_items_association(request):
+    id_item = request.data.get('id_item')
+    id_concept = request.data.get('id_concept')
+
+    if not id_item or not id_concept:
+        return Response({"error": "Faltan parámetros: id_item o id_concept son requeridos."}, status=400)
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("CALL sp_register_item_association(%s, %s, %s)", [id_item, id_concept, 1])
+            
+            row = cursor.fetchone()
+            
+            if row:
+                status_result = row[0]
+                message = row[1]       
+                
+                if status_result == 'SUCCESS':
+                    return Response({"message": message}, status=200)
+                else:
+                    return Response({"error": message}, status=400)
+            else:
+                return Response({"error": "No se obtuvo respuesta de la base de datos."}, status=500)
+
+    except Exception as e:
+        print(f"Error al registrar vinculación: {e}")
+        return Response({"error": "Error interno del servidor al procesar la vinculación."}, status=500)
+    
+
+
+
+@csrf_exempt
+@api_view(['POST']) 
+@permission_classes([IsAdminUser])
+def unregister_items_association(request):
+    id_concept = request.data.get('id_concept')
+
+    if not id_concept:
+        return Response({"error": "El id_concept es obligatorio para desvincular."}, status=400)
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("CALL sp_unregister_item_association(%s)", [id_concept])
+            row = cursor.fetchone()
+
+            if row:
+                res_status = row[0] 
+                message = row[1]
+                
+                if res_status == 'SUCCESS':
+                    return Response({"message": message}, status=200)
+                else:
+                    return Response({"error": message}, status=400)
+            
+            return Response({"error": "La base de datos no devolvió una respuesta válida."}, status=500)
+
+    except Exception as e:
+        print(f"Error en unregister_association_api: {e}")
+        return Response({"error": "Error interno al procesar la desvinculación."}, status=500)

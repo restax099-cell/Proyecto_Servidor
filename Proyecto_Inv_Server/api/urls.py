@@ -27,6 +27,9 @@ urlpatterns = [
     path('get_import_progress/', xml_views.get_import_progress, name='get_import_progress'),
     path('get-items-sync/', xml_views.get_items_sync_panel, name='get_items_sync'),
     path('get-items-modal/', xml_views.get_items_for_modal, name='get_items_for_modal'),
+    path('register-items-association/', xml_views.register_items_association, name='register_items_association'),
+    path('unregister-items-association/', xml_views.unregister_items_association, name='unregister_items_association'),
+
     # Rutas de prueba_views
     path('get-prueba/', prueba_views.get_prueba, name='get-prueba'),
 ]

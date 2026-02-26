@@ -175,3 +175,6 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAdminUser',
     ]
 }
+
+import mimetypes
+mimetypes.add_type("application/javascript", ".js", True)
