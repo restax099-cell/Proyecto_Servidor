@@ -25,10 +25,17 @@ urlpatterns = [
     path('history-price/', xml_views.get_precios_historicos, name='get-history-price'),
     path('xml_import/', xml_views.import_xml_zip, name='import_xml_zip'),
     path('get_import_progress/', xml_views.get_import_progress, name='get_import_progress'),
+
+    # Rutas de ITEMS_VIEWS
+
     path('get-items-sync/', xml_views.get_items_sync_panel, name='get_items_sync'),
     path('get-items-modal/', xml_views.get_items_for_modal, name='get_items_for_modal'),
     path('register-items-association/', xml_views.register_items_association, name='register_items_association'),
     path('unregister-items-association/', xml_views.unregister_items_association, name='unregister_items_association'),
+    path('get-dashboard/', xml_views.get_dashboard, name='get_dashboard'),
+    path('get-dashboard-details/', xml_views.get_dashboard_detail, name='get_dashboard_detail'),
+
+
 
     # Rutas de prueba_views
     path('get-prueba/', prueba_views.get_prueba, name='get-prueba'),

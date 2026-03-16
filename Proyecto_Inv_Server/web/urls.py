@@ -17,4 +17,5 @@ urlpatterns = [
     path('xml_import/', views.xml_import, name='xml_import'),
 
     path('asociacion-panel/', views.asociacion_panel, name='asociacion_panel'),
+    path('reporte-panel/', views.report_panel, name='reporte_panel'),
 ]

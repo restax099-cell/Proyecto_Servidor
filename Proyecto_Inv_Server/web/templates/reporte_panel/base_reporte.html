@@ -1,0 +1,16 @@
+{% load static %} 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% include 'reporte_panel/head_reporte.html' %}
+</head>
+<body>
+    <main>
+        {% block content_panel%}
+        {% endblock %}
+    </main>
+
+    {% block extra_scripts %}
+    {% endblock %}
+</body>
+</html>

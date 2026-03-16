@@ -13,13 +13,25 @@
             </button>
 
             <div class="flex items-center px-1 gap-1">
-                <template x-for="page in totalPages" :key="page">
-                    <button @click="goToPage(page)" 
-                            class="min-w-[32px] sm:min-w-[36px] h-8 sm:h-9 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center transition-all"
-                            :class="currentPage === page ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'">
-                        <span x-text="page"></span>
-                    </button>
-                </template>
+                <div class="flex items-center px-1 gap-1">
+                    <template x-for="(page, index) in displayedPages" :key="index">
+                        <div>
+                            <template x-if="page !== '...'">
+                                <button @click="goToPage(page)" 
+                                        class="min-w-[32px] sm:min-w-[36px] h-8 sm:h-9 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center transition-all"
+                                        :class="currentPage === page ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'">
+                                    <span x-text="page"></span>
+                                </button>
+                            </template>
+                            
+                            <template x-if="page === '...'">
+                                <span class="min-w-[32px] sm:min-w-[36px] h-8 sm:h-9 flex items-center justify-center text-slate-400 font-bold tracking-widest text-xs sm:text-sm cursor-default">
+                                    ...
+                                </span>
+                            </template>
+                        </div>
+                    </template>
+                </div>
             </div>
 
             <button @click="nextPage()" :disabled="currentPage === totalPages" class="p-2 rounded-xl text-slate-400 hover:text-indigo-600 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">

@@ -498,8 +498,6 @@ def register_items_association(request):
         return Response({"error": "Error interno del servidor al procesar la vinculación."}, status=500)
     
 
-
-
 @csrf_exempt
 @api_view(['POST']) 
 @permission_classes([IsAdminUser])
@@ -528,3 +526,100 @@ def unregister_items_association(request):
     except Exception as e:
         print(f"Error en unregister_association_api: {e}")
         return Response({"error": "Error interno al procesar la desvinculación."}, status=500)
+    
+
+@csrf_exempt
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+@renderer_classes([JSONRenderer]) 
+def get_dashboard(request):
+    fecha_inicio = request.query_params.get('fecha_desde') or None
+    fecha_fin = request.query_params.get('fecha_hasta') or None
+    search_provider = request.query_params.get('provider', '').strip() or None
+    search_product = request.query_params.get('product', '').strip() or None
+
+    try:
+        page = int(request.query_params.get('page', 1))
+    except ValueError:
+        page = 1
+
+    limit = 20
+    offset = (page - 1) * limit
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("CALL sp_get_dashboard(%s, %s, %s, %s, %s, %s)", 
+                           [search_product, search_provider, fecha_inicio, fecha_fin, limit, offset])
+            
+            kpi_columns = [col[0] for col in cursor.description]
+            kpi_row = cursor.fetchone()
+            kpis = dict(zip(kpi_columns, kpi_row)) if kpi_row else {}
+            
+            total_items = kpis.pop('total_items', 0)
+
+            
+            cursor.nextset()
+            table_columns = [col[0] for col in cursor.description]
+            table_rows = cursor.fetchall()
+            results = [dict(zip(table_columns, row)) for row in table_rows]
+
+        total_pages = (total_items + limit - 1) // limit
+
+        return Response({
+            "kpis": kpis,
+            "pagination": {
+                "total_items": total_items,
+                "total_pages": total_pages,
+                "current_page": page,
+                "limit": limit
+            },
+            "results": results
+        })
+    
+    except Exception as e:
+        print(f"Error en SP Dashboard: {e}")
+        return Response({"error": "Error interno al procesar el dashboard de auditoría"}, status=500)
+
+
+#? API del Detalle del Ítem (Drawer)
+@csrf_exempt
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+@renderer_classes([JSONRenderer]) 
+def get_dashboard_detail(request):
+    item_name = request.query_params.get('item', '').strip()
+
+    if not item_name:
+        return Response({"error": "Falta el parámetro 'item'"}, status=400)
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("CALL sp_get_dashboard_details(%s)", [item_name])
+            
+
+            header_row = cursor.fetchone()
+            promedio_calculado = header_row[0] if header_row else 0
+
+
+            cursor.nextset() 
+            
+            prov_columns = [col[0] for col in cursor.description]
+            prov_rows = cursor.fetchall()
+            proveedores = [dict(zip(prov_columns, row)) for row in prov_rows]
+
+            cursor.nextset() 
+            
+            hist_columns = [col[0] for col in cursor.description]
+            hist_rows = cursor.fetchall()
+            historial = [dict(zip(hist_columns, row)) for row in hist_rows]
+
+        return Response({
+            "item_name": item_name,
+            "promedio_calculado": promedio_calculado,
+            "proveedores_stats": proveedores,
+            "historial_timeline": historial
+        })
+    
+    except Exception as e:
+        print(f"Error en SP Item Detail: {e}")
+        return Response({"error": "Error interno al procesar el detalle del ítem"}, status=500)

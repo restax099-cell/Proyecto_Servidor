@@ -74,3 +74,8 @@ def xml_import(request):
 @login_required
 def asociacion_panel(request):
     return render(request, 'asociacion_items/asociacion.html')
+
+
+@login_required
+def report_panel(request):
+    return render(request, 'reporte_panel/reporte_panel.html')
