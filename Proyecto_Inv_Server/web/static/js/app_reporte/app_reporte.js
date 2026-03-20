@@ -3,7 +3,7 @@ import { fetchDashboard, fetchItemDetails } from './api_reporte.js';
 
 Alpine.data('auditDashboard', () => ({
     
-    // --- ESTADO ---
+    //? --- ESTADO ---
     tableData: [],
     kpis: {
         importe_total_facturas: 0,
@@ -18,14 +18,14 @@ Alpine.data('auditDashboard', () => ({
         dateEnd: ''
     },
     
-    // Paginación
+    //? Paginación
     currentPage: 1,
     totalPages: 1,
     totalItems: 0,
     isLoading: false,
     abortController: null,
 
-    // Drawer (Detalle)
+    //? Drawer (Detalle)
     drawerOpen: false,
     selectedItemName: '',
     selectedItemDetails: null,
@@ -35,14 +35,13 @@ Alpine.data('auditDashboard', () => ({
     init() {
         this.loadDashboard(1);
 
-        // Observamos los filtros para recargar automáticamente
         this.$watch('filters.search', () => this.loadDashboard(1));
         this.$watch('filters.suppliers', () => this.loadDashboard(1));
         this.$watch('filters.dateStart', () => this.loadDashboard(1));
         this.$watch('filters.dateEnd', () => this.loadDashboard(1));
     },
 
-    // --- LLAMADAS A LA API ---
+    //? --- LLAMADAS A LA API ---
     async loadDashboard(page) {
         if (this.abortController) this.abortController.abort();
         this.abortController = new AbortController();
@@ -72,7 +71,8 @@ Alpine.data('auditDashboard', () => ({
             this.isLoading = false;
         }
     },
-
+    
+    //? --- UTILIDADES ---
     async openDetail(itemRow) {
         this.drawerOpen = true;
         this.selectedItemName = itemRow.item_name;
@@ -83,7 +83,7 @@ Alpine.data('auditDashboard', () => ({
         this.detailsAbortController = new AbortController();
 
         try {
-            const response = await fetchItemDetails(itemRow.item_name, this.detailsAbortController.signal);
+            const response = await fetchItemDetails(itemRow.item_name, this.filters, this.detailsAbortController.signal);
             
             if (response && !response.error) {
                 this.selectedItemDetails = response;
@@ -95,7 +95,6 @@ Alpine.data('auditDashboard', () => ({
         }
     },
 
-    // --- UTILIDADES ---
     resetFilters() {
         this.filters.search = '';
         this.filters.suppliers = [];
@@ -115,6 +114,5 @@ Alpine.data('auditDashboard', () => ({
     }
 }));
 
-// ¡Esto es clave para inicializar Alpine como módulo!
 window.Alpine = Alpine;
 Alpine.start();

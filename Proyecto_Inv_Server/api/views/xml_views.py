@@ -588,27 +588,90 @@ def get_dashboard(request):
 @renderer_classes([JSONRenderer]) 
 def get_dashboard_detail(request):
     item_name = request.query_params.get('item', '').strip()
+    
+    fecha_inicio = request.query_params.get('fecha_desde') or None
+    fecha_fin = request.query_params.get('fecha_hasta') or None
+    search_provider = request.query_params.get('provider', '').strip() or None
 
     if not item_name:
         return Response({"error": "Falta el parámetro 'item'"}, status=400)
 
     try:
         with connection.cursor() as cursor:
-            cursor.execute("CALL sp_get_dashboard_details(%s)", [item_name])
+            cursor.execute("CALL sp_get_dashboard_details(%s, %s, %s, %s)", 
+                           [item_name, search_provider, fecha_inicio, fecha_fin])
             
 
             header_row = cursor.fetchone()
             promedio_calculado = header_row[0] if header_row else 0
 
-
             cursor.nextset() 
-            
             prov_columns = [col[0] for col in cursor.description]
             prov_rows = cursor.fetchall()
             proveedores = [dict(zip(prov_columns, row)) for row in prov_rows]
 
-            cursor.nextset() 
+            cursor.nextset()
+            hist_columns = [col[0] for col in cursor.description]
+            hist_rows = cursor.fetchall()
+            historial = [dict(zip(hist_columns, row)) for row in hist_rows]
+
+        return Response({
+            "item_name": item_name,
+            "promedio_calculado": promedio_calculado,
+            "proveedores_stats": proveedores,
+            "historial_timeline": historial
+        })
+    
+    except Exception as e:
+        print(f"Error en SP Item Detail: {e}")
+        return Response({"error": "Error interno al procesar el detalle del ítem"}, status=500)
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    item_name = request.query_params.get('item', '').strip()
+    
+    # EXTRAEMOS LOS NUEVOS FILTROS
+    fecha_inicio = request.query_params.get('fecha_desde') or None
+    fecha_fin = request.query_params.get('fecha_hasta') or None
+    search_provider = request.query_params.get('provider', '').strip() or None
+
+    if not item_name:
+        return Response({"error": "Falta el parámetro 'item'"}, status=400)
+
+    try:
+        with connection.cursor() as cursor:
+            # LE PASAMOS LOS 4 PARÁMETROS AL SP
+            cursor.execute("CALL sp_get_item_detalle(%s, %s, %s, %s)", 
+                           [item_name, search_provider, fecha_inicio, fecha_fin])
             
+            # ... (todo el resto de los result sets se queda exactamente igual)
+            
+            header_row = cursor.fetchone()
+            promedio_calculado = header_row[0] if header_row else 0
+
+            cursor.nextset() 
+            prov_columns = [col[0] for col in cursor.description]
+            prov_rows = cursor.fetchall()
+            proveedores = [dict(zip(prov_columns, row)) for row in prov_rows]
+
+            cursor.nextset()
             hist_columns = [col[0] for col in cursor.description]
             hist_rows = cursor.fetchall()
             historial = [dict(zip(hist_columns, row)) for row in hist_rows]
