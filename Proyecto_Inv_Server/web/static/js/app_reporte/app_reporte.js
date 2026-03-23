@@ -109,8 +109,15 @@ Alpine.data('auditDashboard', () => ({
     
     formatDate(dateString) {
         if (!dateString) return '';
-        const options = { day: '2-digit', month: 'short', year: 'numeric' };
-        return new Date(dateString + 'T12:00:00').toLocaleDateString('es-MX', options);
+        
+        const options = { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' };
+        
+        const fecha = new Date(dateString + 'T12:00:00');
+        
+        let fechaFormateada = fecha.toLocaleDateString('es-MX', options);
+        fechaFormateada = fechaFormateada.charAt(0).toUpperCase() + fechaFormateada.slice(1);
+        
+        return fechaFormateada.replace(/\./g, '');
     }
 }));
 
