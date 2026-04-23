@@ -1,0 +1,15 @@
+body { 
+    background-color: #F8FAFC; 
+    margin: 0; 
+    font-family: system-ui, -apple-system, sans-serif; 
+}
+/* Esto evita que los SVGs se vuelvan gigantes NUNCA MÁS */
+svg { 
+    max-width: 24px; 
+    max-height: 24px; 
+    flex-shrink: 0; 
+}
+
+[x-cloak] { display: none !important; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }

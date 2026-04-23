@@ -449,7 +449,7 @@ def get_items_sync_panel(request):
 @permission_classes([IsAdminUser])
 @renderer_classes([JSONRenderer]) 
 def get_items_for_modal(request):
-    search_term = request.query_params.get('q', '').strip()
+    search_term = request.query_params.get('search', '').strip()
 
     try:
         with connection.cursor() as cursor:
