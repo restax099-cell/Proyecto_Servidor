@@ -2,7 +2,7 @@
 
 from django.urls import path
 # Importar el módulo views completo
-from .views import codes_views, xml_views, prueba_views
+from .views import codes_views, xml_views, prueba_views, requisicion_views
 # urls.py (Continuación)
 
 urlpatterns = [
@@ -34,6 +34,13 @@ urlpatterns = [
     path('unregister-items-association/', xml_views.unregister_items_association, name='unregister_items_association'),
     path('get-dashboard/', xml_views.get_dashboard, name='get_dashboard'),
     path('get-dashboard-details/', xml_views.get_dashboard_detail, name='get_dashboard_detail'),
+
+
+    # Rutas para app movil 
+    path('set-requisition/', requisicion_views.set_requisition, name='set_requisition'),
+    path('get-draft-list/', requisicion_views.get_draft_list, name='get_draft_list'),
+    path('get-next-sku/', requisicion_views.get_next_sku, name='get_next_sku'),
+
 
 
 
