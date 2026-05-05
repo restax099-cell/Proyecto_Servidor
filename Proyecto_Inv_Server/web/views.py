@@ -79,3 +79,9 @@ def asociacion_panel(request):
 @login_required
 def report_panel(request):
     return render(request, 'reporte_panel/reporte_panel.html')
+
+
+#*-------------- SECCION WEB PANEL DE REQUISCIONES --------------*#
+@login_required
+def requisition_panel(request):
+    return render(request, 'requisicion_panel/requisicion.html')
