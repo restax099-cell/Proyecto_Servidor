@@ -14,6 +14,9 @@ class TokenAdmin(admin.ModelAdmin):
     list_display = ('key', 'user', 'created')
     search_fields = ('user__username',)
 
+
+
+
 #from .models import BarCode
 
 #admin.site.register(BarCode)

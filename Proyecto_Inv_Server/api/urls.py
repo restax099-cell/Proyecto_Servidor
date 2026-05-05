@@ -1,14 +1,22 @@
 # urls.py (Recomendado)
-
+from rest_framework.authtoken.views import obtain_auth_token
 from django.urls import path
+from django.views.decorators.csrf import csrf_exempt
 # Importar el módulo views completo
-from .views import codes_views, xml_views, prueba_views, requisicion_views
+from .views import (
+    codes_views, 
+    xml_views, 
+    prueba_views, 
+    requisicion_views, 
+    user_views)
+
 # urls.py (Continuación)
 
 urlpatterns = [
     
-    # 🚨 Usando el módulo views para llamar a las funciones 🚨
-    
+    # USERS
+    path('login/', csrf_exempt(user_views.AuthToken.as_view()), name='api_login'),
+
     # Rutas de codes_views
     path('get-folio/', codes_views.get_folio_from_url, name='get-folio'),
 
