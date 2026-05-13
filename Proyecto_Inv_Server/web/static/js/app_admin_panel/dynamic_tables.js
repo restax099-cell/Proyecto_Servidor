@@ -130,8 +130,6 @@ export function buildDynamicTable(data, theadId, tbodyId,onSortCallback) {
             if (item.fecha) {
                 const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
                 const fecha = new Date(item.fecha);
-                // Ajuste para evitar desfase de zona horaria si es necesario:
-                // const fecha = new Date(item.fecha + 'T00:00:00'); 
                 const dia = fecha.getDate(); 
                 const mesIndex = fecha.getMonth(); 
                 const anio = fecha.getFullYear();
@@ -464,7 +462,6 @@ export function buildDynamicTableGastos(data, theadId, tbodyId, onSortCallback) 
 
 
 
-/**  Tablas dinamicas del modal (ventana emergente) de conceptos **/
 export function buildConceptosTable(data, theadId, tbodyId) {
   const thead = document.getElementById(theadId);
   const tbody = document.getElementById(tbodyId);
@@ -476,17 +473,14 @@ export function buildConceptosTable(data, theadId, tbodyId) {
     return;
   }
 
-  // 1. Limpiar
   thead.innerHTML = '';
   tbody.innerHTML = '';
 
-  // 2. Manejar si no hay datos
   if (!data || data.length === 0) {
     tbody.innerHTML = '<tr class="text-center p-3"><td colspan="12">Este CFDI no tiene conceptos.</td></tr>';
     return;
   }
 
-  // 3. Definimos TODAS las columnas que queremos, en orden
   const columnas = [
     { key: 'descripcion', titulo: 'Descripción', type: 'text' },
     { key: 'clave_prod_serv', titulo: 'Clave SAT', type: 'text' },
@@ -500,7 +494,6 @@ export function buildConceptosTable(data, theadId, tbodyId) {
     { key: 'total', titulo: 'Total', type: 'currency' }
   ];
   
-  // 4. Construir Head
   const headerRow = document.createElement('tr');
   const thNum = document.createElement('th');
   thNum.scope = 'col';
@@ -533,7 +526,6 @@ export function buildConceptosTable(data, theadId, tbodyId) {
   });
   thead.appendChild(headerRow);
 
-  // 5. Construir Body (con toda la lógica de formato)
   data.forEach((item,index) => {
     const row = document.createElement('tr');
     
@@ -570,7 +562,6 @@ export function buildConceptosTable(data, theadId, tbodyId) {
       
       let valorFormateado;
       
-      // Aplicamos el formato según el TIPO
       switch (col.type) {
         
         case 'currency':

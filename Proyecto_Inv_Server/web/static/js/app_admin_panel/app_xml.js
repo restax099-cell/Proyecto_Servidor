@@ -95,15 +95,12 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     inicializarFiltros((nuevosFiltros) => {
-        // 1. Guardamos lo que haya en el buscador
         const busquedaGuardada = currentFilters.search_term;
 
-        // 2. Reemplazamos TODO con los nuevos filtros (esto borra los viejos)
         currentFilters = {
             ...nuevosFiltros
         };
 
-        // 3. Si había una búsqueda, la volvemos a poner
         if (busquedaGuardada) {
             currentFilters.search_term = busquedaGuardada;
         }

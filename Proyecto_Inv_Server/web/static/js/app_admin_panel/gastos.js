@@ -1,8 +1,3 @@
-//? --- 1. Imports ---
-
-
-
-
 import { fetchData } from '../../utils/get_api.js';
 import { buildDynamicTableGastos } from './dynamic_tables.js';
 import { inicializarFiltros } from './panel_filtros.js';

@@ -48,6 +48,7 @@ urlpatterns = [
     path('set-requisition/', requisicion_views.set_requisition, name='set_requisition'),
     path('get-draft-list/', requisicion_views.get_draft_list, name='get_draft_list'),
     path('get-next-sku/', requisicion_views.get_next_sku, name='get_next_sku'),
+    path('set-delivery/', requisicion_views.set_items_delivery, name='set_items_delivery'),
 
 
 

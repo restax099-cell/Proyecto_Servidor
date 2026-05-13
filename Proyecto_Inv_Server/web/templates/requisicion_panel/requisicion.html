@@ -4,20 +4,16 @@
   
 <div class="flex h-screen bg-slate-300 font-sans text-slate-800 overflow-hidden" x-data="almacenApp()">
     
-
   <div :class="selectedId ? 'hidden md:flex' : 'flex'" class="w-full md:w-[35%] lg:w-[30%] bg-slate-200 border-r border-slate-400 shadow-2xl flex-col z-20 transition-transform">
     
-    <!-- Encabezado y Filtros -->
     <div class="p-4 md:p-6 border-b border-slate-400 bg-slate-200 shrink-0 shadow-sm z-10">
       <div class="flex items-center justify-between mb-5">
         <h1 class="text-xl md:text-2xl font-bold tracking-tight text-slate-800">Bandeja de Pedidos</h1>
-        <!-- Ocultamos el indicador de nuevas requisiciones si el contador es 0 -->
         <div x-show="pendientesCount > 0" class="bg-rose-600 text-white text-xs font-bold px-2 py-1 rounded-full shadow-sm" x-text="`${pendientesCount} Nuevas`">
         </div>
       </div>
 
       <div class="space-y-3">
-        <!-- Buscador Rápido -->
         <div class="relative">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
           <input 
@@ -28,7 +24,6 @@
           />
         </div>
         
-        <!-- Selectores de Filtro -->
         <div class="flex gap-2">
           <div class="relative flex-1">
             <select 
@@ -59,10 +54,8 @@
       </div>
     </div>
 
-    <!-- Lista de Requisiciones Scrollable -->
     <div class="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar bg-slate-200">
       
-      <!-- Estado vacío si no hay coincidencias -->
       <template x-if="filteredRequisitions.length === 0">
         <div class="text-center text-slate-500 mt-10">
           <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mx-auto mb-3 opacity-40"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
@@ -70,20 +63,17 @@
         </div>
       </template>
 
-      <!-- Lista dinámica -->
-      <template x-for="req in filteredRequisitions" :key="req.id">
+      <template x-for="req in filteredRequisitions" :key="item.dtl_id">
         <div 
           @click="selectedId = req.id"
           :class="selectedId === req.id ? 'border-slate-500 ring-2 ring-slate-400 bg-slate-50 shadow-lg scale-[1.02] z-10' : 'border-slate-400 bg-slate-100 hover:bg-slate-50 hover:shadow-md hover:border-slate-500'"
           class="relative p-4 rounded-2xl cursor-pointer transition-all duration-200 border overflow-hidden"
         >
-          <!-- Borde izquierdo de color dinámico (Tonos más sutiles) -->
           <div 
             :class="req.status === 'Pendiente' ? 'bg-amber-500/80' : (req.status === 'En Proceso' ? 'bg-indigo-500/80' : 'bg-teal-500/80')"
             class="absolute left-0 top-0 bottom-0 w-1.5"
           ></div>
 
-          <!-- Indicador de Nuevo (UX Tip) -->
           <template x-if="req.isNew">
             <div class="absolute top-4 right-4 w-3 h-3 bg-rose-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(244,63,94,0.6)]"></div>
           </template>
@@ -102,25 +92,15 @@
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
               <span class="truncate" x-text="req.origin"></span>
             </div>
-            <div class="flex items-center gap-1.5 justify-end">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              <span x-text="req.waitTime"></span>
-            </div>
           </div>
-          <div class="mt-3 pt-3 border-t border-slate-300 pl-2 text-xs text-slate-500 font-medium" x-text="`Creado a las ${req.createdAt}`">
-          </div>
+          <div class="mt-3 pt-3 border-t border-slate-300 pl-2 text-xs text-slate-500 font-medium" x-text="`Creado a las ${req.createdAt}`"></div>
         </div>
       </template>
-
     </div>
   </div>
 
-  <!-- =========================================
-      PANEL DERECHO (70%) - ÁREA DE TRABAJO
-      ========================================= -->
   <div :class="!selectedId ? 'hidden md:flex' : 'flex'" class="w-full md:w-[65%] lg:w-[70%] flex-col relative bg-transparent">
     
-    <!-- Estado Vacío -->
     <template x-if="!selectedReq">
       <div class="flex-1 flex flex-col items-center justify-center text-slate-600">
         <div class="bg-slate-200 p-6 rounded-full shadow-inner mb-4 border border-slate-400">
@@ -131,13 +111,11 @@
       </div>
     </template>
 
-    <!-- Detalle de la Requisición -->
     <template x-if="selectedReq">
       <div class="flex-1 flex flex-col h-full relative">
-        <!-- Encabezado del Detalle -->
+        
         <div class="bg-slate-200 p-6 shadow-sm border-b border-slate-400 z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shrink-0">
           <div class="flex items-center gap-3">
-            <!-- Botón volver solo para móvil -->
             <button 
               class="md:hidden p-2 bg-slate-100 shadow-sm hover:shadow-md rounded-lg transition-colors border border-slate-400"
               @click="selectedId = null"
@@ -153,95 +131,114 @@
               </div>
             </div>
           </div>
-          
-         
-          <div class="flex items-center gap-3 w-full md:w-auto">
-            <!--<button class="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-3 bg-slate-100 shadow-sm hover:shadow-md border border-slate-400 hover:bg-white text-slate-800 font-semibold rounded-xl transition-all">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
-              <span>Imprimir</span>
-            </button> -->
-            <!-- Botón de acción destructiva (Cancelar) -->
-            <!--<button class="p-3 bg-slate-100 shadow-sm hover:shadow-md hover:bg-rose-100 text-rose-700 border border-slate-400 hover:border-rose-400 rounded-xl transition-all tooltip-trigger" title="Cancelar Pedido">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
-            </button> -->
-          </div>
         </div>
 
-        <!-- Contador Visual (Micro-UX) -->
         <div class="bg-slate-200 px-6 py-4 border-b border-slate-400 shrink-0 shadow-sm z-0">
           <div class="flex justify-between items-center mb-2">
-            <span class="font-bold text-slate-800 text-lg">Progreso de surtido</span>
+            <span class="font-bold text-slate-800 text-lg">Artículos Completados</span>
             <span 
-              :class="is100Percent ? 'text-emerald-700' : 'text-slate-600'" 
+              :class="orderStatus === 'complete' ? 'text-emerald-700' : 'text-slate-600'" 
               class="font-bold text-lg"
-              x-text="`${checkedItems} / ${totalItems}`">
+              x-text="`${selectedReq.items.filter(i => i.supplied_qty === i.requested_qty).length} / ${selectedReq.items.length}`">
             </span>
           </div>
           <div class="w-full bg-slate-400 border border-slate-500/50 rounded-full h-3.5 overflow-hidden shadow-inner">
             <div 
-              :class="is100Percent ? 'bg-emerald-600' : 'bg-slate-600'"
+              :class="orderStatus === 'complete' ? 'bg-emerald-600' : (orderStatus === 'partial' ? 'bg-amber-500' : 'bg-slate-600')"
               class="h-3.5 rounded-full transition-all duration-500 ease-out shadow-sm"
-              :style="`width: ${(checkedItems / totalItems) * 100}%`"
+              :style="`width: ${(selectedReq.items.filter(i => i.supplied_qty === i.requested_qty).length / selectedReq.items.length) * 100}%`"
             ></div>
           </div>
         </div>
 
-        <!-- Área de Checklists (Cuerpo principal) -->
         <div class="flex-1 overflow-y-auto p-4 md:p-8 pb-32 custom-scrollbar">
           <div class="max-w-4xl mx-auto space-y-4">
             
-            <template x-for="item in selectedReq.items" :key="item.id">
+            <template x-for="item in selectedReq.items" :key="item.dtl_id">
               <div 
-                @click="selectedReq.status !== 'Finalizada' && toggleItem(selectedReq.id, item.id)"
                 :class="[
-                  selectedReq.status === 'Finalizada' ? 'opacity-70 cursor-default' : 'cursor-pointer hover:-translate-y-0.5',
-                  item.checked ? 'bg-slate-300 border-slate-400 shadow-inner' : 'bg-slate-100 border-slate-400 shadow-sm hover:shadow-md hover:border-slate-500'
+                  selectedReq.status === 'Finalizada' ? 'opacity-70' : 'hover:-translate-y-0.5',
+                  (item.delivered_qty + item.session_qty) >= item.requested_qty ? 'bg-emerald-50 border-emerald-500' : 
+                  ((item.delivered_qty + item.session_qty) > 0 ? 'bg-amber-50 border-amber-400' : 'bg-slate-100 border-slate-400')
                 ]"
-                class="flex items-center justify-between p-5 md:p-6 rounded-2xl transition-all duration-300 border select-none"
+                class="flex flex-col md:flex-row md:items-center justify-between p-4 md:p-6 rounded-2xl transition-all duration-300 border mb-4 gap-4"
               >
-                <div class="flex items-center gap-5">
-                  <!-- Checkbox grande para tabletas (Verde oscuro) -->
+                
+                <div class="flex items-start gap-4">
+                  <!-- Indicador visual de estado -->
                   <div 
-                    :class="item.checked ? 'bg-emerald-700 border-emerald-700 text-white shadow-md' : 'bg-slate-200 border-slate-400 text-transparent shadow-inner'"
-                    class="flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-xl border-2 transition-colors duration-200 shrink-0"
+                    :class="(item.delivered_qty + item.session_qty) >= item.requested_qty ? 'bg-emerald-600 border-emerald-700' : 
+                            ((item.delivered_qty + item.session_qty) > 0 ? 'bg-amber-500 border-amber-600' : 'bg-slate-200 border-slate-400')"
+                    class="flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-xl border-2 shrink-0 mt-1"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 md:w-8 md:h-8"><path d="M20 6 9 17l-5-5"/></svg>
+                    <template x-if="(item.delivered_qty + item.session_qty) >= item.requested_qty">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                    </template>
+                    <template x-if="(item.delivered_qty + item.session_qty) > 0 && (item.delivered_qty + item.session_qty) < item.requested_qty">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    </template>
                   </div>
                   
-                  <div :class="item.checked ? 'opacity-60' : 'opacity-100'" class="transition-all duration-300">
-                    <h3 
-                      :class="item.checked ? 'line-through text-slate-600' : 'text-slate-900'"
-                      class="text-lg md:text-xl font-bold transition-all"
-                      x-text="item.name"
-                    ></h3>
-                    <p class="text-slate-600 font-medium text-sm md:text-base mt-0.5">
-                      Cantidad solicitada
+                  <div>
+                    <!-- Usamos item.name que definimos en el mapeo del JS -->
+                    <h3 class="text-lg md:text-xl font-bold text-slate-900" x-text="item.name"></h3>
+                    <p class="text-slate-600 font-medium text-sm">
+                      Solicitado: <span class="font-bold text-slate-800" x-text="`${item.requested_qty} ${item.unit}`"></span>
                     </p>
+                    <template x-if="item.delivered_qty > 0">
+                      <p class="text-xs text-indigo-600 font-bold mt-1">Surtido previo: <span x-text="item.delivered_qty"></span></p>
+                    </template>
                   </div>
                 </div>
                 
-                <div 
-                  :class="item.checked ? 'text-slate-600 bg-slate-300/50 border-slate-400 line-through' : 'text-slate-900 bg-slate-200 border-slate-400 shadow-sm'"
-                  class="text-xl md:text-2xl font-black px-4 py-2 rounded-xl transition-all duration-300 border"
-                  x-text="item.quantity"
-                ></div>
+                <!-- Controles (Stepper) -->
+                <div class="flex flex-col items-end gap-2" x-show="selectedReq.status !== 'Finalizada'">
+                  <div class="flex items-center bg-slate-200 rounded-xl border border-slate-400 overflow-hidden">
+                    <button 
+                      @click="updateQuantity(selectedReq.id, item.dtl_id, -1)"
+                      :disabled="item.session_qty === 0"
+                      class="px-5 py-2 text-2xl font-bold text-slate-700 hover:bg-slate-300 disabled:opacity-50"
+                    >−</button>
+                    
+                    <div class="w-16 md:w-20 text-center font-black text-xl text-slate-800 bg-slate-100 py-2 border-x border-slate-400">
+                      <span x-text="item.session_qty"></span>
+                    </div>
+                    
+                    <button 
+                      @click="updateQuantity(selectedReq.id, item.dtl_id, 1)"
+                      :disabled="(item.delivered_qty + item.session_qty) >= item.requested_qty"
+                      class="px-5 py-2 text-2xl font-bold text-slate-700 hover:bg-slate-300 disabled:opacity-50"
+                    >+</button>
+                  </div>
+                  <button 
+                    @click="fillAllItem(selectedReq.id, item.dtl_id)"
+                    class="text-xs font-bold text-emerald-700 hover:underline"
+                  >Surtir todo</button>
+                </div>
               </div>
             </template>
 
           </div>
         </div>
 
-        <!-- Pie de página - Botón de Finalización (Fijo abajo) -->
         <div class="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-slate-300 via-slate-300/90 to-transparent z-20">
           <div class="max-w-4xl mx-auto">
             <button
-              :disabled="!is100Percent || selectedReq.status === 'Finalizada'"
+              :disabled="orderStatus === 'pending' || orderStatus === 'empty' || selectedReq.status === 'Finalizada'"
               @click="markAsFinished(selectedReq.id)"
-              :class="(!is100Percent || selectedReq.status === 'Finalizada') ? 'bg-slate-400 text-slate-600 cursor-not-allowed shadow-inner border border-slate-500' : 'bg-emerald-700 text-white hover:bg-emerald-800 hover:shadow-xl hover:-translate-y-1 border border-emerald-900'"
+              :class="[
+                (orderStatus === 'pending' || orderStatus === 'empty' || selectedReq.status === 'Finalizada') ? 'bg-slate-400 text-slate-600 cursor-not-allowed shadow-inner border border-slate-500' : '',
+                orderStatus === 'complete' && selectedReq.status !== 'Finalizada' ? 'bg-emerald-700 text-white hover:bg-emerald-800 hover:shadow-xl hover:-translate-y-1 border border-emerald-900' : '',
+                orderStatus === 'partial' && selectedReq.status !== 'Finalizada' ? 'bg-amber-600 text-white hover:bg-amber-700 hover:shadow-xl hover:-translate-y-1 border border-amber-800' : ''
+              ]"
               class="w-full py-5 rounded-2xl text-xl font-bold shadow-md transition-all duration-300 flex items-center justify-center gap-3"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>
-              <span x-text="selectedReq.status === 'Finalizada' ? 'Pedido Entregado' : (is100Percent ? 'Marcar como Finalizada' : 'Completa el pedido para finalizar')"></span>
+              <span x-text="
+                selectedReq.status === 'Finalizada' ? 'Pedido Entregado' : 
+                (orderStatus === 'complete' ? 'Finalizar Pedido Completo' : 
+                (orderStatus === 'partial' ? 'Finalizar con Faltantes' : 'Comienza a surtir para finalizar'))
+              "></span>
             </button>
           </div>
         </div>
@@ -253,7 +250,4 @@
 
 {% block extra_scripts %}
     <script type="module" src="{% static 'js/app_requisicion/app_requisicion.js' %}"></script>
-    
 {% endblock %}
-
-  

@@ -1,0 +1,65 @@
+import { fetchData } from '../../utils/get_api.js';
+
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+/**
+ * @param {Object} filters
+ * @param {AbortSignal} signal 
+ */
+export async function fetchDraftList(filters, signal) {
+    const params = new URLSearchParams();
+    if (filters.search) params.append('search', filters.search);
+    if (filters.status) params.append('status', filters.status);
+    if (filters.origin) params.append('origin', filters.origin);
+
+    const url = `/api/get-draft-list/?${params.toString()}`;
+    return await fetchData(url, signal);
+}
+
+/**
+ * @param {Array} items 
+ */
+export async function saveItemsDelivery(items) {
+    const url = '/api/set-delivery/';
+    const csrftoken = getCookie('csrftoken');
+
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken 
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify({
+                items: items
+            })
+        });
+
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.error || 'Error al registrar la entrega de artículos.');
+        }
+        
+        return data; 
+        
+    } catch (error) {
+        console.error("Error en saveItemsDelivery:", error);
+        throw error;
+    }
+}

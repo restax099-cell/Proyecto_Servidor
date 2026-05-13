@@ -1,141 +1,143 @@
-// 1. Importamos Alpine desde el CDN como módulo
+import collapse from 'https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/module.esm.js';
 import Alpine from 'https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/module.esm.js';
+import { fetchDraftList, saveItemsDelivery } from './api_requisicion.js';
 
-// 2. Datos de prueba (MockData)
-const mockData = [
-    {
-        id: 'RZ-0001',
-        origin: 'Cocina',
-        status: 'Pendiente',
-        createdAt: '10:05 AM',
-        waitTime: '15 min',
-        isNew: true,
-        items: [
-            { id: 1, name: 'Carne de res (Corte grueso)', quantity: '5 kg', checked: false },
-            { id: 2, name: 'Limones sin semilla', quantity: '2 kg', checked: false },
-            { id: 3, name: 'Cebolla blanca', quantity: '1 kg', checked: false },
-            { id: 4, name: 'Aceite vegetal', quantity: '2 Litros', checked: false }
-        ]
-    },
-    {
-        id: 'RZ-0002',
-        origin: 'Cantina',
-        status: 'En Proceso',
-        createdAt: '09:45 AM',
-        waitTime: '35 min',
-        isNew: false,
-        items: [
-            { id: 5, name: 'Tequila Reposado', quantity: '3 Botellas', checked: true },
-            { id: 6, name: 'Agua Mineral', quantity: '1 Caja', checked: false },
-            { id: 7, name: 'Hielo en cubo', quantity: '5 Bolsas', checked: false }
-        ]
-    },
-    {
-        id: 'RZ-0003',
-        origin: 'Mantenimiento',
-        status: 'Pendiente',
-        createdAt: '10:15 AM',
-        waitTime: '5 min',
-        isNew: true,
-        items: [
-            { id: 8, name: 'Focos LED 15W', quantity: '10 pzas', checked: false },
-            { id: 9, name: 'Cinta aislar', quantity: '2 pzas', checked: false }
-        ]
-    },
-    {
-        id: 'RZ-0004',
-        origin: 'Cocina',
-        status: 'Finalizada',
-        createdAt: '08:00 AM',
-        waitTime: 'Surtida',
-        isNew: false,
-        items: [
-            { id: 10, name: 'Sal fina', quantity: '2 kg', checked: true },
-            { id: 11, name: 'Pimienta negra', quantity: '500 g', checked: true }
-        ]
-    }
-];
+Alpine.plugin(collapse);
 
-// 3. Registro del componente AlmacenApp
-// En modo módulo, registramos directamente sin esperar a 'alpine:init'
 Alpine.data('almacenApp', () => ({
-    requisitions: JSON.parse(JSON.stringify(mockData)), // Copia profunda para evitar mutaciones
+    requisitions: [], 
     selectedId: null,
     searchQuery: '',
     statusFilter: 'Todos',
     originFilter: 'Todos',
+    isLoading: false,
+    abortController: null,
 
-    // --- GETTERS (Propiedades computadas) ---
-    get filteredRequisitions() {
-        return this.requisitions.filter(req => {
-            const searchStr = this.searchQuery.toLowerCase();
-            const matchesSearch = req.id.toLowerCase().includes(searchStr) || 
-                                  req.items.some(item => item.name.toLowerCase().includes(searchStr));
-            const matchesStatus = this.statusFilter === 'Todos' || req.status === this.statusFilter;
-            const matchesOrigin = this.originFilter === 'Todos' || req.origin === this.originFilter;
+    // --- INICIALIZACIÓN ---
+    init() {
+        this.loadRequisitions();
+        this.$watch('searchQuery', () => this.loadRequisitions());
+        this.$watch('statusFilter', () => this.loadRequisitions());
+        this.$watch('originFilter', () => this.loadRequisitions());
+    },
+
+    // --- CONEXIÓN API ---
+    async loadRequisitions() {
+        if (this.abortController) this.abortController.abort();
+        this.abortController = new AbortController();
+        this.isLoading = true;
+
+        try {
+            const filters = { search: this.searchQuery, status: this.statusFilter, origin: this.originFilter };
+            const data = await fetchDraftList(filters, this.abortController.signal);
             
-            return matchesSearch && matchesStatus && matchesOrigin;
-        });
+            if (data) {
+                const uniqueData = Array.from(new Map(data.map(req => [req.sku, req])).values());
+
+                this.requisitions = uniqueData.map(req => {
+                    
+                    const allItemsCompleted = req.items.every(item => 
+                        parseFloat(item.supplied_qty || 0) >= parseFloat(item.requested_qty)
+                    );
+
+                    return {
+                        id: req.sku,          
+                        db_id: req.id,      
+                        origin: req.area_name || 'Almacén',
+                        status: req.is_draft ? 'Pendiente' : (allItemsCompleted ? 'Finalizada' : 'En Proceso'),
+                        createdAt: req.created_at,
+                        items: req.items.map(item => ({
+                            dtl_id: item.dtl_id,        
+                            name: item.nombre,         
+                            requested_qty: parseFloat(item.requested_qty), 
+                            delivered_qty: parseFloat(item.supplied_qty || 0),
+                            session_qty: 0, 
+                            unit: item.unit_name || 'pza'
+                        }))
+                    };
+                });
+            }
+        } catch (error) {
+            if (error.name !== 'AbortError') console.error("Error API:", error);
+        } finally {
+            this.isLoading = false;
+        }
+    },
+
+  
+    get filteredRequisitions() {
+        return this.requisitions; 
     },
 
     get selectedReq() {
         return this.requisitions.find(r => r.id === this.selectedId) || null;
     },
 
-    get totalItems() {
-        return this.selectedReq ? this.selectedReq.items.length : 0;
-    },
+    get orderStatus() {
+        if (!this.selectedReq) return 'empty';
+        const items = this.selectedReq.items;
+        const hasSessionDelivery = items.some(i => i.session_qty > 0);
+        const allCompleted = items.every(i => (i.delivered_qty + i.session_qty) >= i.requested_qty);
 
-    get checkedItems() {
-        return this.selectedReq ? this.selectedReq.items.filter(i => i.checked).length : 0;
-    },
-
-    get is100Percent() {
-        return this.totalItems > 0 && this.totalItems === this.checkedItems;
+        if (allCompleted) return 'complete';
+        if (hasSessionDelivery) return 'partial';
+        return 'pending';
     },
 
     get pendientesCount() {
         return this.requisitions.filter(r => r.status === 'Pendiente').length;
     },
 
-    // --- MÉTODOS ---
-    toggleItem(reqId, itemId) {
+    updateQuantity(reqId, itemId, amount) {
         const req = this.requisitions.find(r => r.id === reqId);
         if (!req) return;
 
-        const item = req.items.find(i => i.id === itemId);
+        const item = req.items.find(i => i.dtl_id === itemId);
         if (item) {
-            item.checked = !item.checked;
-        }
-
-        // Actualizar estado de la requisición según items marcados
-        const checkedCount = req.items.filter(i => i.checked).length;
-        
-        if (req.status !== 'Finalizada') {
-            if (checkedCount === 0) {
-                req.status = 'Pendiente';
-            } else {
-                req.status = 'En Proceso';
-                req.isNew = false;
-            }
+            let newSessionQty = item.session_qty + amount;
+            const remaining = item.requested_qty - item.delivered_qty;
+            if (newSessionQty < 0) newSessionQty = 0;
+            if (newSessionQty > remaining) newSessionQty = remaining;
+            
+            item.session_qty = newSessionQty;
         }
     },
 
-    markAsFinished(reqId) {
+    fillAllItem(reqId, itemId) {
         const req = this.requisitions.find(r => r.id === reqId);
-        if (req) {
-            req.status = 'Finalizada';
-            req.waitTime = 'Surtida';
+        if (!req) return;
+        const item = req.items.find(i => i.dtl_id === itemId);
+        if (item) {
+            item.session_qty = item.requested_qty - item.delivered_qty;
         }
-        // Opcional: cerrar el detalle después de un momento
-        setTimeout(() => {
+    },
+
+    async markAsFinished(reqId) {
+        const req = this.requisitions.find(r => r.id === reqId);
+        if (!req) return;
+
+        const itemsToSubmit = req.items
+            .filter(i => i.session_qty > 0)
+            .map(i => ({
+                dtl_id: i.dtl_id,
+                qty: i.session_qty,
+                folio: req.id
+            }));
+
+        if (itemsToSubmit.length === 0) return;
+
+        try {
+            this.isLoading = true;
+            await saveItemsDelivery(itemsToSubmit); 
             this.selectedId = null;
-        }, 800);
+            await this.loadRequisitions();
+        } catch (error) {
+            alert("Error al guardar entrega: " + error.message);
+        } finally {
+            this.isLoading = false;
+        }
     }
 }));
 
-// 4. Inicialización de Alpine
 window.Alpine = Alpine;
 Alpine.start();
-
-console.log("Sistema de Almacén Inicializado");

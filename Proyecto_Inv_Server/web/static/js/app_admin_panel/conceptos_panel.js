@@ -1,4 +1,4 @@
-//? --- Imports ---
+
 
 import { fetchData } from '../../utils/get_api.js';
 import { buildConceptosTable } from './dynamic_tables.js';
