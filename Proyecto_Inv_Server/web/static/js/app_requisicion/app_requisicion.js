@@ -40,11 +40,22 @@ Alpine.data('almacenApp', () => ({
                         parseFloat(item.supplied_qty || 0) >= parseFloat(item.requested_qty)
                     );
 
+                    const hasAnyDelivery = req.items.some(item => 
+                        parseFloat(item.supplied_qty || 0) > 0
+                    );
+
+                    let currentStatus = 'Pendiente'; 
+                    if (allItemsCompleted) {
+                        currentStatus = 'Finalizada';
+                    } else if (hasAnyDelivery) {
+                        currentStatus = 'En Proceso';
+                    }
+
                     return {
                         id: req.sku,          
                         db_id: req.id,      
                         origin: req.area_name || 'Almacén',
-                        status: req.is_draft ? 'Pendiente' : (allItemsCompleted ? 'Finalizada' : 'En Proceso'),
+                        status: currentStatus, 
                         createdAt: req.created_at,
                         items: req.items.map(item => ({
                             dtl_id: item.dtl_id,        
@@ -56,6 +67,7 @@ Alpine.data('almacenApp', () => ({
                         }))
                     };
                 });
+                console.log("Datos en Alpine:", this.requisitions);
             }
         } catch (error) {
             if (error.name !== 'AbortError') console.error("Error API:", error);
@@ -66,7 +78,18 @@ Alpine.data('almacenApp', () => ({
 
   
     get filteredRequisitions() {
-        return this.requisitions; 
+        return this.requisitions.filter(req => {
+            const query = this.searchQuery.toLowerCase().trim();
+            const matchSearch = query === '' || 
+                                req.id.toLowerCase().includes(query) || 
+                                req.items.some(item => item.name.toLowerCase().includes(query));
+
+            const matchStatus = this.statusFilter === 'Todos' || req.status.includes(this.statusFilter.replace('s', '')); 
+
+            const matchOrigin = this.originFilter === 'Todos' || req.origin === this.originFilter;
+
+            return matchSearch && matchStatus && matchOrigin;
+        });
     },
 
     get selectedReq() {

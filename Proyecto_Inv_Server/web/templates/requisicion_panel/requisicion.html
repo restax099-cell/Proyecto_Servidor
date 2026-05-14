@@ -63,7 +63,7 @@
         </div>
       </template>
 
-      <template x-for="req in filteredRequisitions" :key="item.dtl_id">
+      <template x-for="req in filteredRequisitions" :key="req.id">
         <div 
           @click="selectedId = req.id"
           :class="selectedId === req.id ? 'border-slate-500 ring-2 ring-slate-400 bg-slate-50 shadow-lg scale-[1.02] z-10' : 'border-slate-400 bg-slate-100 hover:bg-slate-50 hover:shadow-md hover:border-slate-500'"
