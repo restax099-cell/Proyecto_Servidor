@@ -85,3 +85,8 @@ def report_panel(request):
 @login_required
 def requisition_panel(request):
     return render(request, 'requisicion_panel/requisicion.html')
+
+#*-------------- SECCION WEB PANEL DE REGISTROS DE ITEMS --------------*#
+@login_required
+def catalog_items(request):
+    return render(request, 'catalog_items/catalog_items.html')

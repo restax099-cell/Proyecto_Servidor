@@ -59,18 +59,22 @@ Alpine.data('inventoryApp', () => ({
 
                 const newGroupedItems = [];
                 for (const [providerName, products] of Object.entries(responseData.results)) {
-                    const mappedProducts = products.map((prod, index) => ({
-                        id: `p${this.currentPage}-${providerName.replace(/\s+/g, '')}-${index}`,
-                        id_concept: prod.id_concept, 
-                        xmlName: prod.producto,
-                        invoice: prod.fecha_producto ? prod.fecha_producto.split(' ')[0] : 'S/F',
-                        price: parseFloat(prod.valor_unitario),
-                        provider: providerName,
+                    const mappedProducts = products.map((prod, index) => {
+                        return {
+                            id: `p${this.currentPage}-${providerName.replace(/\s+/g, '')}-${index}`,
+                            id_concept: prod.id_concept, 
+                            xmlName: prod.producto,
+                            invoice: prod.fecha_producto ? prod.fecha_producto.split(' ')[0] : 'S/F',
+                            price: parseFloat(prod.valor_unitario),
+                            provider: providerName,
 
-                        status: prod.status || 'pending', 
-                        associatedItem: prod.associatedItem || '', 
-                        associatedDbId: prod.associatedDbId || null
-                    }));
+                            status: prod.status || 'pending',
+                            associatedItem: prod.associatedItem || '', 
+                            associatedDbId: prod.associatedDbId || null
+
+                        }
+                        
+                    });
                     newGroupedItems.push({ provider: providerName, items: mappedProducts });
                 }
                 this.groupedItems = newGroupedItems;
@@ -78,7 +82,7 @@ Alpine.data('inventoryApp', () => ({
                 this.groupedItems = [];
             }
 
-            console.log("¡Ahora sí! Datos con ID:", this.groupedItems);
+            console.log("Datos con ID:", this.groupedItems);
         } catch (error) {
             if (error.name !== 'AbortError') {
                 console.error("Error API:", error);
@@ -192,7 +196,7 @@ Alpine.data('inventoryApp', () => ({
             const response = await saveAssociation(target.id_concept, target.associatedDbId);
             
             target.status = 'associated';
-            console.log("¡Éxito! XML ID enviado:", target.id_concept);
+            console.log("XML ID enviado:", target.id_concept);
 
         } catch (error) {
             console.error("Fallo al vincular:", error);
@@ -218,7 +222,7 @@ Alpine.data('inventoryApp', () => ({
             target.associatedItem = ''; 
             target.associatedDbId = null; 
             
-            console.log("¡Éxito! El registro ahora tiene status 0 en MySQL.");
+            console.log("status 0 en MySQL.");
 
         } catch (error) {
             console.error("Fallo al desvincular:", error);

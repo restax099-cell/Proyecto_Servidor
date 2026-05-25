@@ -39,9 +39,9 @@
                 </template>
 
                 <template x-for="item in filteredDb" :key="item.id">
-                    <li @click="selectInventoryItem(item.id, item.name)" 
+                    <li @click="selectInventoryItem(item.id, item.nombre)" 
                         class="cursor-pointer hover:bg-indigo-50 p-3 rounded-xl transition-colors">
-                        <span class="font-medium text-slate-700" x-text="item.name"></span>
+                        <span class="font-medium text-slate-700" x-text="item.nombre"></span>
                     </li>
                 </template>
             </div>
