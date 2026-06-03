@@ -449,11 +449,11 @@ def get_items_sync_panel(request):
 @permission_classes([IsAdminUser])
 @renderer_classes([JSONRenderer]) 
 def get_items_for_modal(request):
-    search_term = request.query_params.get('search', '').strip()
+    search_term = request.query_params.get('q', '').strip() 
 
     try:
         with connection.cursor() as cursor:
-            cursor.callproc('sp_get_items', [search_term])
+            cursor.callproc('sp_get_items', [search_term, 0])
             
             columns = [col[0] for col in cursor.description]
             results = [dict(zip(columns, row)) for row in cursor.fetchall()]

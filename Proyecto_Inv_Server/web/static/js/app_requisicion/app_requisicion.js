@@ -1,6 +1,6 @@
 import collapse from 'https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/module.esm.js';
 import Alpine from 'https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/module.esm.js';
-import { fetchDraftList, saveItemsDelivery } from './api_requisicion.js';
+import { fetchDraftList, fetchRequisitionPdf, saveItemsDelivery } from './api_requisicion.js';
 
 Alpine.plugin(collapse);
 
@@ -13,7 +13,6 @@ Alpine.data('almacenApp', () => ({
     isLoading: false,
     abortController: null,
 
-    // --- INICIALIZACIÓN ---
     init() {
         this.loadRequisitions();
         this.$watch('searchQuery', () => this.loadRequisitions());
@@ -21,7 +20,6 @@ Alpine.data('almacenApp', () => ({
         this.$watch('originFilter', () => this.loadRequisitions());
     },
 
-    // --- CONEXIÓN API ---
     async loadRequisitions() {
         if (this.abortController) this.abortController.abort();
         this.abortController = new AbortController();
@@ -60,6 +58,9 @@ Alpine.data('almacenApp', () => ({
                         items: req.items.map(item => ({
                             dtl_id: item.dtl_id,        
                             name: item.nombre,         
+                            
+                            category: item.categoria || item.category || 'Sin Categoría', 
+                            
                             requested_qty: parseFloat(item.requested_qty), 
                             delivered_qty: parseFloat(item.supplied_qty || 0),
                             session_qty: 0, 
@@ -76,7 +77,20 @@ Alpine.data('almacenApp', () => ({
         }
     },
 
-  
+    get groupedItems() {
+        if (!this.selectedReq || !this.selectedReq.items) return {};
+
+        return this.selectedReq.items.reduce((acc, item) => {
+            const cat = item.category;
+            if (!acc[cat]) {
+                acc[cat] = [];
+            }
+            acc[cat].push(item);
+            return acc;
+        }, {});
+    },
+    // -------------------------------------------------------------
+
     get filteredRequisitions() {
         return this.requisitions.filter(req => {
             const query = this.searchQuery.toLowerCase().trim();
@@ -156,6 +170,20 @@ Alpine.data('almacenApp', () => ({
             await this.loadRequisitions();
         } catch (error) {
             alert("Error al guardar entrega: " + error.message);
+        } finally {
+            this.isLoading = false;
+        }
+    },
+
+    async printRequisition(dbId) {
+        if (!dbId) return;
+        
+        this.isLoading = true; 
+        
+        try {
+            await fetchRequisitionPdf(dbId);
+        } catch (error) {
+            alert("No se pudo imprimir: " + error.message);
         } finally {
             this.isLoading = false;
         }

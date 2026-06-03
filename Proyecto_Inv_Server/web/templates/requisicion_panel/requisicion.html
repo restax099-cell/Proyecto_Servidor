@@ -112,9 +112,10 @@
     </template>
 
     <template x-if="selectedReq">
-      <div class="flex-1 flex flex-col h-full relative">
+      <div class="flex-1 flex flex-col h-full relative overflow-hidden min-h-0">
         
         <div class="bg-slate-200 p-6 shadow-sm border-b border-slate-400 z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shrink-0">
+  
           <div class="flex items-center gap-3">
             <button 
               class="md:hidden p-2 bg-slate-100 shadow-sm hover:shadow-md rounded-lg transition-colors border border-slate-400"
@@ -131,6 +132,16 @@
               </div>
             </div>
           </div>
+
+          <button 
+            @click="printRequisition(selectedReq.db_id)" 
+            class="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-white text-slate-700 hover:text-indigo-700 font-bold rounded-xl border border-slate-400 shadow-sm transition-all duration-200 hover:-translate-y-0.5"
+            title="Imprimir Pedido"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
+            <span class="hidden sm:inline">Imprimir</span>
+          </button>
+
         </div>
 
         <div class="bg-slate-200 px-6 py-4 border-b border-slate-400 shrink-0 shadow-sm z-0">
@@ -151,73 +162,99 @@
           </div>
         </div>
 
-        <div class="flex-1 overflow-y-auto p-4 md:p-8 pb-32 custom-scrollbar">
-          <div class="max-w-4xl mx-auto space-y-4">
+        <div class="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar">
+          <div class="max-w-4xl mx-auto space-y-6 pb-[140px]">
             
-            <template x-for="item in selectedReq.items" :key="item.dtl_id">
-              <div 
-                :class="[
-                  selectedReq.status === 'Finalizada' ? 'opacity-70' : 'hover:-translate-y-0.5',
-                  (item.delivered_qty + item.session_qty) >= item.requested_qty ? 'bg-emerald-50 border-emerald-500' : 
-                  ((item.delivered_qty + item.session_qty) > 0 ? 'bg-amber-50 border-amber-400' : 'bg-slate-100 border-slate-400')
-                ]"
-                class="flex flex-col md:flex-row md:items-center justify-between p-4 md:p-6 rounded-2xl transition-all duration-300 border mb-4 gap-4"
-              >
+            <template x-for="category in Object.keys(groupedItems)" :key="category">
+              
+              <div x-data="{ open: true }" class="bg-slate-200 rounded-2xl border border-slate-400 overflow-hidden shadow-sm">
                 
-                <div class="flex items-start gap-4">
-                  <!-- Indicador visual de estado -->
-                  <div 
-                    :class="(item.delivered_qty + item.session_qty) >= item.requested_qty ? 'bg-emerald-600 border-emerald-700' : 
-                            ((item.delivered_qty + item.session_qty) > 0 ? 'bg-amber-500 border-amber-600' : 'bg-slate-200 border-slate-400')"
-                    class="flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-xl border-2 shrink-0 mt-1"
-                  >
-                    <template x-if="(item.delivered_qty + item.session_qty) >= item.requested_qty">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-                    </template>
-                    <template x-if="(item.delivered_qty + item.session_qty) > 0 && (item.delivered_qty + item.session_qty) < item.requested_qty">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                    </template>
+                <button 
+                  @click="open = !open"
+                  class="w-full px-6 py-4 flex items-center justify-between bg-slate-300 hover:bg-slate-400/50 transition-colors"
+                >
+                  <div class="flex items-center gap-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-slate-600"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                    <h3 class="font-bold text-lg text-slate-800 uppercase tracking-wide" x-text="category"></h3>
+                    <span class="bg-slate-400/60 text-slate-800 text-xs font-bold px-2.5 py-1 rounded-full" x-text="groupedItems[category].length"></span>
                   </div>
-                  
-                  <div>
-                    <!-- Usamos item.name que definimos en el mapeo del JS -->
-                    <h3 class="text-lg md:text-xl font-bold text-slate-900" x-text="item.name"></h3>
-                    <p class="text-slate-600 font-medium text-sm">
-                      Solicitado: <span class="font-bold text-slate-800" x-text="`${item.requested_qty} ${item.unit}`"></span>
-                    </p>
-                    <template x-if="item.delivered_qty > 0">
-                      <p class="text-xs text-indigo-600 font-bold mt-1">Surtido previo: <span x-text="item.delivered_qty"></span></p>
-                    </template>
-                  </div>
-                </div>
-                
-                <!-- Controles (Stepper) -->
-                <div class="flex flex-col items-end gap-2" x-show="selectedReq.status !== 'Finalizada'">
-                  <div class="flex items-center bg-slate-200 rounded-xl border border-slate-400 overflow-hidden">
-                    <button 
-                      @click="updateQuantity(selectedReq.id, item.dtl_id, -1)"
-                      :disabled="item.session_qty === 0"
-                      class="px-5 py-2 text-2xl font-bold text-slate-700 hover:bg-slate-300 disabled:opacity-50"
-                    >−</button>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                      class="text-slate-600 transition-transform duration-200"
+                      :class="open ? 'rotate-180' : ''">
+                    <path d="m6 9 6 6 6-6"/>
+                  </svg>
+                </button>
+
+                <div x-show="open" class="p-2 md:p-4 space-y-2 bg-slate-200/50">
+                  <template x-for="item in groupedItems[category]" :key="item.dtl_id">
                     
-                    <div class="w-16 md:w-20 text-center font-black text-xl text-slate-800 bg-slate-100 py-2 border-x border-slate-400">
-                      <span x-text="item.session_qty"></span>
+                    <div 
+                      :class="[
+                        selectedReq.status === 'Finalizada' ? 'opacity-70' : 'hover:bg-white',
+                        (item.delivered_qty + item.session_qty) >= item.requested_qty ? 'bg-emerald-50 border-emerald-400' : 
+                        ((item.delivered_qty + item.session_qty) > 0 ? 'bg-amber-50 border-amber-300' : 'bg-slate-100 border-slate-300')
+                      ]"
+                      class="flex items-center justify-between py-2 px-3 md:px-4 rounded-xl transition-colors border gap-3 shadow-sm"
+                    >
+                      
+                      <div class="flex items-center gap-3 min-w-0">
+                        <div 
+                          :class="(item.delivered_qty + item.session_qty) >= item.requested_qty ? 'bg-emerald-600 border-emerald-700' : 
+                                  ((item.delivered_qty + item.session_qty) > 0 ? 'bg-amber-500 border-amber-600' : 'bg-slate-300 border-slate-400')"
+                          class="flex items-center justify-center w-6 h-6 md:w-7 md:h-7 rounded-md border-2 shrink-0 transition-colors"
+                        >
+                          <template x-if="(item.delivered_qty + item.session_qty) >= item.requested_qty">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                          </template>
+                          <template x-if="(item.delivered_qty + item.session_qty) > 0 && (item.delivered_qty + item.session_qty) < item.requested_qty">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                          </template>
+                        </div>
+                        
+                        <div class="truncate">
+                          <h3 class="text-sm md:text-base font-bold text-slate-800 truncate leading-tight" x-text="item.name"></h3>
+                          <div class="flex items-center gap-3 text-[11px] md:text-xs text-slate-600 mt-0.5">
+                            <span>Sol: <strong class="text-slate-900" x-text="`${item.requested_qty} ${item.unit}`"></strong></span>
+                            <template x-if="item.delivered_qty > 0">
+                              <span class="text-indigo-700 font-bold bg-indigo-100 px-1.5 rounded-sm">Previo: <span x-text="item.delivered_qty"></span></span>
+                            </template>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div class="flex items-center gap-3 shrink-0" x-show="selectedReq.status !== 'Finalizada'">
+                        
+                        <button 
+                          @click="fillAllItem(selectedReq.id, item.dtl_id)"
+                          class="hidden md:block text-[10px] uppercase font-bold text-emerald-700 hover:text-emerald-500 tracking-wider"
+                        >Todo</button>
+
+                        <div class="flex items-center bg-slate-200/80 rounded-lg border border-slate-400 overflow-hidden h-8">
+                          <button 
+                            @click="updateQuantity(selectedReq.id, item.dtl_id, -1)"
+                            :disabled="item.session_qty === 0"
+                            class="px-3 h-full text-lg font-bold text-slate-700 hover:bg-slate-300 disabled:opacity-40 leading-none flex items-center justify-center"
+                          >−</button>
+                          
+                          <div class="w-10 md:w-12 h-full flex items-center justify-center font-black text-sm text-slate-900 bg-slate-50 border-x border-slate-400">
+                            <span x-text="item.session_qty"></span>
+                          </div>
+                          
+                          <button 
+                            @click="updateQuantity(selectedReq.id, item.dtl_id, 1)"
+                            :disabled="(item.delivered_qty + item.session_qty) >= item.requested_qty"
+                            class="px-3 h-full text-lg font-bold text-slate-700 hover:bg-slate-300 disabled:opacity-40 leading-none flex items-center justify-center"
+                          >+</button>
+                        </div>
+                      </div>
+
                     </div>
-                    
-                    <button 
-                      @click="updateQuantity(selectedReq.id, item.dtl_id, 1)"
-                      :disabled="(item.delivered_qty + item.session_qty) >= item.requested_qty"
-                      class="px-5 py-2 text-2xl font-bold text-slate-700 hover:bg-slate-300 disabled:opacity-50"
-                    >+</button>
-                  </div>
-                  <button 
-                    @click="fillAllItem(selectedReq.id, item.dtl_id)"
-                    class="text-xs font-bold text-emerald-700 hover:underline"
-                  >Surtir todo</button>
+                  </template>
                 </div>
+
               </div>
             </template>
-
+            
           </div>
         </div>
 

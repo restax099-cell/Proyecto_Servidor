@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Requisición {{ requisition.sku }}</title>
+    <style>
+        @page {
+            size: letter;
+            /* Redujimos el margen inferior un poco más para ganar espacio */
+            margin: 15mm 15mm 15mm 15mm; 
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            color: #334155;
+            font-size: 8.5pt; /* Letra un pelín más pequeña para optimizar espacio */
+            line-height: 1.2; /* Interlineado más compacto */
+        }
+
+        /* Numeración al pie de página */
+        .footer-counter {
+            text-align: right;
+            font-size: 8pt;
+            color: #94a3b8;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <table width="100%" style="border-bottom: 2px solid #1e293b; padding-bottom: 6px; margin-bottom: 10px;">
+        <tr>
+            <td style="vertical-align: bottom; width: 40%;">
+                <div style="font-size: 16pt; font-weight: bold; color: #1e293b; line-height: 1.1;">
+                    REQUISICIÓN DE<br>PRODUCTOS
+                </div>
+            </td>
+            <td style="vertical-align: bottom; width: 60%; text-align: right;">
+                <span style="font-size: 9pt; color: #1e293b;">
+                    <strong>Folio:</strong> {{ requisition.sku }} &nbsp;|&nbsp; 
+                    <strong>Destino:</strong> {{ requisition.area_name }} &nbsp;|&nbsp; 
+                    <strong>Fecha:</strong> {{ requisition.created_at|date:"Y-m-d H:i" }}
+                </span>
+            </td>
+        </tr>
+    </table>
+
+    <table width="100%" style="border-collapse: collapse;">
+        <thead>
+            <tr>
+                <th width="60%" style="background-color: #f1f5f9; color: #475569; font-weight: bold; text-align: left; padding: 4px 8px; font-size: 8pt; border-bottom: 1px solid #cbd5e1; text-transform: uppercase;">
+                    Descripción del Artículo
+                </th>
+                <th width="20%" style="background-color: #f1f5f9; color: #475569; font-weight: bold; text-align: center; padding: 4px 8px; font-size: 8pt; border-bottom: 1px solid #cbd5e1; text-transform: uppercase;">
+                    Cant.<br>Solicitada
+                </th>
+                <th width="20%" style="background-color: #f1f5f9; color: #475569; font-weight: bold; text-align: center; padding: 4px 8px; font-size: 8pt; border-bottom: 1px solid #cbd5e1; text-transform: uppercase;">
+                    Cant. Surtida
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for category, items in grouped_items.items %}
+                
+                <tr>
+                    <td colspan="3" style="background-color: #e2e8f0; color: #1e293b; font-weight: bold; padding: 4px 8px; font-size: 8.5pt; text-transform: uppercase; border-bottom: 1px solid #cbd5e1;">
+                        {{ category }}
+                    </td>
+                </tr>
+                
+                {% for item in items %}
+                <tr>
+                    <td style="padding: 3px 8px; color: #334155; font-size: 8.5pt; border-bottom: 1px solid #f1f5f9;">
+                        {{ item.name }}
+                    </td>
+                    <td style="padding: 3px 8px; color: #334155; font-size: 8.5pt; border-bottom: 1px solid #f1f5f9; text-align: center;">
+                        {{ item.requested_qty|floatformat:0 }}
+                    </td>
+                    <td style="padding: 3px 8px; color: #334155; font-size: 8.5pt; border-bottom: 1px solid #f1f5f9; text-align: center;">
+                        {{ item.supplied_qty|floatformat:0 }}
+                    </td>
+                </tr>
+                {% endfor %}
+
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% if requisition.notes and requisition.notes != "Sin observaciones registradas." %}
+    <div style="margin-top: 10px; padding: 6px 8px; background-color: #f8fafc; border: 1px solid #e2e8f0; font-size: 8.5pt;">
+        <strong style="color: #475569;">Observaciones:</strong> <span style="color: #334155;">{{ requisition.notes }}</span>
+    </div>
+    {% endif %}
+
+    <!-- 4. ZONA DE FIRMAS (Dos líneas separadas fo||rzadas) -->
+    <table width="100%" style="margin-top: 50px;">
+        <tr>
+            <!-- Espacio izquierdo (15%) -->
+            <td width="15%"></td>
+            
+            <!-- Línea de Solicitó (30%) -->
+            <td width="30%" style="text-align: center; border-top: 1px solid #1e293b; padding-top: 4px;">
+                <span style="font-size: 9pt; color: #1e293b;">Solicitó</span><br>
+                <span style="font-size: 7.5pt; color: #64748b;">Personal Autorizado</span>
+            </td>
+            
+            <!-- Espacio central separador (10%) -->
+            <td width="10%"></td>
+            
+            <!-- Línea de Despachó (30%) -->
+            <td width="30%" style="text-align: center; border-top: 1px solid #1e293b; padding-top: 4px;">
+                <span style="font-size: 9pt; color: #1e293b;">Despachó</span><br>
+                <span style="font-size: 7.5pt; color: #64748b;">Encargado de Almacén</span>
+            </td>
+            
+            <!-- Espacio derecho (15%) -->
+            <td width="15%"></td>
+        </tr>
+    </table>
+
+    <div class="footer-counter">
+        Página <pdf:pagenumber /> de <pdf:pagecount />
+    </div>
+
+</body>
+</html>

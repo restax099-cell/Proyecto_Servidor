@@ -63,3 +63,36 @@ export async function saveItemsDelivery(items) {
         throw error;
     }
 }
+
+/**
+ * @param {number|string} dbId 
+ */
+export async function fetchRequisitionPdf(dbId) {
+    const url = `/api/export-requisition-pdf/?id=${dbId}`;
+
+    try {
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/pdf'
+            }
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(errorText || 'Error al generar el PDF de la requisición.');
+        }
+
+        const blob = await response.blob();
+        
+        const pdfUrl = URL.createObjectURL(blob);
+        
+        window.open(pdfUrl, '_blank');
+
+        setTimeout(() => URL.revokeObjectURL(pdfUrl), 10000);
+
+    } catch (error) {
+        console.error("Error en fetchRequisitionPdf:", error);
+        throw error;
+    }
+}
