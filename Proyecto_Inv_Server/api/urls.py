@@ -51,6 +51,11 @@ urlpatterns = [
     path('get-next-sku/', requisicion_views.get_next_sku, name='get_next_sku'),
     path('set-delivery/', requisicion_views.set_items_delivery, name='set_items_delivery'),
     path('export-requisition-pdf/', requisicion_views.export_requisition_pdf, name='export_requisition_pdf'),
+    path('get-items/', requisicion_views.get_items, name='get_items'),
+    path('get-categories/', requisicion_views.get_categories, name='get_categories'),
+    path('get-pending-count/', requisicion_views.get_pending_count, name='get_pending_count'),
+    path('set-insert-item/', requisicion_views.set_insert_item, name='set_insert_item'),
+    path('set-complete-item/', requisicion_views.set_complete_ficha_tecnica_item, name='set_complete_ficha_tecnica_item'),
 
 
 

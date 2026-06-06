@@ -2,8 +2,10 @@ import json
 from io import BytesIO
 from django.db import connection
 from django.http import HttpResponse
+from django.http import JsonResponse
 from django.template.loader import get_template
 from django.contrib.auth.decorators import login_required
+
 
 from collections import defaultdict
 
@@ -13,7 +15,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from xhtml2pdf import pisa
 
-
+from ..utils.pagination import get_sp_pagination_params,respond_paginated_sp
 
 
 @api_view(['POST']) 
@@ -133,7 +135,6 @@ def set_items_delivery(request):
         print(f"Error en set_items_delivery: {e}")
         return Response({"error": f"Error BD: {str(e)}"}, status=500)
     
-
 @login_required
 def export_requisition_pdf(request):
     requisition_id = request.GET.get('id')
@@ -202,5 +203,144 @@ def export_requisition_pdf(request):
         
     return HttpResponse("Error crítico al intentar formatear el reporte PDF.", status=500)
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_items(request):
+    if request.method == 'GET':
+        search = request.GET.get('search', '')
+        try: category_id = int(request.GET.get('category_id', 0))
+        except ValueError: category_id = 0
+
+        page, limit, offset = get_sp_pagination_params(request, default_limit=10)
+
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute("CALL sp_get_items(%s, %s, %s, %s)", [search, category_id, offset, limit])
+                columns = [col[0] for col in cursor.description]
+                
+                results = [dict(zip(columns, row)) for row in cursor.fetchall()]
+                
+                for item in results:
+                    item['isComplete'] = bool(item['isComplete'])
+
+            return respond_paginated_sp(page, limit, results)
+
+        except Exception as e:
+            return JsonResponse({"error": f"Error de BD: {str(e)}"}, status=500)
 
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_categories(request):
+    search = request.GET.get('search', '')
+    try:
+        with connection.cursor() as cursor:
+            sql = "SELECT id, category AS name FROM vlx_items_categories WHERE is_active = 1"
+            params = []
+            
+            if search:
+                sql += " AND category LIKE %s"
+                params.append(f"%{search}%")
+            
+            sql += " ORDER BY category ASC"
+            cursor.execute(sql, params)
+            
+            columns = [col[0] for col in cursor.description]
+            categories = [dict(zip(columns, row)) for row in cursor.fetchall()]
+            
+        return JsonResponse({"success": True, "data": categories})
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+    
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_pending_count(request):
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT COUNT(i.id) 
+                FROM vlx_items i
+                LEFT JOIN vlx_items_operacion op ON i.id = op.id_item
+                WHERE i.is_active = 1 
+                  AND (i.codigo IS NULL OR TRIM(i.codigo) = '' OR op.unidad IS NULL)
+            """)
+            count = cursor.fetchone()[0]
+            
+        return JsonResponse({"success": True, "count": count})
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+    
+
+@api_view(['POST']) 
+@permission_classes([IsAuthenticated])
+def set_insert_item(request):
+    item_id = int(request.data.get('id', 0))
+    nombre = request.data.get('nombre', '')
+    codigo = request.data.get('codigo', '')
+    id_categoria = int(request.data.get('id_categoria', 0))
+    descripcion = request.data.get('descripcion', '')
+
+    if not nombre.strip():
+        return Response({"error": "El nombre del ítem es obligatorio."}, status=400)
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("CALL sp_insert_item(%s, %s, %s, %s, %s)", 
+                           [item_id, nombre, codigo, id_categoria, descripcion])
+            
+            columns = [col[0] for col in cursor.description]
+            row = cursor.fetchone()
+            result = dict(zip(columns, row)) if row else {}
+
+        return Response({
+            "status": "success",
+            "message": "Ítem registrado correctamente",
+            "data": result 
+        }, status=201)
+
+    except Exception as e:
+        print(f"Error en SP sp_insert_item: {e}")
+        return Response({"error": "Error interno al guardar en base de datos"}, status=500)
+    
+@api_view(['POST']) 
+@permission_classes([IsAuthenticated])
+def set_complete_ficha_tecnica_item(request):
+    id_item = request.data.get('id_item')
+    
+    if not id_item:
+        return Response({"error": "El ID del ítem es obligatorio para completar la ficha."}, status=400)
+
+    unidad = int(request.data.get('unidad', 0))
+    contenido_empaque = float(request.data.get('contenido_empaque', 1.0))
+    peso = float(request.data.get('peso', 0.0))
+    rendimiento = float(request.data.get('rendimiento', 100.0))
+
+    tipo_precio = request.data.get('tipo_precio', '')
+    precio = float(request.data.get('precio', 0.0))
+    utilidad = float(request.data.get('utilidad', 0.0))
+    moneda = request.data.get('moneda', 'MXN')
+    tasa_cuota = float(request.data.get('tasa_cuota', 0.0))
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                CALL sp_complete_item_ficha(
+                    %s, %s, %s, %s, %s, 
+                    %s, %s, %s, %s, %s
+                )
+            """, [
+                id_item, 
+                unidad, contenido_empaque, peso, rendimiento,
+                tipo_precio, precio, utilidad, moneda, tasa_cuota
+            ])
+            
+
+        return Response({
+            "status": "success",
+            "message": "Ficha técnica actualizada correctamente"
+        }, status=201)
+
+    except Exception as e:
+        print(f"Error en SP sp_complete_item_ficha: {e}")
+        return Response({"error": "Error interno al guardar la ficha técnica"}, status=500)

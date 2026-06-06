@@ -15,9 +15,9 @@
             <div class="flex items-center gap-4">
                 <!-- Alerta Dinámica de Pendientes -->
                 <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold border shadow-sm transition-colors duration-300"
-                    :class="incompleteCount > 0 ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-emerald-50 text-emerald-700 border-emerald-100'">
-                    <div class="w-2 h-2 rounded-full" :class="incompleteCount > 0 ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'"></div>
-                    <span x-text="incompleteCount > 0 ? incompleteCount + ' Pendientes' : 'Al día'"></span>
+                    :class="globalPendingCount > 0 ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-emerald-50 text-emerald-700 border-emerald-100'">
+                    <div class="w-2 h-2 rounded-full" :class="globalPendingCount > 0 ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'"></div>
+                    <span x-text="globalPendingCount > 0 ? globalPendingCount + ' Pendientes' : 'Al día'"></span>
                 </div>
                 
                 <button @click="showCreateModal = true" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-all shadow-sm shadow-indigo-200">
@@ -29,7 +29,7 @@
 
         <main class="max-w-6xl mx-auto px-6 pb-12 space-y-6">
             
-            <!-- TARJETA DE FILTROS -->
+            <!--? TARJETA DE FILTROS -->
             <div class="bg-white rounded-[24px] p-6 shadow-sm border border-slate-100/70">
                 <div class="flex items-center gap-2 mb-6 text-indigo-600 font-bold text-[14px]">
                     <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.591l-5.432 5.432a2.25 2.25 0 00-.659 1.591v2.927a2.25 2.25 0 01-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 00-.659-1.591L3.659 7.409A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0112 3z" /></svg>
@@ -37,7 +37,7 @@
                 </div>
                 
                 <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-end">
-                    <!-- Buscador -->
+                    <!--? Buscador -->
                     <div class="md:col-span-4">
                         <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2.5">Producto</label>
                         <div class="relative">
@@ -51,57 +51,24 @@
                         </div>
                     </div>
 
-                    <!-- Categorías (Segmented Control Style) -->
+                    <!--? Categorías -->
                     <div class="md:col-span-8 relative" 
-                        x-data="{ 
-                            openCategoryDropdown: false,
-                            localSearch: '', 
-                            
-                            // Inicializamos el texto del input al cargar
-                            init() {
-                                this.localSearch = this.selectedCategory === 'Todo' ? '' : this.selectedCategory;
-                                
-                                // Si selectedCategory cambia por otro lado, actualizamos el input
-                                this.$watch('selectedCategory', val => {
-                                    this.localSearch = val === 'Todo' ? '' : val;
-                                });
-                            },
-                            
-                            // Filtramos usando el texto del input
-                            get filteredCategories() {
-                                if (this.localSearch === '') return categories;
-                                return categories.filter(c => c.toLowerCase().includes(this.localSearch.toLowerCase()));
-                            },
-                            
-                            // Función centralizada para seleccionar
-                            selectCategory(cat) {
-                                this.selectedCategory = cat;
-                                this.openCategoryDropdown = false;
-                            }
-                        }"
-                        @click.outside="
-                            // Si borraron todo y dieron clic fuera, reseteamos a 'Todo'
-                            if (localSearch.trim() === '') {
-                                selectCategory('Todo');
-                            } else {
-                                // Si escribieron algo a medias, restauramos la última selección válida
-                                localSearch = selectedCategory === 'Todo' ? '' : selectedCategory;
-                            }
-                            openCategoryDropdown = false;
-                        "
-                    >
+                        @click.outside="openCategoryDropdown = false; localSearch = ''">
+                        
                         <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2.5">Filtrar por Categoría</label>
                         
-                        <div class="relative">
+                        <div class="relative w-full sm:w-[280px]">
+
                             <input 
                                 type="text"
                                 x-model="localSearch"
                                 @focus="openCategoryDropdown = true"
                                 @input="openCategoryDropdown = true"
                                 @keydown.escape="openCategoryDropdown = false"
-                                placeholder="Todas las categorías..."
-                                class="w-full sm:w-[280px] bg-[#F8FAFC] border border-slate-200 rounded-[14px] pl-4 pr-10 py-3 text-[14px] text-slate-700 font-medium placeholder-slate-400 focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all shadow-sm"
+                                :placeholder="selectedCategoryName"
+                                class="w-full bg-[#F8FAFC] border border-slate-200 rounded-[14px] pl-4 pr-10 py-3 text-[14px] text-slate-700 font-medium placeholder-slate-700 focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all shadow-sm"
                             >
+                            
                             <button 
                                 type="button" 
                                 @click="openCategoryDropdown = !openCategoryDropdown; if(openCategoryDropdown) $el.previousElementSibling.focus()"
@@ -125,66 +92,112 @@
                             x-transition:leave-end="opacity-0 scale-95 -translate-y-2"
                             class="absolute z-30 mt-2 w-full sm:w-[280px] bg-white border border-slate-100 rounded-[16px] shadow-xl shadow-slate-200/50 overflow-hidden flex flex-col"
                             style="display: none;"
+                            x-cloak
                         >
                             <div class="max-h-[240px] overflow-y-auto p-1.5 custom-scrollbar flex-1">
                                 
-                                <button 
-                                    type="button"
-                                    @click="selectCategory('Todo')"
-                                    class="w-full text-left px-3 py-2.5 rounded-[10px] text-[13.5px] transition-all flex items-center justify-between mb-0.5"
-                                    :class="selectedCategory === 'Todo' ? 'bg-indigo-50 text-indigo-700 font-bold' : 'text-slate-600 hover:bg-[#F8FAFC] hover:text-slate-900 font-medium'"
-                                >
-                                    <span>Todas las categorías</span>
-                                    <svg x-show="selectedCategory === 'Todo'" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="text-indigo-600"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
-                                </button>
-
-                                <div class="h-px bg-slate-100 mx-2 my-1"></div>
-
-                                <template x-for="category in filteredCategories.filter(c => c !== 'Todo')" :key="category">
+                                <template x-for="cat in categories" :key="cat.id">
                                     <button 
                                         type="button"
-                                        @click="selectCategory(category)"
+                                        @click="
+                                            selectedCategoryId = cat.id;
+                                            selectedCategoryName = cat.name;
+                                            openCategoryDropdown = false;
+                                            localSearch = '';
+                                        "
                                         class="w-full text-left px-3 py-2.5 rounded-[10px] text-[13.5px] transition-all flex items-center justify-between mb-0.5 last:mb-0"
-                                        :class="selectedCategory === category 
+                                        :class="selectedCategoryId === cat.id 
                                             ? 'bg-indigo-50 text-indigo-700 font-bold' 
                                             : 'text-slate-600 hover:bg-[#F8FAFC] hover:text-slate-900 font-medium'"
                                     >
-                                        <span x-text="category"></span>
-                                        <svg x-show="selectedCategory === category" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="text-indigo-600"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                                        <span x-text="cat.name"></span>
+                                        <svg x-show="selectedCategoryId === cat.id" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="text-indigo-600"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
                                     </button>
                                 </template>
                                 
-                                <div x-show="filteredCategories.length === 0" class="px-3 py-6 text-center text-[13px] text-slate-500 font-medium">
+                                <div x-show="categories.length <= 1 && localSearch !== ''" class="px-3 py-6 text-center text-[13px] text-slate-500 font-medium">
                                     No se encontró "<span x-text="localSearch" class="text-slate-800 font-bold"></span>"
                                 </div>
+                                
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- BARRA DE RESULTADOS Y PAGINACIÓN -->
+            <!--? BARRA DE RESULTADOS Y PAGINACIÓN -->
             <div class="bg-white rounded-[20px] px-6 py-3 shadow-sm border border-slate-100/70 flex flex-col sm:flex-row items-center justify-between gap-4">
+                
                 <div class="text-[14px] text-slate-500">
-                    Mostrando <span class="font-bold text-slate-700">1</span> - <span class="font-bold text-slate-700" x-text="filteredItems.length"></span> de <span class="font-bold text-indigo-600" x-text="filteredItems.length"></span> resultados
+                    Mostrando 
+                    <span class="font-bold text-slate-700" x-text="totalItems === 0 ? 0 : ((currentPage - 1) * itemsPerPage) + 1"></span> - 
+                    <span class="font-bold text-slate-700" x-text="Math.min(currentPage * itemsPerPage, totalItems)"></span> 
+                    de <span class="font-bold text-indigo-600" x-text="totalItems"></span> resultados
                 </div>
                 
-                <!-- Paginación visual (Mock) -->
                 <div class="flex items-center gap-1">
-                    <button class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-50 transition" disabled>
+                    
+                    <button 
+                        @click="prevPage()"
+                        :disabled="currentPage === 1"
+                        class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 transition disabled:opacity-40 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+                    >
                         <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
                     </button>
-                    <button class="w-8 h-8 flex items-center justify-center rounded-lg bg-indigo-600 text-white font-bold text-sm shadow-sm">1</button>
-                    <button class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 transition font-bold text-sm">2</button>
-                    <button class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 transition">
+
+                    <template x-for="page in visiblePages" :key="page">
+                        <button 
+                            @click="goToPage(page)"
+                            class="w-8 h-8 flex items-center justify-center rounded-lg font-bold text-sm transition"
+                            :class="currentPage === page ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-500 hover:bg-slate-100'"
+                            x-text="page"
+                        ></button>
+                    </template>
+
+                    <button 
+                        @click="nextPage()"
+                        :disabled="currentPage >= totalPages"
+                        class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 transition disabled:opacity-40 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+                    >
                         <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
                     </button>
+                    
                     <div class="w-[1px] h-4 bg-slate-200 mx-2"></div>
-                    <button class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 transition text-sm font-bold">#</button>
-                </div>
+                    
+                    <div class="relative flex items-center justify-center" x-data="{ isJumping: false, jumpValue: '' }">
+                        <button 
+                            x-show="!isJumping"
+                            @click="isJumping = true; $nextTick(() => $refs.jumpInput.focus())"
+                            class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-slate-100 transition text-sm font-bold"
+                            title="Ir a una página"
+                        >
+                            #
+                        </button>
+
+                        <input 
+                            x-ref="jumpInput"
+                            x-show="isJumping"
+                            x-cloak
+                            type="number"
+                            x-model="jumpValue"
+                            placeholder="#"
+                            @keydown.enter="
+                                let pageNum = parseInt(jumpValue);
+                                if(pageNum >= 1 && pageNum <= totalPages) {
+                                    goToPage(pageNum);
+                                }
+                                isJumping = false;
+                                jumpValue = '';
+                            "
+                            @keydown.escape="isJumping = false; jumpValue = ''"
+                            @click.outside="isJumping = false; jumpValue = ''"
+                            class="w-12 h-8 text-center text-sm font-bold text-slate-700 bg-white border border-indigo-400 rounded-lg focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 shadow-inner transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        >
+                    </div>
+                    </div>
             </div>
 
-            <!-- CONTENEDOR DE LA LISTA -->
+            <!--? CONTENEDOR DE LA LISTA -->
             <div class="bg-white rounded-[24px] shadow-sm border border-slate-100/70 overflow-hidden flex flex-col min-h-[400px]">
                 
                 <div class="flex-1 flex flex-col">
@@ -201,7 +214,7 @@
                                 <!-- Lado Izquierdo: Info -->
                                 <div class="flex flex-col justify-center">
                                     <div class="flex items-center gap-2 mb-2">
-                                        <h3 class="font-bold text-[15px] text-slate-800" x-text="item.name"></h3>
+                                        <h3 class="font-bold text-[15px] text-slate-800" x-text="item.nombre"></h3>
                                         <template x-if="!item.isComplete">
                                             <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-[18px] h-[18px] text-amber-500"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
                                         </template>
@@ -212,21 +225,25 @@
                                     </div>
                                 </div>
 
-                                <!-- Lado Derecho: Acciones (Aparecen sutilmente en web) -->
+                                <!-- Lado Derecho: Acciones -->
                                 <div class="flex items-center gap-2 shrink-0 md:opacity-40 group-hover:opacity-100 transition-opacity">
+    
                                     <template x-if="!item.isComplete">
                                         <button @click="openCompleteModal(item)" class="px-4 py-1.5 rounded-lg border border-slate-200 text-[12px] font-bold text-slate-600 hover:text-indigo-600 hover:bg-white hover:shadow-sm hover:border-indigo-200 transition-all bg-[#F8FAFC] mr-2 opacity-100">
                                             Completar Ficha
                                         </button>
                                     </template>
+                                    
                                     <template x-if="item.isComplete">
-                                        <button class="w-9 h-9 flex items-center justify-center rounded-lg text-slate-400 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
+                                        <button @click="openEditModal(item)" class="w-9 h-9 flex items-center justify-center rounded-lg text-slate-400 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
                                             <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.89 1.112l-2.83.793a.25.25 0 01-.31-.31l.793-2.83a4.5 4.5 0 011.112-1.89l13.3-13.3zM16.862 4.487L19.5 7.125" /></svg>
                                         </button>
                                     </template>
+                                    
                                     <button class="w-9 h-9 flex items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors">
                                         <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>
                                     </button>
+                                    
                                 </div>
 
                             </div>
@@ -247,7 +264,7 @@
             </div>
         </main>
 
-        <!-- MODAL -->
+        <!--? MODAL -->
         {% include 'catalog_items/modals_catalog.html' %}
     </div>
     
