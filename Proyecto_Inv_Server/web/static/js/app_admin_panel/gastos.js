@@ -28,7 +28,7 @@ async function loadTableData() {
 
     const queryParams = buildQueryString(pagination.limit, pagination.page);
     //const url = `http://127.0.0.1:8000/api/cfdi-consultas/?${queryParams}`; 
-    const url = `/api/cfdi-consultas/?${queryParams}`;
+    const url = `/api/xml/cfdi-consultas/?${queryParams}`;
 
     const responseData = await fetchData(url, abortController.signal);
 

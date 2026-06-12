@@ -1,0 +1,15 @@
+from django.urls import path
+from ..views import xml_views
+
+urlpatterns = [
+    path('get-xml/', xml_views.get_xml_file, name='get-xml-file'),
+    path('get-xml-data/', xml_views.get_xml_data, name='get-xml-data'),
+    path('get-xml-head/', xml_views.get_xml_head, name='get-xml-head'),
+    path('get-all-raw/', xml_views.get_all_raw_cfdi, name='get-all-raw-cfdi'),
+    path('get-all-data/', xml_views.get_all_data_xml, name='get-all-data-xml'),
+    path('get-all-total/', xml_views.get_all_total_data_xml, name='get-all-total-data-xml'),
+    path('cfdi-consultas/', xml_views.get_cfdi_consultas, name='api_cfdi_consultas'),
+    path('history-price/', xml_views.get_precios_historicos, name='get-history-price'),
+    path('import/', xml_views.import_xml_zip, name='import_xml_zip'),
+    path('get_import_progress/', xml_views.get_import_progress, name='get_import_progress'),
+]

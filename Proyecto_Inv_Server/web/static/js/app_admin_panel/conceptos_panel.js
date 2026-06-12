@@ -27,7 +27,7 @@ const ID_ABORT_CONTROLLER = new AbortController();
         return;
     }
 
-    const url = `/api/get-xml-data/?uuid=${uuid}`;
+    const url = `/api/xml/get-xml-data/?uuid=${uuid}`;
     const data = await fetchData(url, ID_ABORT_CONTROLLER.signal);
 
     if (data) {

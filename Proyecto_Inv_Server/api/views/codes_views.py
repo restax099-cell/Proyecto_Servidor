@@ -9,7 +9,6 @@ import urllib.parse
 @csrf_exempt
 @api_view(["GET", "POST"])
 def get_folio_from_url(request):
-    # La lógica para el método GET y POST es casi la misma, simplifiquemos
     if request.method == 'GET':
         url_recibida = request.GET.get('url', '')
     elif request.method == 'POST':
@@ -25,7 +24,6 @@ def get_folio_from_url(request):
         return JsonResponse({"error": "Falta la URL"}, status=400)
 
     try:
-        # Pasa la URL recibida a tu función de web scraping
         print("----------- URL RECIBIDA -----------")
         print(url_recibida)
         print("----------- FIN URL RECIBIDA -----------")

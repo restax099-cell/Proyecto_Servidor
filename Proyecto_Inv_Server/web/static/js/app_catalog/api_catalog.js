@@ -29,7 +29,7 @@ export async function fetchCatalogItems(filters = {}, page = 1, signal) {
         params.append('category_id', filters.categoryId);
     }
 
-    const url = `/api/get-items/?${params.toString()}`;
+    const url = `/api/items/get-items/?${params.toString()}`;
     return await fetchData(url, signal);
 }
 
@@ -37,18 +37,18 @@ export async function fetchCategories(search = '', signal) {
     const params = new URLSearchParams();
     if (search) params.append('search', search);
     
-    const url = `/api/get-categories/?${params.toString()}`;
+    const url = `/api/items/get-categories/?${params.toString()}`;
     return await fetchData(url, signal);
 }
 
 export async function fetchPendingCount(signal) {
-    const url = `/api/get-pending-count/`;
+    const url = `/api/items/get-pending-count/`;
     return await fetchData(url, signal);
 }
 
 
 export async function createItem(itemData) {
-    const url = `/api/set-insert-item/`; 
+    const url = `/api/items/set-insert-item/`; 
     
     try {
         const response = await fetch(url, {
@@ -74,7 +74,7 @@ export async function createItem(itemData) {
 
 
 export async function saveFichaTecnica(fichaData) {
-    const url = `/api/set-complete-item/`; 
+    const url = `/api/items/set-complete-item/`; 
     
     try {
         const response = await fetch(url, {

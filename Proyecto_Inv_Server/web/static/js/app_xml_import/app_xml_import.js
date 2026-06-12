@@ -64,7 +64,7 @@ uploadForm.addEventListener('submit', function(e) {
     };
 
     const progressInterval = setInterval(() => {
-       fetch(`/api/get_import_progress/?t=${new Date().getTime()}`, {
+       fetch(`/api/xml/get_import_progress/?t=${new Date().getTime()}`, {
             method: 'GET',
             headers: {
                 'Cache-Control': 'no-cache',

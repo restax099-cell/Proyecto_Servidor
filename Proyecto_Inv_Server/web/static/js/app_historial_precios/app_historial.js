@@ -21,7 +21,7 @@ async function loadTableData() {
     const signal = abortController.signal;
 
     const params = new URLSearchParams(currentFilters);
-    const url = `/api/history-price/?${params.toString()}`;
+    const url = `/api/xml/history-price/?${params.toString()}`;
 
     try {
         const response = await fetch(url, { signal });

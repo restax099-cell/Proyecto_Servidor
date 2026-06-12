@@ -26,7 +26,7 @@ export async function fetchDraftList(filters, signal) {
     if (filters.status) params.append('status', filters.status);
     if (filters.origin) params.append('origin', filters.origin);
 
-    const url = `/api/get-draft-list/?${params.toString()}`;
+    const url = `/api/requisition/get-draft-list/?${params.toString()}`;
     return await fetchData(url, signal);
 }
 
@@ -34,7 +34,7 @@ export async function fetchDraftList(filters, signal) {
  * @param {Array} items 
  */
 export async function saveItemsDelivery(items) {
-    const url = '/api/set-delivery/';
+    const url = '/api/requisition/set-delivery/';
     const csrftoken = getCookie('csrftoken');
 
     try {
@@ -68,7 +68,7 @@ export async function saveItemsDelivery(items) {
  * @param {number|string} dbId 
  */
 export async function fetchRequisitionPdf(dbId) {
-    const url = `/api/export-requisition-pdf/?id=${dbId}`;
+    const url = `/api/requisition/export-requisition-pdf/?id=${dbId}`;
 
     try {
         const response = await fetch(url, {

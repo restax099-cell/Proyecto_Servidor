@@ -26,7 +26,7 @@ export async function fetchInventorySync(page, filters, signal) {
     if (filters.dateFrom) params.append('fecha_desde', filters.dateFrom);
     if (filters.dateTo) params.append('fecha_hasta', filters.dateTo);
 
-    const url = `/api/get-items-sync/?${params.toString()}`;
+    const url = `/api/items/get-items-sync/?${params.toString()}`;
     return await fetchData(url, signal);
 }
 
@@ -36,13 +36,13 @@ export async function fetchModalItems(searchTerm = '', signal) {
         params.append('q', searchTerm);
     }
     
-    const url = `/api/get-items-modal/?${params.toString()}`;
+    const url = `/api/items/get-items-modal/?${params.toString()}`;
     return await fetchData(url, signal);
 }
 
 export async function saveAssociation(idConcept, idItem) {
         // Usamos la URL exacta de tu captura
-        const url = '/api/register-items-association/'; 
+        const url = '/api/items/register-items-association/'; 
         const csrftoken = getCookie('csrftoken');
 
         try {
@@ -74,7 +74,7 @@ export async function saveAssociation(idConcept, idItem) {
 }
 
 export async function unregisterAssociation(idConcept) {
-    const url = '/api/unregister-items-association/';
+    const url = '/api/items/unregister-items-association/';
     const csrftoken = getCookie('csrftoken'); 
 
     try {

@@ -13,7 +13,7 @@ export async function fetchDashboard(page, filters, signal) {
     if (filters.dateStart) params.append('fecha_desde', filters.dateStart);
     if (filters.dateEnd) params.append('fecha_hasta', filters.dateEnd);
 
-    const url = `/api/get-dashboard/?${params.toString()}`;
+    const url = `/api/items/get-dashboard/?${params.toString()}`;
     return await fetchData(url, signal);
 }
 
@@ -27,6 +27,6 @@ export async function fetchItemDetails(itemName, filters, signal) {
     if (filters.dateStart) params.append('fecha_desde', filters.dateStart);
     if (filters.dateEnd) params.append('fecha_hasta', filters.dateEnd);
 
-    const url = `/api/get-dashboard-details/?${params.toString()}`;
+    const url = `/api/items/get-dashboard-details/?${params.toString()}`;
     return await fetchData(url, signal);
 }
