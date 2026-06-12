@@ -1,418 +1,395 @@
     <!-- ============================================== -->
     <!-- MODAL: REGISTRAR ITEM                          -->
     <!-- ============================================== -->
-    <div x-cloak x-show="showCreateModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
-        <div x-show="showCreateModal" x-transition.opacity class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm" @click="showCreateModal = false"></div>
-        
-        <div x-show="showCreateModal" x-transition class="bg-white w-full max-w-lg rounded-[24px] shadow-2xl flex flex-col relative z-10 max-h-[90vh] overflow-hidden border border-slate-100">
-            
-            <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-[14px] flex items-center justify-center">
-                        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
-                    </div>
-                    <h2 class="text-slate-800 text-[18px] font-bold">Registrar Item</h2>
-                </div>
-                <button @click="showCreateModal = false" class="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition">
-                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                </button>
-            </div>
-            
-            <div class="p-6 overflow-y-auto">
+        <!-- Backdrop -->
+        <div 
+            x-show="showCreateModal" 
+            x-cloak
+            x-transition.opacity
+            @click="showCreateModal = false"
+            class="fixed inset-0 z-40"
+            style="background: rgba(0,0,0,.45);">
+        </div>
+
+        <!-- Modal -->
+        <div 
+            x-show="showCreateModal"
+            x-cloak
+            x-transition
+            class="fixed inset-0 z-50 flex items-center justify-center p-3">
+
+            <div class="bg-white shadow-lg overflow-hidden" style="width:100%; max-width:800px; border-radius:12px;">
                 
-                <div class="mb-5">
-                    <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2.5">Nombre de Item</label>
-                    <input type="text" x-model="newItem.nombre" placeholder="Ej. Tequila Don Julio 70" class="w-full bg-[#F8FAFC] border border-slate-200 rounded-[14px] px-4 py-3 text-[14px] text-slate-700 placeholder-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all">
+                <!-- Header -->
+                <div class="d-flex justify-content-between align-items-center px-4 py-3 text-white"
+                    style="background: linear-gradient(90deg,#1f252d,#222b35);">
+                    <h5 class="mb-0 fw-bold">Registrar Item</h5>
+                    <button type="button" class="btn-close btn-close-white" @click="showCreateModal = false"></button>
                 </div>
-                
-                <div class="flex flex-col sm:flex-row gap-5 mb-5">
-                    <div class="flex-1">
-                        <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2.5">SKU / Código</label>
-                        <input type="text" x-model="newItem.codigo" placeholder="T099" class="w-full bg-[#F8FAFC] border border-slate-200 rounded-[14px] px-4 py-3 text-[14px] text-slate-700 placeholder-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all">
+
+                <!-- Body -->
+                <div class="p-4 bg-light">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Nombre de Item</label>
+                        <input type="text" class="form-control" x-model="newItem.nombre" placeholder="Ej. Tequila Don Julio 70">
                     </div>
-                    
-                    <div class="flex-1">
-                        <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2.5">Categoría</label>
-                        <div class="relative">
-                            <select x-model.number="newItem.id_categoria" class="w-full bg-[#F8FAFC] border border-slate-200 rounded-[14px] px-4 py-3 text-[14px] text-slate-700 placeholder-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all appearance-none cursor-pointer">
-                                <option value="0" disabled>Selecciona una...</option>
-                                <template x-for="cat in categories.filter(c => c.id !== 0)" :key="cat.id">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">SKU / Código</label>
+                            <input type="text" class="form-control" x-model="newItem.codigo" placeholder="T099">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Categoría</label>
+                            <select class="form-select" x-model.number="newItem.id_categoria">
+                                <option value="0" disabled>Selecciona una categoría...</option>
+                                <template x-for="cat in categories.filter(c => c.id !== 0)">
                                     <option :value="cat.id" x-text="cat.name"></option>
                                 </template>
                             </select>
-                            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
                         </div>
                     </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Descripción</label>
+                        <textarea rows="4" class="form-control" x-model="newItem.descripcion"></textarea>
+                    </div>
                 </div>
-                
-                <div class="mb-8">
-                    <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2.5">Descripción</label>
-                    <textarea rows="3" x-model="newItem.descripcion" class="w-full bg-[#F8FAFC] border border-slate-200 rounded-[14px] px-4 py-3 text-[14px] text-slate-700 placeholder-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all resize-none"></textarea>
+
+                <!-- Footer -->
+                <div class="bg-white border-top px-4 py-3 d-flex justify-content-end gap-2">
+                    <button class="btn btn-outline-secondary" @click="showCreateModal = false">Cancelar</button>
+                    <button class="btn btn-dark" @click="submitNewItem()" :disabled="isSubmitting">
+                        <span x-show="isSubmitting" class="spinner-border spinner-border-sm me-2"></span>
+                        <span x-text="isSubmitting ? 'Guardando...' : 'Registrar Item'"></span>
+                    </button>
                 </div>
-                
-                <button 
-                    @click="submitNewItem()" 
-                    :disabled="isSubmitting"
-                    class="w-full h-[52px] bg-indigo-600 text-white font-bold text-[14px] rounded-[14px] hover:bg-indigo-700 shadow-sm shadow-indigo-200 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                    <svg x-show="isSubmitting" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                    <span x-text="isSubmitting ? 'Guardando...' : 'Registrar Item'"></span>
-                </button>
-                
+
             </div>
         </div>
-    </div>
 
     <!-- ============================================== -->
     <!-- MODAL: COMPLETAR REGISTRO                      -->
     <!-- ============================================== -->
-    <div x-cloak x-show="showCompleteModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
-        <div x-show="showCompleteModal" x-transition.opacity class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm" @click="showCompleteModal = false"></div>
-        
-        <div x-show="showCompleteModal" x-transition class="bg-white w-full max-w-2xl rounded-[24px] shadow-2xl flex flex-col relative z-10 max-h-[90vh] overflow-hidden border border-slate-100">
-            
-            <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-amber-50 text-amber-600 rounded-[14px] flex items-center justify-center">
-                        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
-                    </div>
-                    <h2 class="text-slate-800 text-[18px] font-bold truncate" x-text="activeItem.nombre ? `Ficha: ${activeItem.nombre}` : 'Ficha Técnica'"></h2>
-                </div>
-                <button @click="showCompleteModal = false" class="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition">
-                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                </button>
-            </div>
+        <!-- Backdrop -->
+        <div
+            x-show="showCompleteModal"
+            x-cloak
+            x-transition.opacity
+            @click="showCompleteModal = false"
+            class="fixed inset-0 z-40"
+            style="background: rgba(0,0,0,.45);">
+        </div>
 
-            <div class="p-6 overflow-y-auto flex-1 space-y-6 bg-[#F8FAFC]/50">
-                
-                <div class="bg-white p-6 rounded-[20px] shadow-sm border border-slate-100">
-                    <div class="flex items-center gap-3 mb-6">
-                        <div class="p-2 bg-slate-50 text-slate-500 rounded-lg border border-slate-100">
-                            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" /></svg>
-                        </div>
-                        <h3 class="font-bold text-[15px] text-slate-800">Ficha Operativa (Logística)</h3>
-                    </div>
-                    
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
-                        <div class="relative">
-                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2.5">Unidad de Medida</label>
-                            <div class="relative">
-                                <select x-model.number="ficha.unidad" class="w-full bg-[#F8FAFC] border border-slate-200 rounded-[14px] px-4 py-3 text-[14px] text-slate-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all appearance-none cursor-pointer">
+        <!-- Modal -->
+        <div
+            x-show="showCompleteModal"
+            x-cloak
+            x-transition
+            class="fixed inset-0 z-50 flex items-center justify-center p-3">
+
+            <div class="bg-white overflow-hidden" style="width:100%; max-width:700px; border-radius:8px;">
+
+                <!-- Header -->
+                <div class="d-flex justify-content-between align-items-center px-4 py-3 text-white"
+                    style="background: linear-gradient(90deg,#1f252d,#222b35);">
+                    <h5 class="mb-0 fw-bold" x-text="activeItem.nombre ? `Ficha: ${activeItem.nombre}` : 'Ficha Técnica'"></h5>
+                    <button type="button" class="btn-close btn-close-white" @click="showCompleteModal = false"></button>
+                </div>
+
+                <!-- Body scrollable -->
+                <div class="overflow-y-auto" style="max-height: 70vh;">
+
+                    <!-- Ficha Operativa -->
+                    <div class="p-4 bg-light border-bottom">
+                        <p class="fw-bold text-uppercase text-secondary mb-3" style="font-size:11px; letter-spacing:.08em;">Ficha Operativa (Logística)</p>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Unidad de Medida</label>
+                                <select x-model.number="ficha.unidad" class="form-select">
                                     <option value="0" disabled>Selecciona...</option>
                                     <option value="1">Pz</option>
                                     <option value="2">Kg</option>
                                     <option value="3">Litro</option>
                                 </select>
-                                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Cont. Empaque</label>
+                                <input type="number" step="0.01" x-model.number="ficha.contenido_empaque" placeholder="1.0" class="form-control">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Peso (Kg/gr)</label>
+                                <input type="number" step="0.01" x-model.number="ficha.peso" placeholder="0.0" class="form-control">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Rendimiento (%)</label>
+                                <input type="number" step="0.01" x-model.number="ficha.rendimiento" placeholder="100" class="form-control">
                             </div>
                         </div>
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2.5">Cont. Empaque</label>
-                            <input type="number" step="0.01" x-model.number="ficha.contenido_empaque" placeholder="1.0" class="w-full bg-[#F8FAFC] border border-slate-200 rounded-[14px] px-4 py-3 text-[14px] text-slate-700 placeholder-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all">
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2.5">Peso (Kg/gr)</label>
-                            <input type="number" step="0.01" x-model.number="ficha.peso" placeholder="0.0" class="w-full bg-[#F8FAFC] border border-slate-200 rounded-[14px] px-4 py-3 text-[14px] text-slate-700 placeholder-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all">
-                        </div>
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2.5">Rendimiento (%)</label>
-                            <input type="number" step="0.01" x-model.number="ficha.rendimiento" placeholder="100" class="w-full bg-[#F8FAFC] border border-slate-200 rounded-[14px] px-4 py-3 text-[14px] text-slate-700 placeholder-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-white p-6 rounded-[20px] shadow-sm border border-slate-100">
-                    
-                    <div class="flex items-center gap-3 mb-6">
-                        <div class="p-2 bg-slate-50 text-slate-500 rounded-lg border border-slate-100">
-                            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                        </div>
-                        <h3 class="font-bold text-[15px] text-slate-800">Ficha Financiera (Precios)</h3>
                     </div>
 
-                    <div class="mb-5">
-                        <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2.5">Tipo de Precio</label>
-                        <div class="relative w-full sm:w-1/2 pr-2.5">
-                            <select x-model="ficha.tipo_precio" class="w-full bg-[#F8FAFC] border border-indigo-200 rounded-[14px] px-4 py-3 text-[14px] text-slate-700 font-medium focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all appearance-none cursor-pointer">
+                    <!-- Ficha Financiera -->
+                    <div class="p-4 bg-light">
+                        <p class="fw-bold text-uppercase text-secondary mb-3" style="font-size:11px; letter-spacing:.08em;">Ficha Financiera (Precios)</p>
+
+                        <div class="mb-3" style="max-width: 50%;">
+                            <label class="form-label fw-semibold">Tipo de Precio</label>
+                            <select x-model="ficha.tipo_precio" class="form-select">
                                 <option value="">Omitir Precios (Opcional)</option>
                                 <option value="Menudeo">Menudeo</option>
                                 <option value="Mayoreo">Mayoreo</option>
                             </select>
-                            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="absolute right-6 top-1/2 -translate-y-1/2 text-indigo-400 pointer-events-none"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
-                        </div>
-                    </div>
-
-                    <div :class="ficha.tipo_precio === '' ? 'opacity-40 pointer-events-none grayscale-[50%]' : 'opacity-100'" class="transition-all duration-300">
-                        
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5 border-t border-slate-100 pt-5">
-                            <div>
-                                <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2.5">Precio de Venta</label>
-                                <input type="number" step="0.01" x-model.number="ficha.precio" placeholder="0.00" class="w-full bg-[#F8FAFC] border border-slate-200 rounded-[14px] px-4 py-3 text-[14px] text-slate-700 placeholder-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all">
-                            </div>
-                            <div>
-                                <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2.5">Margen Objetivo (%)</label>
-                                <input type="number" step="0.01" x-model.number="ficha.utilidad" placeholder="Ej. 35" class="w-full bg-[#F8FAFC] border border-slate-200 rounded-[14px] px-4 py-3 text-[14px] text-slate-700 placeholder-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all">
-                            </div>
                         </div>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
-                            <div>
-                                <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2.5">Moneda</label>
-                                <div class="relative">
-                                    <select x-model="ficha.moneda" class="w-full bg-[#F8FAFC] border border-slate-200 rounded-[14px] px-4 py-3 text-[14px] text-slate-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all appearance-none cursor-pointer">
+                        <div :class="ficha.tipo_precio === '' ? 'opacity-50 pointer-events-none' : ''" class="transition-all">
+                            <div class="row g-3 mb-3 pt-3 border-top">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Precio de Venta</label>
+                                    <input type="number" step="0.01" x-model.number="ficha.precio" placeholder="0.00" class="form-control">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Margen Objetivo (%)</label>
+                                    <input type="number" step="0.01" x-model.number="ficha.utilidad" placeholder="Ej. 35" class="form-control">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Moneda</label>
+                                    <select x-model="ficha.moneda" class="form-select">
                                         <option value="MXN">MXN</option>
                                         <option value="USD">USD</option>
                                     </select>
-                                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
                                 </div>
-                            </div>
-                            
-                            <div>
-                                <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2.5">Impuesto (IVA)</label>
-                                <div class="flex gap-2">
-                                    <div class="relative flex-1">
-                                        <select 
-                                            x-model="ivaType" 
-                                            class="w-full bg-[#F8FAFC] border border-slate-200 rounded-[14px] px-4 py-3 text-[14px] text-slate-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all appearance-none cursor-pointer"
-                                        >
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Impuesto (IVA)</label>
+                                    <div class="d-flex gap-2">
+                                        <select x-model="ivaType" class="form-select">
                                             <option value="0.16">16% (Predeterminado)</option>
                                             <option value="0.00">Exento (0%)</option>
                                             <option value="custom">Personalizado...</option>
                                         </select>
-                                        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
-                                    </div>
-
-                                    <div x-show="ivaType === 'custom'" x-cloak x-transition.scale.origin.left class="w-24 relative">
-                                        <input 
-                                            type="number" step="0.01" 
-                                            x-model.number="ficha.tasa_cuota" 
-                                            placeholder="Ej. 0.08" 
-                                            class="w-full bg-white border border-indigo-300 rounded-[14px] px-3 py-3 text-[14px] text-slate-700 placeholder-slate-400 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 outline-none shadow-sm"
-                                            title="Ingresa en formato decimal (ej. 0.08 para 8%)"
-                                        >
+                                        <input
+                                            x-show="ivaType === 'custom'"
+                                            x-cloak
+                                            type="number" step="0.01"
+                                            x-model.number="ficha.tasa_cuota"
+                                            placeholder="0.08"
+                                            class="form-control"
+                                            style="width: 90px;">
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="p-6 bg-white border-t border-slate-100">
-                <button 
-                    @click="submitFichaTecnica()" 
-                    :disabled="isSavingFicha"
-                    class="w-full h-[52px] bg-indigo-600 text-white font-bold text-[14px] rounded-[14px] hover:bg-indigo-700 shadow-sm shadow-indigo-200 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                    <svg x-show="isSavingFicha" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                    <span x-text="isSavingFicha ? 'Guardando...' : 'Guardar Ficha Técnica'"></span>
-                </button>
+                <!-- Footer -->
+                <div class="bg-white border-top px-4 py-3 d-flex justify-content-end gap-2">
+                    <button class="btn btn-outline-secondary" @click="showCompleteModal = false">Cancelar</button>
+                    <button class="btn btn-dark" @click="submitFichaTecnica()" :disabled="isSavingFicha">
+                        <span x-show="isSavingFicha" class="spinner-border spinner-border-sm me-2"></span>
+                        <span x-text="isSavingFicha ? 'Guardando...' : 'Guardar Ficha Técnica'"></span>
+                    </button>
+                </div>
+
             </div>
         </div>
-    </div>
 
     <!-- ============================================== -->
     <!-- MODAL: EDITAR TODO                             -->
     <!-- ============================================== -->
-    <div x-cloak x-show="showEditModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
-        <div x-show="showEditModal" x-transition.opacity class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm" @click="showEditModal = false"></div>
-        
-        <div x-show="showEditModal" x-transition class="bg-white w-full max-w-3xl rounded-[24px] shadow-2xl flex flex-col relative z-10 max-h-[90vh] overflow-hidden border border-slate-100">
-            
-            <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-white z-20 shadow-sm">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-[14px] flex items-center justify-center">
-                        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.89 1.112l-2.83.793c-.396.11-.77-.265-.658-.66l.793-2.83a4.5 4.5 0 011.112-1.89l8.253-8.253z" /></svg>
-                    </div>
-                    <h2 class="text-slate-800 text-[18px] font-bold truncate">
-                        Editar Ítem: <span class="font-normal text-slate-500" x-text="newItem.nombre"></span>
-                    </h2>
-                </div>
-                <button @click="showEditModal = false" class="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition">
-                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                </button>
-            </div>
+        <!-- Backdrop -->
+        <div
+            x-show="showEditModal"
+            x-cloak
+            x-transition.opacity
+            @click="showEditModal = false"
+            class="fixed inset-0 z-40"
+            style="background: rgba(0,0,0,.45);">
+        </div>
 
-            <div class="p-6 overflow-y-auto flex-1 space-y-6 bg-[#F8FAFC]/50">
-                
-                <div class="bg-white p-6 rounded-[20px] shadow-sm border border-slate-100">
-                    <div class="flex items-center gap-3 mb-6">
-                        <div class="p-2 bg-slate-50 text-slate-500 rounded-lg border border-slate-100">
-                            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6z" /></svg>
+        <!-- Modal -->
+        <div
+            x-show="showEditModal"
+            x-cloak
+            x-transition
+            class="fixed inset-0 z-50 flex items-center justify-center p-3">
+
+            <div class="bg-white overflow-hidden" style="width:100%; max-width:750px; border-radius:8px;">
+
+                <!-- Header -->
+                <div class="d-flex justify-content-between align-items-center px-4 py-3 text-white"
+                    style="background: linear-gradient(90deg,#1f252d,#222b35);">
+                    <h5 class="mb-0 fw-bold">
+                        Editar Ítem: <span class="fw-normal opacity-75" x-text="newItem.nombre"></span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" @click="showEditModal = false"></button>
+                </div>
+
+                <!-- Body scrollable -->
+                <div class="overflow-y-auto" style="max-height: 75vh;">
+
+                    <!-- Datos Generales -->
+                    <div class="p-4 bg-light border-bottom">
+                        <p class="fw-bold text-uppercase text-secondary mb-3" style="font-size:11px; letter-spacing:.08em;">Datos Generales</p>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Nombre de Item</label>
+                            <input type="text" x-model="newItem.nombre" class="form-control">
                         </div>
-                        <h3 class="font-bold text-[15px] text-slate-800">Datos Generales</h3>
-                    </div>
-                    
-                    <div class="mb-5">
-                        <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2.5">Nombre de Item</label>
-                        <input type="text" x-model="newItem.nombre" class="w-full bg-[#F8FAFC] border border-slate-200 rounded-[14px] px-4 py-3 text-[14px] text-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all">
-                    </div>
-                    <div class="flex flex-col sm:flex-row gap-5 mb-5">
-                        <div class="flex-1">
-                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2.5">SKU / Código</label>
-                            <input type="text" x-model="newItem.codigo" class="w-full bg-[#F8FAFC] border border-slate-200 rounded-[14px] px-4 py-3 text-[14px] text-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all">
-                        </div>
-                        <div class="flex-1">
-                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2.5">Categoría</label>
-                            <div class="relative">
-                                <select x-model.number="newItem.id_categoria" class="w-full bg-[#F8FAFC] border border-slate-200 rounded-[14px] px-4 py-3 text-[14px] text-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all appearance-none cursor-pointer">
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">SKU / Código</label>
+                                <input type="text" x-model="newItem.codigo" class="form-control">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Categoría</label>
+                                <select x-model.number="newItem.id_categoria" class="form-select">
                                     <option value="0" disabled>Selecciona una...</option>
                                     <template x-for="cat in categories.filter(c => c.id !== 0)" :key="cat.id">
                                         <option :value="cat.id" x-text="cat.name"></option>
                                     </template>
                                 </select>
-                                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
                             </div>
                         </div>
-                    </div>
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2.5">Descripción</label>
-                        <textarea rows="2" x-model="newItem.descripcion" class="w-full bg-[#F8FAFC] border border-slate-200 rounded-[14px] px-4 py-3 text-[14px] text-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all resize-none"></textarea>
-                    </div>
-                </div>
-
-                <div class="bg-white p-6 rounded-[20px] shadow-sm border border-slate-100">
-                    <div class="flex items-center gap-3 mb-6">
-                        <div class="p-2 bg-slate-50 text-slate-500 rounded-lg border border-slate-100">
-                            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" /></svg>
+                        <div>
+                            <label class="form-label fw-semibold">Descripción</label>
+                            <textarea rows="2" x-model="newItem.descripcion" class="form-control"></textarea>
                         </div>
-                        <h3 class="font-bold text-[15px] text-slate-800">Ficha Operativa (Logística)</h3>
                     </div>
-                    
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
-                        <div class="relative">
-                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2.5">Unidad de Medida</label>
-                            <div class="relative">
-                                <select x-model.number="ficha.unidad" class="w-full bg-[#F8FAFC] border border-slate-200 rounded-[14px] px-4 py-3 text-[14px] text-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all appearance-none cursor-pointer">
+
+                    <!-- Ficha Operativa -->
+                    <div class="p-4 bg-light border-bottom">
+                        <p class="fw-bold text-uppercase text-secondary mb-3" style="font-size:11px; letter-spacing:.08em;">Ficha Operativa (Logística)</p>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Unidad de Medida</label>
+                                <select x-model.number="ficha.unidad" class="form-select">
                                     <option value="0" disabled>Selecciona...</option>
                                     <option value="1">Pz</option>
                                     <option value="2">Kg</option>
                                     <option value="3">Litro</option>
                                 </select>
-                                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Cont. Empaque</label>
+                                <input type="number" step="0.01" x-model.number="ficha.contenido_empaque" class="form-control">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Peso (Kg/gr)</label>
+                                <input type="number" step="0.01" x-model.number="ficha.peso" class="form-control">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Rendimiento (%)</label>
+                                <input type="number" step="0.01" x-model.number="ficha.rendimiento" class="form-control">
                             </div>
                         </div>
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2.5">Cont. Empaque</label>
-                            <input type="number" step="0.01" x-model.number="ficha.contenido_empaque" class="w-full bg-[#F8FAFC] border border-slate-200 rounded-[14px] px-4 py-3 text-[14px] text-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all">
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2.5">Peso (Kg/gr)</label>
-                            <input type="number" step="0.01" x-model.number="ficha.peso" class="w-full bg-[#F8FAFC] border border-slate-200 rounded-[14px] px-4 py-3 text-[14px] text-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all">
-                        </div>
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2.5">Rendimiento (%)</label>
-                            <input type="number" step="0.01" x-model.number="ficha.rendimiento" class="w-full bg-[#F8FAFC] border border-slate-200 rounded-[14px] px-4 py-3 text-[14px] text-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-white p-6 rounded-[20px] shadow-sm border border-slate-100">
-                    <div class="flex items-center gap-3 mb-6">
-                        <div class="p-2 bg-slate-50 text-slate-500 rounded-lg border border-slate-100">
-                            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                        </div>
-                        <h3 class="font-bold text-[15px] text-slate-800">Ficha Financiera (Precios)</h3>
                     </div>
 
-                    <div class="mb-5">
-                        <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2.5">Tipo de Precio</label>
-                        <div class="relative w-full sm:w-1/2 pr-2.5">
-                            <select x-model="ficha.tipo_precio" class="w-full bg-[#F8FAFC] border border-blue-200 rounded-[14px] px-4 py-3 text-[14px] text-slate-700 font-medium focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all appearance-none cursor-pointer">
+                    <!-- Ficha Financiera -->
+                    <div class="p-4 bg-light">
+                        <p class="fw-bold text-uppercase text-secondary mb-3" style="font-size:11px; letter-spacing:.08em;">Ficha Financiera (Precios)</p>
+
+                        <div class="mb-3" style="max-width: 50%;">
+                            <label class="form-label fw-semibold">Tipo de Precio</label>
+                            <select x-model="ficha.tipo_precio" class="form-select">
                                 <option value="">Omitir Precios (Opcional)</option>
                                 <option value="Menudeo">Menudeo</option>
                                 <option value="Mayoreo">Mayoreo</option>
                             </select>
-                            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="absolute right-6 top-1/2 -translate-y-1/2 text-blue-400 pointer-events-none"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
-                        </div>
-                    </div>
-
-                    <div :class="ficha.tipo_precio === '' ? 'opacity-40 pointer-events-none grayscale-[50%]' : 'opacity-100'" class="transition-all duration-300">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5 border-t border-slate-100 pt-5">
-                            <div>
-                                <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2.5">Precio de Venta</label>
-                                <input type="number" step="0.01" x-model.number="ficha.precio" class="w-full bg-[#F8FAFC] border border-slate-200 rounded-[14px] px-4 py-3 text-[14px] text-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all">
-                            </div>
-                            <div>
-                                <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2.5">Margen Objetivo (%)</label>
-                                <input type="number" step="0.01" x-model.number="ficha.utilidad" class="w-full bg-[#F8FAFC] border border-slate-200 rounded-[14px] px-4 py-3 text-[14px] text-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all">
-                            </div>
                         </div>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
-                            <div>
-                                <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2.5">Moneda</label>
-                                <div class="relative">
-                                    <select x-model="ficha.moneda" class="w-full bg-[#F8FAFC] border border-slate-200 rounded-[14px] px-4 py-3 text-[14px] text-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all appearance-none cursor-pointer">
+                        <div :class="ficha.tipo_precio === '' ? 'opacity-50 pointer-events-none' : ''" class="transition-all">
+                            <div class="row g-3 pt-3 border-top">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Precio de Venta</label>
+                                    <input type="number" step="0.01" x-model.number="ficha.precio" class="form-control">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Margen Objetivo (%)</label>
+                                    <input type="number" step="0.01" x-model.number="ficha.utilidad" class="form-control">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Moneda</label>
+                                    <select x-model="ficha.moneda" class="form-select">
                                         <option value="MXN">MXN</option>
                                         <option value="USD">USD</option>
                                     </select>
-                                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
                                 </div>
-                            </div>
-                            
-                            <div>
-                                <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2.5">Impuesto (IVA)</label>
-                                <div class="flex gap-2">
-                                    <div class="relative flex-1">
-                                        <select x-model="ivaType" class="w-full bg-[#F8FAFC] border border-slate-200 rounded-[14px] px-4 py-3 text-[14px] text-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all appearance-none cursor-pointer">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Impuesto (IVA)</label>
+                                    <div class="d-flex gap-2">
+                                        <select x-model="ivaType" class="form-select">
                                             <option value="0.16">16% (Predeterminado)</option>
                                             <option value="0.00">Exento (0%)</option>
                                             <option value="custom">Personalizado...</option>
                                         </select>
-                                        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
-                                    </div>
-                                    <div x-show="ivaType === 'custom'" x-cloak x-transition.scale.origin.left class="w-24 relative">
-                                        <input type="number" step="0.01" x-model.number="ficha.tasa_cuota" placeholder="0.08" class="w-full bg-white border border-blue-300 rounded-[14px] px-3 py-3 text-[14px] text-slate-700 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none shadow-sm">
+                                        <input
+                                            x-show="ivaType === 'custom'"
+                                            x-cloak
+                                            type="number" step="0.01"
+                                            x-model.number="ficha.tasa_cuota"
+                                            placeholder="0.08"
+                                            class="form-control"
+                                            style="width: 90px;">
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="p-6 bg-white border-t border-slate-100">
-                <button 
-                    @click="submitEditAll()" 
-                    :disabled="isEditingAll"
-                    class="w-full h-[52px] bg-blue-600 text-white font-bold text-[14px] rounded-[14px] hover:bg-blue-700 shadow-sm shadow-blue-200 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                    <svg x-show="isEditingAll" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                    <span x-text="isEditingAll ? 'Guardando Cambios...' : 'Guardar Cambios'"></span>
-                </button>
+                <!-- Footer -->
+                <div class="bg-white border-top px-4 py-3 d-flex justify-content-end gap-2">
+                    <button class="btn btn-outline-secondary" @click="showEditModal = false">Cancelar</button>
+                    <button class="btn btn-dark" @click="submitEditAll()" :disabled="isEditingAll">
+                        <span x-show="isEditingAll" class="spinner-border spinner-border-sm me-2"></span>
+                        <span x-text="isEditingAll ? 'Guardando Cambios...' : 'Guardar Cambios'"></span>
+                    </button>
+                </div>
+
             </div>
         </div>
-    </div>
 
 
     <!-- ============================================== -->
     <!-- MODAL: CONFIRMACIÓN DE REGISTRO                -->
     <!-- ============================================== -->
-    <div x-cloak x-show="showSuccessModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
-        <div x-show="showSuccessModal" x-transition.opacity class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm" @click="showSuccessModal = false"></div>
-        
-        <div x-show="showSuccessModal" x-transition class="bg-white w-full max-w-sm rounded-[24px] shadow-2xl p-6 flex flex-col items-center text-center relative z-10 border border-slate-100">
-            
-            <div class="w-16 h-16 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mb-4 border border-emerald-100 animate-bounce-short">
-                <svg width="32" height="32" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                </svg>
-            </div>
-            
-            <h3 class="text-slate-800 text-[20px] font-bold mb-2" x-text="successTitle"></h3>
-            
-            <p class="text-slate-500 text-[14px] leading-relaxed mb-6 px-2" x-text="successMessage"></p>
-            
-            <button 
-                @click="showSuccessModal = false" 
-                class="w-full h-[48px] bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[14px] rounded-[14px] shadow-sm shadow-emerald-100 transition-all active:scale-[0.98]"
-            >
-                Entendido
-            </button>
+        <!-- Backdrop -->
+        <div
+            x-show="showSuccessModal"
+            x-cloak
+            x-transition.opacity
+            @click="showSuccessModal = false"
+            class="fixed inset-0 z-40"
+            style="background: rgba(0,0,0,.45);">
         </div>
-    </div>
+
+        <!-- Modal -->
+        <div
+            x-show="showSuccessModal"
+            x-cloak
+            x-transition
+            class="fixed inset-0 z-50 flex items-center justify-center p-3">
+
+            <div class="bg-white overflow-hidden d-flex flex-column align-items-center text-center px-4 py-5"
+                style="width:100%; max-width:380px; border-radius:8px;">
+
+                <!-- Ícono -->
+                <div class="rounded-circle d-flex align-items-center justify-content-center mb-4"
+                    style="width:64px; height:64px; background:#d1fae5; color:#059669; border:1px solid #a7f3d0;">
+                    <svg width="32" height="32" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                    </svg>
+                </div>
+
+                <!-- Texto -->
+                <h5 class="fw-bold mb-2" x-text="successTitle"></h5>
+                <p class="text-secondary mb-4" style="font-size:14px;" x-text="successMessage"></p>
+
+                <!-- Botón -->
+                <button
+                    @click="showSuccessModal = false"
+                    class="btn btn-dark w-100 fw-bold"
+                    style="height:48px; border-radius:8px;">
+                    Entendido
+                </button>
+
+            </div>
+        </div>

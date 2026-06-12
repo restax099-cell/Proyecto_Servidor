@@ -1,28 +1,28 @@
+/* Limpia tu archivo styles_catalog_items.css con esto */
+[x-cloak] { display: none !important; }
+
 body { 
     background-color: #F8FAFC; 
     margin: 0; 
     font-family: system-ui, -apple-system, sans-serif; 
 }
-svg { 
-    max-width: 24px; 
-    max-height: 24px; 
-    flex-shrink: 0; 
-}
 
-.form-control:focus {
+/* Modal estilos */
+.modal-content { border-radius: 4px; } /* Estilo más cuadrado/industrial */
+.modal-body { background: #fff; } /* Fondo blanco para que sea más limpio */
+
+/* Focus gris pizarra (Consolidado) */
+.form-control:focus,
+.form-select:focus {
     border-color: #6c757d !important; 
-    
     box-shadow: 0 0 0 0.25rem rgba(108, 117, 125, 0.25) !important;
 }
-
 
 .page-link:focus {
     box-shadow: 0 0 0 0.25rem rgba(108, 117, 125, 0.25) !important;
-    
     border-color: #6c757d !important;
     color: inherit !important; 
 }
 
-[x-cloak] { display: none !important; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
