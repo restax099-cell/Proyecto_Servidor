@@ -23,4 +23,5 @@ urlpatterns = [
     path('get-items-modal/', items_views.get_items_for_modal, name='get_items_for_modal'),
     path('register-items-association/', items_views.register_items_association, name='register_items_association'),
     path('unregister-items-association/', items_views.unregister_items_association, name='unregister_items_association'),
+    path('get-item-complete-ficha/', items_views.get_item_ficha, name='get_item_ficha'),
 ]

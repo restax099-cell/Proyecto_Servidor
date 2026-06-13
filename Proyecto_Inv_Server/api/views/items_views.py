@@ -387,4 +387,40 @@ def set_complete_ficha_tecnica_item(request):
         print(f"Error en SP sp_complete_item_ficha: {e}")
         return Response({"error": "Error interno al guardar la ficha técnica"}, status=500)
     
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_item_ficha(request):
+    if request.method == 'GET':
+        try: 
+            item_id = int(request.GET.get('item_id', 0))
+        except ValueError: 
+            return JsonResponse({"error": "El ID del ítem debe ser un número válido."}, status=400)
+
+        if item_id == 0:
+            return JsonResponse({"error": "Se requiere el ID del ítem para consultar su ficha."}, status=400)
+
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute("CALL sp_get_item_ficha(%s)", [item_id])
+                
+                row = cursor.fetchone()
+                
+                if row:
+                    columns = [col[0] for col in cursor.description]
+                    result = dict(zip(columns, row))
+                    
+                    return JsonResponse({
+                        "status": "success", 
+                        "data": result
+                    }, status=200)
+                else:
+                    return JsonResponse({
+                        "error": "No se encontró la ficha técnica para este ítem o está incompleta."
+                    }, status=404)
+
+        except Exception as e:
+            return JsonResponse({"error": f"Error de BD: {str(e)}"}, status=500)
+        
+
+
 

@@ -41,6 +41,23 @@ export async function fetchCategories(search = '', signal) {
     return await fetchData(url, signal);
 }
 
+export async function fetchFichaTecnica(itemId) {
+    try {
+        const response = await fetch(`/api/items/get-item-complete-ficha/?item_id=${itemId}`);
+        const json = await response.json();
+        
+        if (json.status === 'success') {
+            return json.data;
+        } else {
+            console.error(json.error);
+            return null;
+        }
+    } catch (error) {
+        console.error("Error al obtener la ficha técnica:", error);
+        return null;
+    }
+}
+
 export async function fetchPendingCount(signal) {
     const url = `/api/items/get-pending-count/`;
     return await fetchData(url, signal);
@@ -97,3 +114,4 @@ export async function saveFichaTecnica(fichaData) {
         return { error: "Error de conexión con el servidor" };
     }
 }
+

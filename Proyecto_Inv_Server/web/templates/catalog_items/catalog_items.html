@@ -173,24 +173,27 @@
                                     </template>
                                 </td>
 
-                                <!-- Acciones (Con efecto Hover restaurado y colores suaves) -->
+                                <!-- Acciones -->
                                 <td class="text-end px-4 py-3 border-0">
                                     <div class="d-flex justify-content-end gap-2">
+                                        
                                         <template x-if="!item.isComplete">
-                                            <!-- Gris Pizarra (Secondary) en lugar del negro agresivo (Dark) -->
-                                            <button @click="openCompleteModal(item)" class="btn btn-sm btn-outline-secondary opacity-75 px-3">
-                                                Completar Ficha
-                                            </button>
+                                            <div class="d-flex gap-2">
+                                                <button @click="openCompleteModal(item)" class="btn btn-sm btn-outline-secondary opacity-75 px-3">
+                                                    Completar Ficha
+                                                </button>
+                                                <button @click="openEditModal(item)" class="btn btn-sm btn-outline-primary opacity-75 px-3">
+                                                    Editar
+                                                </button>
+                                            </div>
                                         </template>
                                         
                                         <template x-if="item.isComplete">
-                                            <!-- Azul suave (Primary + opacity-75) -->
-                                            <button @click="openEditModal(item)" class="btn btn-sm btn-outline-primary opacity-75 px-3">
+                                            <button @click="openEditAllModal(item)" class="btn btn-sm btn-outline-primary opacity-75 px-3">
                                                 Editar
                                             </button>
                                         </template>
                                         
-                                        <!-- Rojo suave (Danger + opacity-75) -->
                                         <button class="btn btn-sm btn-outline-danger opacity-75 px-3">
                                             Eliminar
                                         </button>

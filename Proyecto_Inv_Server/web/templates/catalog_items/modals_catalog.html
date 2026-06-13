@@ -110,6 +110,8 @@
                                     <option value="1">Pz</option>
                                     <option value="2">Kg</option>
                                     <option value="3">Litro</option>
+                                    <option value="4">Caja</option>
+                                    <option value="5">Paquete</option>
                                 </select>
                             </div>
                             <div class="col-md-6">
@@ -193,7 +195,7 @@
         </div>
 
     <!-- ============================================== -->
-    <!-- MODAL: EDITAR TODO                             -->
+    <!-- MODAL: EDITAR DATOS BÁSICOS (ITEM INCOMPLETO)  -->
     <!-- ============================================== -->
         <!-- Backdrop -->
         <div
@@ -212,21 +214,91 @@
             x-transition
             class="fixed inset-0 z-50 flex items-center justify-center p-3">
 
-            <div class="bg-white overflow-hidden" style="width:100%; max-width:750px; border-radius:8px;">
+            <div class="bg-white overflow-hidden" style="width:100%; max-width:650px; border-radius:8px;">
 
                 <!-- Header -->
                 <div class="d-flex justify-content-between align-items-center px-4 py-3 text-white"
                     style="background: linear-gradient(90deg,#1f252d,#222b35);">
                     <h5 class="mb-0 fw-bold">
-                        Editar Ítem: <span class="fw-normal opacity-75" x-text="newItem.nombre"></span>
+                        Editar Datos Básicos: <span class="fw-normal opacity-75" x-text="newItem.nombre"></span>
                     </h5>
                     <button type="button" class="btn-close btn-close-white" @click="showEditModal = false"></button>
                 </div>
 
-                <!-- Body scrollable -->
+                <!-- Body (Sin scroll interno necesario por ser corto) -->
+                <div class="p-4 bg-light">
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Nombre de Item</label>
+                        <input type="text" x-model="newItem.nombre" class="form-control">
+                    </div>
+                    
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">SKU / Código</label>
+                            <input type="text" x-model="newItem.codigo" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Categoría</label>
+                            <select x-model.number="newItem.id_categoria" class="form-select">
+                                <option value="0" disabled>Selecciona una...</option>
+                                <template x-for="cat in categories.filter(c => c.id !== 0)" :key="cat.id">
+                                    <option :value="cat.id" x-text="cat.name"></option>
+                                </template>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="form-label fw-semibold">Descripción</label>
+                        <textarea rows="3" x-model="newItem.descripcion" class="form-control"></textarea>
+                    </div>
+                    
+                </div>
+
+                <!-- Footer -->
+                <div class="bg-white border-top px-4 py-3 d-flex justify-content-end gap-2">
+                    <button class="btn btn-outline-secondary" @click="showEditModal = false">Cancelar</button>
+                    <button class="btn btn-dark" @click="submitEdit()" :disabled="isSubmitting">
+                        <span x-show="isSubmitting" class="spinner-border spinner-border-sm me-2"></span>
+                        <span x-text="isSubmitting ? 'Guardando...' : 'Guardar Cambios'"></span>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+    <!-- ============================================== -->
+    <!-- MODAL: EDITAR TODO                             -->
+    <!-- ============================================== -->
+        <!-- Backdrop -->
+        <div
+            x-show="showEditAllModal"
+            x-cloak
+            x-transition.opacity
+            @click="showEditAllModal = false"
+            class="fixed inset-0 z-40"
+            style="background: rgba(0,0,0,.45);">
+        </div>
+
+        <div
+            x-show="showEditAllModal"
+            x-cloak
+            x-transition
+            class="fixed inset-0 z-50 flex items-center justify-center p-3">
+
+            <div class="bg-white overflow-hidden" style="width:100%; max-width:750px; border-radius:8px;">
+
+                <div class="d-flex justify-content-between align-items-center px-4 py-3 text-white"
+                    style="background: linear-gradient(90deg,#1f252d,#222b35);">
+                    <h5 class="mb-0 fw-bold">
+                        Editar Ítem: <span class="fw-normal opacity-75" x-text="newItem.nombre"></span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" @click="showEditAllModal = false"></button>
+                </div>
+
                 <div class="overflow-y-auto" style="max-height: 75vh;">
 
-                    <!-- Datos Generales -->
                     <div class="p-4 bg-light border-bottom">
                         <p class="fw-bold text-uppercase text-secondary mb-3" style="font-size:11px; letter-spacing:.08em;">Datos Generales</p>
                         <div class="mb-3">
@@ -254,7 +326,6 @@
                         </div>
                     </div>
 
-                    <!-- Ficha Operativa -->
                     <div class="p-4 bg-light border-bottom">
                         <p class="fw-bold text-uppercase text-secondary mb-3" style="font-size:11px; letter-spacing:.08em;">Ficha Operativa (Logística)</p>
                         <div class="row g-3">
@@ -265,6 +336,8 @@
                                     <option value="1">Pz</option>
                                     <option value="2">Kg</option>
                                     <option value="3">Litro</option>
+                                    <option value="4">Caja</option>
+                                    <option value="5">Paquete</option>
                                 </select>
                             </div>
                             <div class="col-md-6">
@@ -282,7 +355,6 @@
                         </div>
                     </div>
 
-                    <!-- Ficha Financiera -->
                     <div class="p-4 bg-light">
                         <p class="fw-bold text-uppercase text-secondary mb-3" style="font-size:11px; letter-spacing:.08em;">Ficha Financiera (Precios)</p>
 
@@ -335,9 +407,8 @@
                     </div>
                 </div>
 
-                <!-- Footer -->
                 <div class="bg-white border-top px-4 py-3 d-flex justify-content-end gap-2">
-                    <button class="btn btn-outline-secondary" @click="showEditModal = false">Cancelar</button>
+                    <button class="btn btn-outline-secondary" @click="showEditAllModal = false">Cancelar</button>
                     <button class="btn btn-dark" @click="submitEditAll()" :disabled="isEditingAll">
                         <span x-show="isEditingAll" class="spinner-border spinner-border-sm me-2"></span>
                         <span x-text="isEditingAll ? 'Guardando Cambios...' : 'Guardar Cambios'"></span>

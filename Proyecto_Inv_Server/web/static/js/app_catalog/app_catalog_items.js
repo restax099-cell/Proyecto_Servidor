@@ -1,11 +1,11 @@
 import Alpine from 'https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/module.esm.js';
 
-import { createItem, fetchCatalogItems, fetchCategories, fetchPendingCount, saveFichaTecnica } from './api_catalog.js';
+import { createItem, fetchCatalogItems, fetchCategories, fetchFichaTecnica, fetchPendingCount, saveFichaTecnica } from './api_catalog.js';
 import { getCategoryStyles } from './themes_catalog.js';
 
 Alpine.data('catalogApp', () => ({
     
-    //? --- ESTADO ---
+    //? --- FILTROS ---
     searchQuery: '',
     
     
@@ -15,25 +15,34 @@ Alpine.data('catalogApp', () => ({
     selectedCategoryName: 'Todas las categorías...',
     categories: [], 
     
+
+    //? --- MODALS ---
     showCreateModal: false,
     showCompleteModal: false,
     showSuccessModal: false,
     showEditModal: false,
+    showEditAllModal: false,
     isEditingAll: false,
     successTitle: '',
     successMessage: '',
     activeItem: {}, 
     
-    items: [], 
-    isLoading: false,
-    abortController: null,
 
+    //? --- ITEMS ---
+    items: [], 
+    abortController: null,
+    _timeout: null, 
     currentPage: 1,
     itemsPerPage: 10,
     totalItems: 0,
     totalPages: 1,
+    ivaType: '0.16',
 
     globalPendingCount: 0,
+
+    isLoading: false,
+    isSubmitting: false,
+    isSavingFicha: false,
 
     newItem: {
         nombre: '',
@@ -41,7 +50,7 @@ Alpine.data('catalogApp', () => ({
         id_categoria: 0,
         descripcion: ''
     },
-    isSubmitting: false,
+    
 
     ficha: {
         unidad: 0,
@@ -53,11 +62,7 @@ Alpine.data('catalogApp', () => ({
         utilidad: 0.0,
         moneda: 'MXN',
         tasa_cuota: 0.16
-    },
-    ivaType: '0.16',
-    isSavingFicha: false,
-    
-    _timeout: null, 
+    },  
 
     //? --- INICIALIZACIÓN ---
     init() {
@@ -110,6 +115,18 @@ Alpine.data('catalogApp', () => ({
                 this.totalItems = response.total_records;  
                 this.totalPages = response.total_pages;
                 this.currentPage = response.current_page;
+
+                if (this.items.length > 0) {
+                    console.log("--- DEBUG: ESTRUCTURA DE DATOS ---");
+                    console.log("1. Objeto completo del primer ITEM:", this.items[0]);
+                    
+                    // Comprobamos también cómo están estructuradas las categorías 
+                    // (tomamos la posición 1 para saltar la de "Todas las categorías...")
+                    if (this.categories.length > 1) {
+                        console.log("2. Objeto completo de una CATEGORÍA:", this.categories[1]);
+                    }
+                    console.log("----------------------------------");
+                }
                 
                 this.$nextTick(() => {
                     if (window.lucide) window.lucide.createIcons();
@@ -146,6 +163,8 @@ Alpine.data('catalogApp', () => ({
             console.error("Error al contar pendientes:", error);
         }
     },
+
+    //? --- SUBMITS ---
 
     async submitNewItem() {
         if (!this.newItem.nombre.trim()) {
@@ -217,6 +236,36 @@ Alpine.data('catalogApp', () => ({
         }
     },
 
+    async submitEdit() {
+        if (!this.newItem.nombre.trim()) {
+            alert("El nombre del ítem es obligatorio");
+            return;
+        }
+
+        this.isSubmitting = true; 
+
+        try {
+            const resBase = await createItem(this.newItem);
+            
+            if (resBase && resBase.status === 'success') {
+                this.showEditBasicModal = false;
+                
+                this.loadItems();
+                
+                this.successTitle = '¡Datos Actualizados!';
+                this.successMessage = 'Los datos básicos del ítem se guardaron correctamente.';
+                this.showSuccessModal = true;
+            } else {
+                alert(resBase.error || "Falló al actualizar los datos básicos.");
+            }
+        } catch (error) {
+            console.error(error);
+            alert("Error de conexión al actualizar el ítem.");
+        } finally {
+            this.isSubmitting = false;
+        }
+    },
+
     async submitEditAll() {
         if (!this.newItem.nombre.trim()) {
             alert("El nombre del ítem es obligatorio");
@@ -257,34 +306,64 @@ Alpine.data('catalogApp', () => ({
         }
     },
 
+    
+    //? --- ABRIR MODALS ---
     openEditModal(item) {
-        this.activeItem = item;
+        const matchedCategory = this.categories.find(cat => cat.name === item.category);
         
+        const correctCategoryId = matchedCategory ? matchedCategory.id : 0;
+
         this.newItem = {
             id: item.id,
-            nombre: item.nombre || '',
-            codigo: item.codigo || '',
-            id_categoria: item.id_categoria || 0,
+            nombre: item.nombre,
+            codigo: item.sku,
+            id_categoria: correctCategoryId, 
             descripcion: item.descripcion || ''
         };
-
-        this.ficha = {
-            unidad: item.unidad || 0,
-            contenido_empaque: item.contenido_empaque || 1.0,
-            peso: item.peso || 0.0,
-            rendimiento: item.rendimiento || 100.0,
-            tipo_precio: item.tipo_precio || '',
-            precio: item.precio || 0.0,
-            utilidad: item.utilidad || 0.0,
-            moneda: item.moneda || 'MXN',
-            tasa_cuota: item.tasa_cuota !== undefined ? item.tasa_cuota : 0.16
-        };
-
-        this.ivaType = [0.16, 0.00].includes(this.ficha.tasa_cuota) 
-                        ? this.ficha.tasa_cuota.toString() 
-                        : 'custom';
-
         this.showEditModal = true;
+    },
+    
+    async openEditAllModal(item) {
+        const matchedCategory = this.categories.find(cat => cat.name === item.category);
+        const correctCategoryId = matchedCategory ? matchedCategory.id : 0;
+
+        this.newItem = {
+            id: item.id,
+            nombre: item.nombre,
+            codigo: item.sku,
+            id_categoria: correctCategoryId,
+            descripcion: item.descripcion || ''
+        };
+        
+        const fichaData = await fetchFichaTecnica(item.id);
+        
+        if (fichaData) {
+            this.ficha = {
+                unidad: fichaData.id_unidad || 0, 
+                contenido_empaque: fichaData.contenido_empaque || null,
+                peso: fichaData.peso || null,
+                rendimiento: fichaData.rendimiento || null,
+                tipo_precio: fichaData.tipo_precio || '',
+                precio: fichaData.precio || null,
+                utilidad: fichaData.utilidad || null,
+                moneda: fichaData.moneda || 'MXN',
+                tasa_cuota: fichaData.tasa_cuota || 0.16
+            };
+
+            const tasaNum = Number(fichaData.tasa_cuota);
+            if (tasaNum === 0.16) {
+                this.ivaType = '0.16';
+            } else if (tasaNum === 0.00) {
+                this.ivaType = '0.00';
+            } else {
+                this.ivaType = 'custom';
+            }
+
+            this.showEditAllModal = true;
+            
+        } else {
+            alert("No se pudo cargar la información de la ficha técnica.");
+        }
     },
 
 
