@@ -422,5 +422,27 @@ def get_item_ficha(request):
             return JsonResponse({"error": f"Error de BD: {str(e)}"}, status=500)
         
 
+@api_view(['POST']) 
+@permission_classes([IsAuthenticated])
+def set_deactivate_item(request):
+    try:
+        item_id = request.data.get('item_id')
+        
+        if not item_id:
+            return JsonResponse({"error": "Se requiere el ID del ítem."}, status=400)
 
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                UPDATE vlx_items 
+                SET is_active = 0, updated_at = CURRENT_TIMESTAMP 
+                WHERE id = %s
+            """, [item_id])
+            
+            if cursor.rowcount == 0:
+                return JsonResponse({"error": "No se encontró el ítem o ya estaba eliminado."}, status=404)
+            
+        return JsonResponse({"status": "success", "message": "Ítem eliminado correctamente."})
+
+    except Exception as e:
+        return JsonResponse({"error": f"Error al eliminar: {str(e)}"}, status=500)
 

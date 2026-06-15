@@ -115,3 +115,22 @@ export async function saveFichaTecnica(fichaData) {
     }
 }
 
+
+export async function deleteItemAPI(itemId) {
+    try {
+        const csrftoken = getCookie('csrftoken');
+        const response = await fetch('/api/items/deactivate-item/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify({ item_id: itemId })
+        });
+        return await response.json();
+    } catch (error) {
+        console.error("Error al eliminar el ítem:", error);
+        return { status: 'error' };
+    }
+}
+

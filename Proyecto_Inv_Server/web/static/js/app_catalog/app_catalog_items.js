@@ -1,6 +1,14 @@
 import Alpine from 'https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/module.esm.js';
 
-import { createItem, fetchCatalogItems, fetchCategories, fetchFichaTecnica, fetchPendingCount, saveFichaTecnica } from './api_catalog.js';
+import {
+    createItem,
+    deleteItemAPI,
+    fetchCatalogItems,
+    fetchCategories,
+    fetchFichaTecnica,
+    fetchPendingCount,
+    saveFichaTecnica,
+} from './api_catalog.js';
 import { getCategoryStyles } from './themes_catalog.js';
 
 Alpine.data('catalogApp', () => ({
@@ -23,6 +31,9 @@ Alpine.data('catalogApp', () => ({
     showEditModal: false,
     showEditAllModal: false,
     isEditingAll: false,
+    showDeleteModal: false,
+    itemToDelete: null,
+    isDeleting: false,
     successTitle: '',
     successMessage: '',
     activeItem: {}, 
@@ -306,6 +317,7 @@ Alpine.data('catalogApp', () => ({
         }
     },
 
+
     
     //? --- ABRIR MODALS ---
     openEditModal(item) {
@@ -363,6 +375,37 @@ Alpine.data('catalogApp', () => ({
             
         } else {
             alert("No se pudo cargar la información de la ficha técnica.");
+        }
+    },
+
+    openDeleteModal(item) {
+        this.itemToDelete = item;       
+        this.showDeleteModal = true;   
+    },
+
+    async confirmDelete() {
+        if (!this.itemToDelete) return;
+
+        this.isDeleting = true; 
+        try {
+            const response = await deleteItemAPI(this.itemToDelete.id);
+
+            if (response && response.status === 'success') {
+                this.showDeleteModal = false;
+                this.loadItems();
+                
+                this.successTitle = '¡Eliminado!';
+                this.successMessage = 'El registro se ha dado de baja correctamente.';
+                this.showSuccessModal = true;
+            } else {
+                alert(response.error || "Ocurrió un error al intentar eliminar el ítem.");
+            }
+        } catch (error) {
+            console.error("Error al eliminar:", error);
+            alert("Error de red al intentar conectar con el servidor.");
+        } finally {
+            this.isDeleting = false; 
+            this.itemToDelete = null; 
         }
     },
 

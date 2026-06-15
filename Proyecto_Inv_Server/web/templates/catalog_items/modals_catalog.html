@@ -417,24 +417,21 @@
 
             </div>
         </div>
-
-
+    
     <!-- ============================================== -->
-    <!-- MODAL: CONFIRMACIÓN DE REGISTRO                -->
+    <!-- MODAL: CONFIRMAR ELIMINACIÓN                   -->
     <!-- ============================================== -->
-        <!-- Backdrop -->
         <div
-            x-show="showSuccessModal"
+            x-show="showDeleteModal"
             x-cloak
             x-transition.opacity
-            @click="showSuccessModal = false"
+            @click="if(!isDeleting) showDeleteModal = false"
             class="fixed inset-0 z-40"
             style="background: rgba(0,0,0,.45);">
         </div>
 
-        <!-- Modal -->
         <div
-            x-show="showSuccessModal"
+            x-show="showDeleteModal"
             x-cloak
             x-transition
             class="fixed inset-0 z-50 flex items-center justify-center p-3">
@@ -442,25 +439,36 @@
             <div class="bg-white overflow-hidden d-flex flex-column align-items-center text-center px-4 py-5"
                 style="width:100%; max-width:380px; border-radius:8px;">
 
-                <!-- Ícono -->
                 <div class="rounded-circle d-flex align-items-center justify-content-center mb-4"
-                    style="width:64px; height:64px; background:#d1fae5; color:#059669; border:1px solid #a7f3d0;">
+                    style="width:64px; height:64px; background:#fee2e2; color:#dc2626; border:1px solid #fecaca;">
                     <svg width="32" height="32" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                     </svg>
                 </div>
 
-                <!-- Texto -->
-                <h5 class="fw-bold mb-2" x-text="successTitle"></h5>
-                <p class="text-secondary mb-4" style="font-size:14px;" x-text="successMessage"></p>
+                <h5 class="fw-bold mb-2">Eliminar Registro</h5>
+                <p class="text-secondary mb-4" style="font-size:14px;">
+                    ¿Estás seguro de que deseas eliminar <strong class="text-dark" x-text="itemToDelete ? itemToDelete.nombre : ''"></strong>? Esta acción no se puede deshacer.
+                </p>
 
-                <!-- Botón -->
-                <button
-                    @click="showSuccessModal = false"
-                    class="btn btn-dark w-100 fw-bold"
-                    style="height:48px; border-radius:8px;">
-                    Entendido
-                </button>
+                <div class="d-flex w-100 gap-2">
+                    <button
+                        @click="showDeleteModal = false"
+                        :disabled="isDeleting"
+                        class="btn btn-outline-secondary w-50 fw-bold"
+                        style="height:48px; border-radius:8px;">
+                        Cancelar
+                    </button>
+                    <button
+                        @click="confirmDelete()"
+                        :disabled="isDeleting"
+                        class="btn btn-danger w-50 fw-bold d-flex align-items-center justify-content-center"
+                        style="height:48px; border-radius:8px;">
+                        <span x-show="isDeleting" class="spinner-border spinner-border-sm me-2"></span>
+                        <span x-text="isDeleting ? 'Eliminando...' : 'Eliminar'"></span>
+                    </button>
+                </div>
 
             </div>
         </div>
+    
