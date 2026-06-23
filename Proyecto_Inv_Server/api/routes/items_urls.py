@@ -25,4 +25,5 @@ urlpatterns = [
     path('unregister-items-association/', items_views.unregister_items_association, name='unregister_items_association'),
     path('get-item-complete-ficha/', items_views.get_item_ficha, name='get_item_ficha'),
     path('deactivate-item/', items_views.set_deactivate_item, name='set_deactivate_item'),
+    path('get-barcode/', items_views.get_barcode_image, name='get_barcode_image'),
 ]

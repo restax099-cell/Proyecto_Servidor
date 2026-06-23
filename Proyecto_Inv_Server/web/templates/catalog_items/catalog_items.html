@@ -194,9 +194,15 @@
                                             </button>
                                         </template>
                                         
+                                        <a :href="`/api/items/get-barcode/?codigo=${item.codigo || item.sku}`" 
+                                            target="_blank" 
+                                            class="btn btn-sm btn-outline-secondary opacity-75 px-3 d-inline-flex align-items-center">
+                                                Generar Barcode
+                                        </a>
                                         <button @click="openDeleteModal(item)" class="btn btn-sm btn-outline-danger opacity-75 px-3">
                                             Eliminar
                                         </button>
+                                     
                                     </div>
                                 </td>
                             </tr>

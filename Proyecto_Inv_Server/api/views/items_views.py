@@ -1,7 +1,7 @@
 import json
 from django.db import connection
 from django.views.decorators.csrf import csrf_exempt
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from rest_framework.decorators import api_view, permission_classes, renderer_classes
 from rest_framework.permissions import IsAdminUser
 from rest_framework.renderers import JSONRenderer
@@ -13,7 +13,7 @@ from rest_framework.permissions import IsAuthenticated
 from xhtml2pdf import pisa
 
 from ..utils.pagination import get_sp_pagination_params,respond_paginated_sp
-
+from api.utils.item_utils import generar_codigo_barras_bytes
 #? API del panel de vinculación de items y facturas
 @csrf_exempt
 @api_view(['GET'])
@@ -445,4 +445,21 @@ def set_deactivate_item(request):
 
     except Exception as e:
         return JsonResponse({"error": f"Error al eliminar: {str(e)}"}, status=500)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])  # Mantenemos la seguridad de tu sistema
+def get_barcode_image(request):
+    codigo = request.GET.get('codigo')
+    
+    if not codigo:
+        return JsonResponse({"error": "Se requiere el parámetro 'codigo'."}, status=400)
+
+    imagen_bytes = generar_codigo_barras_bytes(codigo)
+    
+    if imagen_bytes:
+        return HttpResponse(imagen_bytes, content_type="image/png")
+    else:
+        return JsonResponse({"error": "Error interno al generar la imagen."}, status=500)
+    
+
 
