@@ -134,3 +134,31 @@ export async function deleteItemAPI(itemId) {
     }
 }
 
+
+export async function setCategoryItem(payload) {
+    const url = `/api/items/set-category/`;
+    const csrftoken = getCookie('csrftoken');
+
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || 'Ocurrió un error al procesar la categoría');
+        }
+
+        return data;
+    } catch (error) {
+        console.error('Error en setCategoryItem API:', error);
+        throw error; 
+    }
+}
+

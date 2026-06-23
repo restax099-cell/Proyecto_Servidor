@@ -279,7 +279,7 @@ def get_categories(request):
     search = request.GET.get('search', '')
     try:
         with connection.cursor() as cursor:
-            sql = "SELECT id, category AS name FROM vlx_items_categories WHERE is_active = 1"
+            sql = "SELECT id, code, category AS name FROM vlx_items_categories WHERE is_active = 1"
             params = []
             
             if search:
@@ -461,5 +461,48 @@ def get_barcode_image(request):
     else:
         return JsonResponse({"error": "Error interno al generar la imagen."}, status=500)
     
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def set_save_category(request):
+    try:
+        data = request.data
+        
+        p_id = data.get('id', 0) 
+        p_code = data.get('code', '')
+        p_category = data.get('category', '')
+        p_is_active = data.get('is_active', 1)
+        p_display_order = data.get('display_order', 0)
+
+        if not p_category:
+            return JsonResponse({"error": "El nombre de la categoría es obligatorio."}, status=400)
+
+        with connection.cursor() as cursor:
+            cursor.callproc('sp_save_category_item', [
+                p_id, 
+                p_code, 
+                p_category, 
+                p_is_active, 
+                p_display_order
+            ])
+            
+            row = cursor.fetchone()
+            
+            if row:
+                result_id = row[0]
+                action = row[1]
+            else:
+                raise Exception("El procedimiento no devolvió resultados.")
+
+        return JsonResponse({
+            "mensaje": "Categoría procesada con éxito.",
+            "id": result_id,
+            "accion": action
+        }, status=200)
+
+    except Exception as e:
+        print(f"Error en save_category: {e}")
+        return JsonResponse({"error": "Ocurrió un error interno al guardar la categoría."}, status=500)
+
 
 

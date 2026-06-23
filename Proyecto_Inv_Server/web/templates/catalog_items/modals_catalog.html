@@ -225,7 +225,7 @@
                     <button type="button" class="btn-close btn-close-white" @click="showEditModal = false"></button>
                 </div>
 
-                <!-- Body (Sin scroll interno necesario por ser corto) -->
+                <!-- Body -->
                 <div class="p-4 bg-light">
                     
                     <div class="mb-3">
@@ -240,12 +240,19 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-semibold">Categoría</label>
-                            <select x-model.number="newItem.id_categoria" class="form-select">
-                                <option value="0" disabled>Selecciona una...</option>
-                                <template x-for="cat in categories.filter(c => c.id !== 0)" :key="cat.id">
-                                    <option :value="cat.id" x-text="cat.name"></option>
-                                </template>
-                            </select>
+                            
+                            <div class="d-flex gap-2">
+                                <select x-model.number="newItem.id_categoria" class="form-select w-100">
+                                    <option value="0" disabled>Selecciona una...</option>
+                                    <template x-for="cat in categories.filter(c => c.id !== 0)" :key="cat.id">
+                                        <option :value="cat.id" x-text="cat.name"></option>
+                                    </template>
+                                </select>
+                                
+                                <button type="button" @click="showCategoryModal = true" class="btn btn-dark px-3" title="Administrar Categorías">
+                                    <span class="fw-bold fs-5" style="line-height: 1;">+</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                     
@@ -312,13 +319,20 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">Categoría</label>
-                                <select x-model.number="newItem.id_categoria" class="form-select">
-                                    <option value="0" disabled>Selecciona una...</option>
-                                    <template x-for="cat in categories.filter(c => c.id !== 0)" :key="cat.id">
-                                        <option :value="cat.id" x-text="cat.name"></option>
-                                    </template>
-                                </select>
+                                <div class="d-flex gap-2">
+                                    <select x-model.number="newItem.id_categoria" class="form-select">
+                                        <option value="0" disabled>Selecciona una...</option>
+                                        <template x-for="cat in categories.filter(c => c.id !== 0)" :key="cat.id">
+                                            <option :value="cat.id" x-text="cat.name"></option>
+                                        </template>
+                                    </select>
+                                    
+                                    <button type="button" @click="showCategoryModal = true" class="btn btn-dark px-3 d-flex align-items-center justify-content-center" title="Administrar Categorías">
+                                        <span class="fw-bold fs-5" style="line-height: 1;">+</span>
+                                    </button>
+                                </div>
                             </div>
+                            
                         </div>
                         <div>
                             <label class="form-label fw-semibold">Descripción</label>
@@ -433,10 +447,17 @@
         <div
             x-show="showDeleteModal"
             x-cloak
-            x-transition
-            class="fixed inset-0 z-50 flex items-center justify-center p-3">
+            x-transition.opacity
+            @click="if(!isDeleting) showDeleteModal = false"
+            class="fixed inset-0"
+            style="background: rgba(0,0,0,.45); z-index: 1070;"> </div>
 
-            <div class="bg-white overflow-hidden d-flex flex-column align-items-center text-center px-4 py-5"
+            <div
+                x-show="showDeleteModal"
+                x-cloak
+                x-transition
+                class="fixed inset-0 flex items-center justify-center p-3"
+                style="z-index: 1080;"> <div class="bg-white overflow-hidden d-flex flex-column align-items-center text-center px-4 py-5 shadow-lg"
                 style="width:100%; max-width:380px; border-radius:8px;">
 
                 <div class="rounded-circle d-flex align-items-center justify-content-center mb-4"
@@ -448,7 +469,7 @@
 
                 <h5 class="fw-bold mb-2">Eliminar Registro</h5>
                 <p class="text-secondary mb-4" style="font-size:14px;">
-                    ¿Estás seguro de que deseas eliminar <strong class="text-dark" x-text="itemToDelete ? itemToDelete.nombre : ''"></strong>? Esta acción no se puede deshacer.
+                    ¿Estás seguro de que deseas eliminar <strong class="text-dark" x-text="deleteName"></strong>? Esta acción no se puede deshacer.
                 </p>
 
                 <div class="d-flex w-100 gap-2">
@@ -468,7 +489,125 @@
                         <span x-text="isDeleting ? 'Eliminando...' : 'Eliminar'"></span>
                     </button>
                 </div>
+            </div>
+        </div>
+
+    <!-- ============================================== -->
+    <!-- MODAL: CRUD CATEGORIAS                         -->
+    <!-- ============================================== -->   
+
+        <div
+            x-show="showCategoryModal"
+            x-cloak
+            x-transition.opacity
+            @click="showCategoryModal = false"
+            class="fixed inset-0" 
+            style="background: rgba(0,0,0,.6); z-index: 1055;">
+        </div>
+
+        <div
+            x-show="showCategoryModal"
+            x-cloak
+            x-transition
+            class="fixed inset-0 flex items-center justify-center p-3"
+            style="z-index: 1060;">
+
+            <div class="bg-white overflow-hidden shadow-lg d-flex flex-column" style="width:100%; max-width:1000px; border-radius:8px; max-height: 85vh;">
+                
+                <div class="d-flex justify-content-between align-items-center px-4 py-3 border-bottom bg-dark text-white">
+                    <h6 class="mb-0 fw-bold">Administrar Categorías</h6>
+                    <button @click="showCategoryModal = false" class="btn-close btn-close-white" aria-label="Close"></button>
+                </div>
+
+                <div class="p-4 overflow-auto flex-grow-1">
+                    
+                    <div class="row g-2 mb-4">
+                        <div class="col-sm-3">
+                            <input type="text" x-model="newCategoryCode" class="form-control" placeholder="Código">
+                        </div>
+                        <div class="col-sm-7">
+                            <input type="text" x-model="newCategoryName" class="form-control" placeholder="Nombre de la nueva categoría...">
+                        </div>
+                        <div class="col-sm-2 d-grid">
+                            <button class="btn btn-primary" @click="saveCategory()">
+                                <i class="bi bi-plus-lg me-1"></i> Agregar
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive border rounded">
+                        <table class="table table-hover table-sm mb-0 align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="px-3 py-2" style="width: 80px;">ID</th>
+                                    <th class="px-3 py-2" style="width: 150px;">Código</th>
+                                    <th class="px-3 py-2">Nombre de Categoría</th>
+                                    <th class="px-3 py-2 text-end" style="width: 180px;">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template x-for="cat in categories.filter(c => c.id !== 0)" :key="cat.id">
+                                    <tr>
+                                        <td class="px-3 text-secondary" x-text="cat.id"></td>
+                                        
+                                        <td class="px-3">
+                                            <span x-show="editingCategoryId !== cat.id" class="badge bg-secondary" x-text="cat.code"></span>
+                                            <div x-show="editingCategoryId === cat.id" style="display: none;">
+                                                <input 
+                                                    type="text" 
+                                                    x-model="inlineEditCode" 
+                                                    @keyup.enter="saveInlineCategory(cat)"
+                                                    @keyup.escape="cancelEdit()"
+                                                    class="form-control form-control-sm border-primary"
+                                                >
+                                            </div>
+                                        </td>
+
+                                        <td class="px-3 fw-medium">
+                                            <span x-show="editingCategoryId !== cat.id" x-text="cat.name"></span>
+                                            <div x-show="editingCategoryId === cat.id" style="display: none;">
+                                                <input 
+                                                    type="text" 
+                                                    x-model="inlineEditName" 
+                                                    @keyup.enter="saveInlineCategory(cat)"
+                                                    @keyup.escape="cancelEdit()"
+                                                    class="form-control form-control-sm border-primary shadow-sm"
+                                                >
+                                                <small class="text-muted d-block mt-1" style="font-size: 11px;">
+                                                    Presiona <b>Enter</b> para guardar o <b>Esc</b> para cancelar
+                                                </small>
+                                            </div>
+                                        </td>
+                                        
+                                        <td class="px-3 text-end">
+                                            <div x-show="editingCategoryId !== cat.id">
+                                                <button @click="editCategory(cat)" class="btn btn-sm btn-outline-primary opacity-75 px-2" title="Editar">
+                                                    Editar
+                                                </button>
+                                                <button @click="deleteCategory(cat.id)" class="btn btn-sm btn-outline-danger opacity-75 px-2" title="Eliminar">
+                                                    Eliminar
+                                                </button>
+                                            </div>
+                                            <div x-show="editingCategoryId === cat.id" style="display: none;">
+                                                <button @click="cancelEdit()" class="btn btn-sm btn-outline-secondary opacity-75 px-2" title="Cancelar">
+                                                    Cancelar
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+
+                <div class="px-4 py-3 border-top bg-light text-end">
+                    <button @click="showCategoryModal = false" class="btn btn-secondary px-4">
+                        Cerrar
+                    </button>
+                </div>
 
             </div>
         </div>
-    
+        

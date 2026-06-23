@@ -8,6 +8,7 @@ import {
     fetchFichaTecnica,
     fetchPendingCount,
     saveFichaTecnica,
+    setCategoryItem,
 } from './api_catalog.js';
 import { getCategoryStyles } from './themes_catalog.js';
 
@@ -30,10 +31,23 @@ Alpine.data('catalogApp', () => ({
     showSuccessModal: false,
     showEditModal: false,
     showEditAllModal: false,
+    showCategoryModal: false,
+    newCategoryName: '',
+    newCategoryCode: '',
+    editingCategoryId: null,
+    inlineEditCode: '',
+    inlineEditName: '',
     isEditingAll: false,
+
+
+    //* Variables de modal delete
     showDeleteModal: false,
-    itemToDelete: null,
     isDeleting: false,
+    deleteTarget: null, 
+    deleteType: '',     
+    deleteName: '',     
+    itemToDelete: null,
+   
     successTitle: '',
     successMessage: '',
     activeItem: {}, 
@@ -158,7 +172,7 @@ Alpine.data('catalogApp', () => ({
         const response = await fetchCategories(search);
         if (response && response.success) {
             this.categories = [
-                { id: 0, name: 'Todas las categorías...' },
+                { id: 0, code: '', name: 'Todas las categorías...' },
                 ...response.data
             ];
         }
@@ -317,6 +331,40 @@ Alpine.data('catalogApp', () => ({
         }
     },
 
+    async saveCategory() {
+        let codigo = this.newCategoryCode.trim();
+        let nombre = this.newCategoryName.trim();
+        
+        if (!codigo || !nombre) {
+            alert("Por favor, ingresa tanto el código como el nombre de la categoría.");
+            return;
+        }
+
+        let payload = {
+            id: 0, 
+            code: codigo.toUpperCase(), 
+            category: nombre.toUpperCase(),
+            is_active: 1,
+            display_order: 0
+        };
+
+        try {
+            let result = await setCategoryItem(payload);
+            
+            this.categories.push({
+                id: result.id, 
+                code: payload.code,
+                name: payload.category
+            });
+
+            this.newCategoryCode = '';
+            this.newCategoryName = '';
+            
+        } catch (error) {
+            alert(error.message);
+        }
+    },
+
 
     
     //? --- ABRIR MODALS ---
@@ -379,36 +427,65 @@ Alpine.data('catalogApp', () => ({
     },
 
     openDeleteModal(item) {
-        this.itemToDelete = item;       
+        this.deleteTarget = item;       
+        this.deleteType = 'item';
+        this.deleteName = item.nombre; 
         this.showDeleteModal = true;   
     },
 
     async confirmDelete() {
-        if (!this.itemToDelete) return;
+        if (!this.deleteTarget) return;
 
         this.isDeleting = true; 
+        
         try {
-            const response = await deleteItemAPI(this.itemToDelete.id);
 
-            if (response && response.status === 'success') {
-                this.showDeleteModal = false;
-                this.loadItems();
+            if (this.deleteType === 'category') {
+                let payload = {
+                    id: this.deleteTarget.id,
+                    code: this.deleteTarget.code,
+                    category: this.deleteTarget.name,
+                    is_active: 0,
+                    display_order: 0
+                };
+
+                await setCategoryItem(payload);
+                this.categories = this.categories.filter(c => c.id !== this.deleteTarget.id);
                 
-                this.successTitle = '¡Eliminado!';
-                this.successMessage = 'El registro se ha dado de baja correctamente.';
+                this.successTitle = '¡Categoría Eliminada!';
+                this.successMessage = 'La categoría se ha dado de baja correctamente.';
                 this.showSuccessModal = true;
-            } else {
-                alert(response.error || "Ocurrió un error al intentar eliminar el ítem.");
+            } 
+            
+
+            else if (this.deleteType === 'item') {
+                const response = await deleteItemAPI(this.deleteTarget.id);
+
+                if (response && response.status === 'success') {
+                    this.loadItems();
+                    
+                    this.successTitle = '¡Eliminado!';
+                    this.successMessage = 'El registro se ha dado de baja correctamente.';
+                    this.showSuccessModal = true;
+                } else {
+                    alert(response.error || "Ocurrió un error al intentar eliminar el ítem.");
+                    this.isDeleting = false;
+                    return; 
+                }
             }
+
+            this.showDeleteModal = false;
+
         } catch (error) {
             console.error("Error al eliminar:", error);
             alert("Error de red al intentar conectar con el servidor.");
         } finally {
             this.isDeleting = false; 
-            this.itemToDelete = null; 
+            this.deleteTarget = null; 
+            this.deleteType = '';
+            this.deleteName = '';
         }
     },
-
 
     debounceCategories(value) {
         clearTimeout(this._timeout);
@@ -420,6 +497,64 @@ Alpine.data('catalogApp', () => ({
     //? --- PROPIEDADES COMPUTADAS (GETTERS) ---
     get filteredItems() {
         return this.items;
+    },
+
+
+    //? --- Acciones de categorias ---
+    editCategory(cat) {
+        this.editingCategoryId = cat.id;
+        this.inlineEditName = cat.name;
+        this.inlineEditCode = cat.code; 
+    },
+
+    cancelEdit() {
+        this.editingCategoryId = null;
+        this.inlineEditName = '';
+        this.inlineEditCode = ''; 
+    },
+
+    async saveInlineCategory(cat) {
+        let nombre = this.inlineEditName.trim();
+        let codigo = this.inlineEditCode.trim();
+        
+        if (!nombre || !codigo) {
+            alert("El nombre o código no pueden estar vacíos.");
+            return;
+        }
+
+        let payload = {
+            id: cat.id, 
+            code: codigo.toUpperCase(),
+            category: nombre.toUpperCase(),
+            is_active: 1,
+            display_order: 0
+        };
+
+        try {
+            let result = await setCategoryItem(payload);
+            
+            let index = this.categories.findIndex(c => c.id === cat.id);
+            if (index !== -1) {
+                this.categories[index].code = payload.code;
+                this.categories[index].name = payload.category;
+            }
+            
+            this.cancelEdit();
+            
+        } catch (error) {
+            alert(error.message);
+        }
+    },
+
+    deleteCategory(id) {
+        let catTarget = this.categories.find(c => c.id === id);
+        if (!catTarget) return;
+
+        this.deleteTarget = catTarget;
+        this.deleteType = 'category';
+        this.deleteName = catTarget.name; 
+        
+        this.showDeleteModal = true;
     },
 
     
