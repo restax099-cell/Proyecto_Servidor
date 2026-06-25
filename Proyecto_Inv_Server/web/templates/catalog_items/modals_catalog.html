@@ -38,14 +38,60 @@
                             <label class="form-label fw-semibold">SKU / Código</label>
                             <input type="text" class="form-control" x-model="newItem.codigo" placeholder="T099">
                         </div>
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-6">
                             <label class="form-label fw-semibold">Categoría</label>
-                            <select class="form-select" x-model.number="newItem.id_categoria">
-                                <option value="0" disabled>Selecciona una categoría...</option>
-                                <template x-for="cat in categories.filter(c => c.id !== 0)">
-                                    <option :value="cat.id" x-text="cat.name"></option>
-                                </template>
-                            </select>
+                            
+                            <div class="d-flex gap-2">
+                                
+                                <div class="position-relative flex-grow-1" @click.outside="modalOpenCategoryDropdown = false; modalLocalSearch = ''">
+                                    <div class="input-group">
+                                        <input 
+                                            type="text"
+                                            x-model="modalLocalSearch"
+                                            @focus="modalOpenCategoryDropdown = true"
+                                            @input="modalOpenCategoryDropdown = true"
+                                            @keydown.escape="modalOpenCategoryDropdown = false"
+                                            :placeholder="(categories.find(c => c.id === newItem.id_categoria) || {}).name || 'Buscar categoría...'"
+                                            class="form-control"
+                                        >
+                                        <button 
+                                            type="button" 
+                                            @click="modalOpenCategoryDropdown = !modalOpenCategoryDropdown; if(modalOpenCategoryDropdown) $el.previousElementSibling.focus()"
+                                            class="btn btn-outline-secondary px-2"
+                                        >
+                                            ▼
+                                        </button>
+                                    </div>
+
+                                    <div 
+                                        x-show="modalOpenCategoryDropdown" 
+                                        class="dropdown-menu show position-absolute w-100 mt-1 shadow border rounded" 
+                                        style="max-height: 200px; overflow-y: auto; z-index: 1060;" 
+                                        x-cloak>
+                                        
+                                        <template x-for="cat in categories.filter(c => c.id !== 0 && c.name.toLowerCase().includes(modalLocalSearch.toLowerCase()))" :key="cat.id">
+                                            <button 
+                                                type="button" 
+                                                @click="newItem.id_categoria = cat.id; modalOpenCategoryDropdown = false; modalLocalSearch = '';" 
+                                                class="dropdown-item py-2 small" 
+                                                :class="newItem.id_categoria === cat.id ? 'bg-light fw-bold text-dark' : ''">
+                                                <span x-text="cat.code ? cat.code + ' - ' + cat.name : cat.name"></span>
+                                            </button>
+                                        </template>
+
+                                        <div 
+                                            x-show="categories.filter(c => c.id !== 0 && c.name.toLowerCase().includes(modalLocalSearch.toLowerCase())).length === 0" 
+                                            class="px-3 py-2 text-muted small text-center">
+                                            No hay coincidencias
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <button type="button" @click="showCategoryModal = true" class="btn btn-dark px-3 d-flex align-items-center justify-content-center" title="Administrar Categorías">
+                                    <span class="fw-bold fs-5" style="line-height: 1;">+</span>
+                                </button>
+
+                            </div>
                         </div>
                     </div>
                     <div class="mb-3">
@@ -242,16 +288,55 @@
                             <label class="form-label fw-semibold">Categoría</label>
                             
                             <div class="d-flex gap-2">
-                                <select x-model.number="newItem.id_categoria" class="form-select w-100">
-                                    <option value="0" disabled>Selecciona una...</option>
-                                    <template x-for="cat in categories.filter(c => c.id !== 0)" :key="cat.id">
-                                        <option :value="cat.id" x-text="cat.name"></option>
-                                    </template>
-                                </select>
                                 
-                                <button type="button" @click="showCategoryModal = true" class="btn btn-dark px-3" title="Administrar Categorías">
+                                <div class="position-relative flex-grow-1" @click.outside="modalOpenCategoryDropdown = false; modalLocalSearch = ''">
+                                    <div class="input-group">
+                                        <input 
+                                            type="text"
+                                            x-model="modalLocalSearch"
+                                            @focus="modalOpenCategoryDropdown = true"
+                                            @input="modalOpenCategoryDropdown = true"
+                                            @keydown.escape="modalOpenCategoryDropdown = false"
+                                            :placeholder="(categories.find(c => c.id === newItem.id_categoria) || {}).name || 'Buscar categoría...'"
+                                            class="form-control"
+                                        >
+                                        <button 
+                                            type="button" 
+                                            @click="modalOpenCategoryDropdown = !modalOpenCategoryDropdown; if(modalOpenCategoryDropdown) $el.previousElementSibling.focus()"
+                                            class="btn btn-outline-secondary px-2"
+                                        >
+                                            ▼
+                                        </button>
+                                    </div>
+
+                                    <div 
+                                        x-show="modalOpenCategoryDropdown" 
+                                        class="dropdown-menu show position-absolute w-100 mt-1 shadow border rounded" 
+                                        style="max-height: 200px; overflow-y: auto; z-index: 1060;" 
+                                        x-cloak>
+                                        
+                                        <template x-for="cat in categories.filter(c => c.id !== 0 && c.name.toLowerCase().includes(modalLocalSearch.toLowerCase()))" :key="cat.id">
+                                            <button 
+                                                type="button" 
+                                                @click="newItem.id_categoria = cat.id; modalOpenCategoryDropdown = false; modalLocalSearch = '';" 
+                                                class="dropdown-item py-2 small" 
+                                                :class="newItem.id_categoria === cat.id ? 'bg-light fw-bold text-dark' : ''">
+                                                <span x-text="cat.code ? cat.code + ' - ' + cat.name : cat.name"></span>
+                                            </button>
+                                        </template>
+
+                                        <div 
+                                            x-show="categories.filter(c => c.id !== 0 && c.name.toLowerCase().includes(modalLocalSearch.toLowerCase())).length === 0" 
+                                            class="px-3 py-2 text-muted small text-center">
+                                            No hay coincidencias
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <button type="button" @click="showCategoryModal = true" class="btn btn-dark px-3 d-flex align-items-center justify-content-center" title="Administrar Categorías">
                                     <span class="fw-bold fs-5" style="line-height: 1;">+</span>
                                 </button>
+
                             </div>
                         </div>
                     </div>
@@ -319,17 +404,57 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">Categoría</label>
+                                
                                 <div class="d-flex gap-2">
-                                    <select x-model.number="newItem.id_categoria" class="form-select">
-                                        <option value="0" disabled>Selecciona una...</option>
-                                        <template x-for="cat in categories.filter(c => c.id !== 0)" :key="cat.id">
-                                            <option :value="cat.id" x-text="cat.name"></option>
-                                        </template>
-                                    </select>
+                                    
+                                    <div class="position-relative flex-grow-1" @click.outside="modalOpenCategoryDropdown = false; modalLocalSearch = ''">
+                                        <div class="input-group">
+                                            <input 
+                                                type="text"
+                                                x-model="modalLocalSearch"
+                                                @focus="modalOpenCategoryDropdown = true"
+                                                @input="modalOpenCategoryDropdown = true"
+                                                @keydown.escape="modalOpenCategoryDropdown = false"
+                                                :placeholder="(categories.find(c => c.id === newItem.id_categoria) || {}).name || 'Buscar categoría...'"
+                                                class="form-control"
+                                            >
+                                            <button 
+                                                type="button" 
+                                                @click="modalOpenCategoryDropdown = !modalOpenCategoryDropdown; if(modalOpenCategoryDropdown) $el.previousElementSibling.focus()"
+                                                class="btn btn-outline-secondary px-2"
+                                            >
+                                                ▼
+                                            </button>
+                                        </div>
+
+                                        <div 
+                                            x-show="modalOpenCategoryDropdown" 
+                                            class="dropdown-menu show position-absolute w-100 mt-1 shadow border rounded" 
+                                            style="max-height: 200px; overflow-y: auto; z-index: 1060;" 
+                                            x-cloak>
+                                            
+                                            <template x-for="cat in categories.filter(c => c.id !== 0 && c.name.toLowerCase().includes(modalLocalSearch.toLowerCase()))" :key="cat.id">
+                                                <button 
+                                                    type="button" 
+                                                    @click="newItem.id_categoria = cat.id; modalOpenCategoryDropdown = false; modalLocalSearch = '';" 
+                                                    class="dropdown-item py-2 small" 
+                                                    :class="newItem.id_categoria === cat.id ? 'bg-light fw-bold text-dark' : ''">
+                                                    <span x-text="cat.code ? cat.code + ' - ' + cat.name : cat.name"></span>
+                                                </button>
+                                            </template>
+
+                                            <div 
+                                                x-show="categories.filter(c => c.id !== 0 && c.name.toLowerCase().includes(modalLocalSearch.toLowerCase())).length === 0" 
+                                                class="px-3 py-2 text-muted small text-center">
+                                                No hay coincidencias
+                                            </div>
+                                        </div>
+                                    </div>
                                     
                                     <button type="button" @click="showCategoryModal = true" class="btn btn-dark px-3 d-flex align-items-center justify-content-center" title="Administrar Categorías">
                                         <span class="fw-bold fs-5" style="line-height: 1;">+</span>
                                     </button>
+
                                 </div>
                             </div>
                             

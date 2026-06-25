@@ -20,10 +20,12 @@ Alpine.data('catalogApp', () => ({
     
     localSearch: '',
     openCategoryDropdown: false,
+    modalOpenCategoryDropdown: false,
+    modalLocalSearch: '',
     selectedCategoryId: 0, 
     selectedCategoryName: 'Todas las categorías...',
     categories: [], 
-    
+   
 
     //? --- MODALS ---
     showCreateModal: false,
