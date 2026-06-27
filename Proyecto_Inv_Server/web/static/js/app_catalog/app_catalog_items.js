@@ -42,6 +42,8 @@ Alpine.data('catalogApp', () => ({
     isEditingAll: false,
 
 
+    skuModificadoManualmente: false,
+
     //* Variables de modal delete
     showDeleteModal: false,
     isDeleting: false,
@@ -53,7 +55,7 @@ Alpine.data('catalogApp', () => ({
     successTitle: '',
     successMessage: '',
     activeItem: {}, 
-    
+
 
     //? --- ITEMS ---
     items: [], 
@@ -367,6 +369,70 @@ Alpine.data('catalogApp', () => ({
         }
     },
 
+    //? --- Generar SKU ---
+
+    generarPrefijoInteligente(catTarget) {
+        let nombreLimpio = catTarget.name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9 ]/g, "");
+        
+        let palabras = nombreLimpio.toUpperCase().split(" ");
+        let palabrasIgnoradas = ["Y", "E", "DE", "DEL", "CON", "EL", "LA", "LOS", "LAS", "EN", "PARA"];
+        let palabrasUtiles = palabras.filter(p => !palabrasIgnoradas.includes(p) && p.length > 0);
+
+        if (palabrasUtiles.length === 0) return "CAT";
+
+        if (palabrasUtiles.length >= 3) {
+            return (palabrasUtiles[0][0] + palabrasUtiles[1][0] + palabrasUtiles[2][0]).toUpperCase();
+        } 
+
+        else if (palabrasUtiles.length === 2) {
+            let p1 = palabrasUtiles[0].substring(0, 2); 
+            let p2 = palabrasUtiles[1].substring(0, 1); 
+            
+            return (p1 + p2).padEnd(3, 'X').toUpperCase(); 
+        } 
+ 
+        else {
+            let palabra = palabrasUtiles[0];
+            let primeraLetra = palabra.charAt(0); 
+            let restoConsonantes = palabra.slice(1).replace(/[AEIOU]/ig, ''); 
+            
+            return (primeraLetra + restoConsonantes).padEnd(3, 'X').substring(0, 3).toUpperCase();
+        }
+    },
+
+    proposeSKU(categoryId) {
+        if (this.skuModificadoManualmente) {
+            return;
+        }
+
+        let catTarget = this.categories.find(c => c.id === categoryId);
+        if (!catTarget) return;
+
+
+        let prefijo = this.generarPrefijoInteligente(catTarget);
+        
+        let nuevoCodigo = '';
+        let esDuplicado = true;
+        let intentos = 0; 
+
+        while (esDuplicado && intentos < 100) {
+            let randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+            nuevoCodigo = `${prefijo}${randomNum}`;
+            
+   
+            let coincidencia = this.items.some(item => item.codigo === nuevoCodigo);
+            
+            if (!coincidencia) {
+                esDuplicado = false; 
+            }
+            
+            intentos++;
+        }
+        
+        this.newItem.codigo = nuevoCodigo;
+    },
+
+
 
     
     //? --- ABRIR MODALS ---
@@ -501,6 +567,7 @@ Alpine.data('catalogApp', () => ({
         return this.items;
     },
 
+    
 
     //? --- Acciones de categorias ---
     editCategory(cat) {

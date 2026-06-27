@@ -36,7 +36,12 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-semibold">SKU / Código</label>
-                            <input type="text" class="form-control" x-model="newItem.codigo" placeholder="T099">
+                            <input 
+                                type="text" 
+                                x-model="newItem.codigo" 
+                                @input="skuModificadoManualmente = true" 
+                                class="form-control"
+                            >
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-semibold">Categoría</label>
@@ -72,7 +77,7 @@
                                         <template x-for="cat in categories.filter(c => c.id !== 0 && c.name.toLowerCase().includes(modalLocalSearch.toLowerCase()))" :key="cat.id">
                                             <button 
                                                 type="button" 
-                                                @click="newItem.id_categoria = cat.id; modalOpenCategoryDropdown = false; modalLocalSearch = '';" 
+                                                @click="newItem.id_categoria = cat.id; proposeSKU(cat.id); modalOpenCategoryDropdown = false; modalLocalSearch = '';" 
                                                 class="dropdown-item py-2 small" 
                                                 :class="newItem.id_categoria === cat.id ? 'bg-light fw-bold text-dark' : ''">
                                                 <span x-text="cat.code ? cat.code + ' - ' + cat.name : cat.name"></span>
@@ -282,7 +287,12 @@
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
                             <label class="form-label fw-semibold">SKU / Código</label>
-                            <input type="text" x-model="newItem.codigo" class="form-control">
+                            <input 
+                                type="text" 
+                                x-model="newItem.codigo" 
+                                @input="skuModificadoManualmente = true" 
+                                class="form-control"
+                            >
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-semibold">Categoría</label>
@@ -400,7 +410,12 @@
                         <div class="row g-3 mb-3">
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">SKU / Código</label>
-                                <input type="text" x-model="newItem.codigo" class="form-control">
+                                <input 
+                                    type="text" 
+                                    x-model="newItem.codigo" 
+                                    @input="skuModificadoManualmente = true" 
+                                    class="form-control"
+                                >
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">Categoría</label>
