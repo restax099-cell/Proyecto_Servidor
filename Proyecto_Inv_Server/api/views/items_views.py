@@ -447,7 +447,7 @@ def set_deactivate_item(request):
         return JsonResponse({"error": f"Error al eliminar: {str(e)}"}, status=500)
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])  # Mantenemos la seguridad de tu sistema
+@permission_classes([IsAuthenticated]) 
 def get_barcode_image(request):
     codigo = request.GET.get('codigo')
     

@@ -6,6 +6,13 @@ body {
     margin: 0; 
     font-family: system-ui, -apple-system, sans-serif; 
 }
+.btn-fluido {
+    transition: all 0.2s ease-in-out;
+}
+.btn-fluido:hover {
+    transform: translateY(-2px);
+    filter: brightness(0.95);
+}
 
 /* Modal estilos */
 .modal-content { border-radius: 4px; } /* Estilo más cuadrado/industrial */

@@ -3,6 +3,7 @@ import Alpine from 'https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/module.esm.
 import {
     createItem,
     deleteItemAPI,
+    fetchBarcodeImage,
     fetchCatalogItems,
     fetchCategories,
     fetchFichaTecnica,
@@ -10,6 +11,7 @@ import {
     saveFichaTecnica,
     setCategoryItem,
 } from './api_catalog.js';
+
 import { getCategoryStyles } from './themes_catalog.js';
 
 Alpine.data('catalogApp', () => ({
@@ -25,7 +27,16 @@ Alpine.data('catalogApp', () => ({
     selectedCategoryId: 0, 
     selectedCategoryName: 'Todas las categorías...',
     categories: [], 
+    
    
+
+    //? --- BARCODE ---
+    showBarcodeModal: false,
+    barcodeSearch: '',
+    selectedBarcodeItems: [], 
+    isGeneratingPDF: false,
+    selectedItems: [], 
+    isGeneratingPDF: false,
 
     //? --- MODALS ---
     showCreateModal: false,
@@ -148,9 +159,7 @@ Alpine.data('catalogApp', () => ({
                 if (this.items.length > 0) {
                     console.log("--- DEBUG: ESTRUCTURA DE DATOS ---");
                     console.log("1. Objeto completo del primer ITEM:", this.items[0]);
-                    
-                    // Comprobamos también cómo están estructuradas las categorías 
-                    // (tomamos la posición 1 para saltar la de "Todas las categorías...")
+
                     if (this.categories.length > 1) {
                         console.log("2. Objeto completo de una CATEGORÍA:", this.categories[1]);
                     }
@@ -430,6 +439,161 @@ Alpine.data('catalogApp', () => ({
         }
         
         this.newItem.codigo = nuevoCodigo;
+    },
+
+    //? --- Generar png barcode ---
+    fontTitlesPDF(doc, nombreItem, width) {
+        let nombre = nombreItem.trim();
+        let lineasText = [];
+
+        if (!nombre.includes(' ')) {
+            lineasText = [nombre, ""];
+        } else {
+            let centroIdeal = Math.floor(nombre.length * 0.45);
+            let mejorEspacio = -1;
+            let menorDistancia = nombre.length;
+
+            for (let j = 0; j < nombre.length; j++) {
+                if (nombre[j] === ' ') {
+                    let distancia = Math.abs(j - centroIdeal);
+                    if (distancia < menorDistancia) {
+                        menorDistancia = distancia;
+                        mejorEspacio = j;
+                    }
+                }
+            }
+
+            let linea1 = nombre.substring(0, mejorEspacio).trim();
+            let linea2 = nombre.substring(mejorEspacio + 1).trim();
+            lineasText = [linea1, linea2];
+        }
+
+        let anchoMaximo = width + 5;
+        for (let k = 0; k < 2; k++) {
+            if (doc.getTextWidth(lineasText[k]) > anchoMaximo) {
+                while (doc.getTextWidth(lineasText[k] + '...') > anchoMaximo && lineasText[k].length > 0) {
+                    lineasText[k] = lineasText[k].slice(0, -1); 
+                }
+                lineasText[k] = lineasText[k].trim() + '...';
+            }
+        }
+
+        return lineasText;
+    },
+
+    async generarPDFCodigos() {
+        if (!this.selectedBarcodeItems || this.selectedBarcodeItems.length === 0) {
+            alert("Por favor, selecciona al menos un ítem.");
+            return;
+        }
+
+        this.isGeneratingPDF = true; 
+
+        try {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            let x = 20;          
+            let y = 28;         
+            const width = 75;    
+            const height = 35;   
+            const gapX = 90;     
+            const gapY = 60;     
+            let colActual = 0;
+
+            let itemsParaImprimir = this.selectedBarcodeItems;
+
+            for (let i = 0; i < itemsParaImprimir.length; i++) {
+                
+                let item = itemsParaImprimir[i];
+                console.log("Revisando el objeto item completo:", item);
+
+                try {
+                    let blob = await fetchBarcodeImage(item.sku);
+
+                    let base64Img = await new Promise((resolve, reject) => {
+                        let reader = new FileReader();
+                        reader.onloadend = () => resolve(reader.result);
+                        reader.onerror = reject;
+                        reader.readAsDataURL(blob);
+                    });
+
+                    doc.setFont("helvetica", "bold"); 
+                    doc.setFontSize(11);              
+                    doc.setTextColor(0, 0, 0);        
+
+                    let lineasText = this.fontTitlesPDF(doc, item.nombre, width);
+
+                    let posicionYTexto = y - 8;
+                    doc.text(lineasText, x + (colActual * gapX) + (width / 2), posicionYTexto, { align: "center" });
+
+                    doc.addImage(base64Img, 'PNG', x + (colActual * gapX), y, width, height);
+
+                } catch (error) {
+                    console.warn(`Falló la generación para el código ${item.codigo}:`, error);
+                }
+
+                colActual++;
+
+                if (colActual > 1) {
+                    colActual = 0;
+                    y += gapY;
+                }
+
+                if (y > 250 && i < itemsParaImprimir.length - 1) {
+                    doc.addPage();
+                    y = 20; 
+                    colActual = 0;
+                }
+            }
+
+            //doc.save('Codigos_De_Barras.pdf');
+            let pdfUrl = doc.output('bloburl');
+            window.open(pdfUrl, '_blank');
+
+        } catch (error) {
+            console.error("Error al construir el PDF:", error);
+            alert("Ocurrió un error al procesar el archivo PDF.");
+        } finally {
+            this.isGeneratingPDF = false; 
+            this.showBarcodeModal = false;
+            this.selectedBarcodeItems = [];
+   
+        }
+    },
+
+    //? --- FUNSIONES BARCODE ---
+    getBarcodeSearchResults() {
+        // Si el buscador está vacío, no mostramos nada
+        if (this.barcodeSearch.trim() === '') return [];
+        
+        let search = this.barcodeSearch.toLowerCase();
+        
+        // 🚨 IMPORTANTE: Revisa qué variable usas en tu tabla principal. 
+        // Yo le puse 'this.items', si el tuyo se llama diferente (ej. this.articulos), cámbialo aquí:
+        let datosDelCatalogo = this.items; 
+        
+        if (!datosDelCatalogo) return [];
+
+        return datosDelCatalogo.filter(item => {
+            // El ?. (Optional Chaining) evita errores si algún item no tiene nombre o código guardado
+            let matchNombre = item.nombre?.toLowerCase().includes(search);
+            let matchCodigo = item.codigo?.toLowerCase().includes(search);
+            
+            // Verificamos que no esté ya en la lista de impresión
+            let yaEstaAgregado = this.selectedBarcodeItems.some(selected => selected.id === item.id);
+            
+            return (matchNombre || matchCodigo) && !yaEstaAgregado;
+        }).slice(0, 5); // Máximo 5 resultados para no hacer el modal gigante
+    },
+
+    addBarcodeItem(item) {
+        this.selectedBarcodeItems.push(item);
+        this.barcodeSearch = '';
+    },
+
+    removeBarcodeItem(id) {
+        this.selectedBarcodeItems = this.selectedBarcodeItems.filter(item => item.id !== id);
     },
 
 

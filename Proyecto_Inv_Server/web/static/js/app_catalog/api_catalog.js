@@ -15,7 +15,6 @@ function getCookie(name) {
     return cookieValue;
 }
 
-
 export async function fetchCatalogItems(filters = {}, page = 1, signal) {
     const params = new URLSearchParams({ 
         page: page 
@@ -162,3 +161,26 @@ export async function setCategoryItem(payload) {
     }
 }
 
+export async function fetchBarcodeImage(codigo) {
+    try {
+        const response = await fetch(`/api/items/get-barcode/?codigo=${codigo}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken'),
+            },
+
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error ${response.status}: No se pudo generar el código`);
+        }
+
+        const blob = await response.blob();
+        return blob;
+
+    } catch (error) {
+        console.error("Error en fetchBarcodeImage:", error);
+        throw error; 
+    }
+}

@@ -571,6 +571,83 @@
 
             </div>
         </div>
+
+
+    <!-- ============================================== -->
+    <!-- MODAL: BARCODES MODAL                          -->
+    <!-- ============================================== -->
+    <div 
+        x-show="showBarcodeModal" 
+        x-cloak class="fixed inset-0 z-40" 
+        style="background: rgba(0,0,0,.45);" 
+        @click="if(!isGeneratingPDF) showBarcodeModal = false">
+    </div>
+
+    <div x-show="showBarcodeModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-3">
+        <div class="bg-white overflow-hidden d-flex flex-column" style="width:100%; max-width:600px; border-radius:8px;">
+            
+            <div class="d-flex justify-content-between align-items-center px-4 py-3 text-white" style="background: linear-gradient(90deg,#1f252d,#222b35);">
+                <h5 class="mb-0 fw-bold">Imprimir Códigos de Barras</h5>
+                <button type="button" class="btn-close btn-close-white" @click="if(!isGeneratingPDF) showBarcodeModal = false"></button>
+            </div>
+
+            <div class="p-4" style="min-height: 400px; max-height: 70vh; overflow-y: auto;">
+                
+                <div class="position-relative mb-4" @click.outside="barcodeSearch = ''">
+                    <label class="form-label fw-semibold">Buscar Ítem</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white"><svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/></svg></span>
+                        <input type="text" x-model="barcodeSearch" class="form-control" placeholder="Escribe el nombre o código...">
+                    </div>
+
+                    <div x-show="barcodeSearch.length > 1" class="dropdown-menu show position-absolute w-100 mt-1 shadow border rounded" style="max-height: 250px; overflow-y: auto; z-index: 1060;">
+                        <template x-for="res in getBarcodeSearchResults()" :key="res.id">
+                            <button type="button" @click="addBarcodeItem(res)" class="dropdown-item py-2 small border-bottom">
+                                <span class="fw-bold" x-text="res.codigo"></span> - <span x-text="res.nombre"></span>
+                            </button>
+                        </template>
+                        <div x-show="getBarcodeSearchResults().length === 0" class="px-3 py-2 text-muted small">
+                            No hay coincidencias o el ítem ya está en la lista.
+                        </div>
+                    </div>
+                </div>
+
+                <p class="fw-bold text-uppercase text-secondary mb-2" style="font-size:11px; letter-spacing:.08em;">
+                    Ítems Seleccionados (<span x-text="selectedBarcodeItems.length"></span>)
+                </p>
+
+                <div class="bg-light border rounded p-2" style="min-height: 180px;">
+                    <div x-show="selectedBarcodeItems.length === 0" class="text-muted text-center pt-5 small">
+                        Usa el buscador de arriba para agregar ítems al documento.
+                    </div>
+
+                    <ul class="list-group list-group-flush border-0">
+                        <template x-for="item in selectedBarcodeItems" :key="item.id">
+                            <li class="list-group-item d-flex justify-content-between align-items-center mb-2 rounded shadow-sm" style="border: 1px solid #e5e7eb;">
+                                <div style="line-height: 1.3;">
+                                    <div class="fw-bold text-dark" style="font-size: 0.95rem;" x-text="item.codigo"></div>
+                                    <div class="text-secondary" style="font-size: 0.85rem;" x-text="item.nombre"></div>
+                                </div>
+                                <button type="button" @click="removeBarcodeItem(item.id)" class="btn btn-sm btn-light text-danger border-0" title="Quitar de la lista">
+                                    <svg width="18" height="18" fill="currentColor" viewBox="0 0 16 16"><path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/></svg>
+                                </button>
+                            </li>
+                        </template>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="bg-white border-top px-4 py-3 d-flex justify-content-end gap-2">
+                <button class="btn btn-outline-secondary" @click="showBarcodeModal = false" :disabled="isGeneratingPDF">Cancelar</button>
+                <button class="btn btn-dark d-flex align-items-center gap-2" @click="generarPDFCodigos()" :disabled="selectedBarcodeItems.length === 0 || isGeneratingPDF">
+                    <span x-show="isGeneratingPDF" class="spinner-border spinner-border-sm"></span>
+                    <span x-text="isGeneratingPDF ? 'Generando Archivo...' : 'Generar PDF'"></span>
+                </button>
+            </div>
+            
+        </div>
+    </div>
+    
     
     <!-- ============================================== -->
     <!-- MODAL: CONFIRMAR ELIMINACIÓN                   -->
