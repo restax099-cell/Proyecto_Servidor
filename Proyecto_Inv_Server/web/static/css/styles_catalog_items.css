@@ -1,4 +1,3 @@
-/* Limpia tu archivo styles_catalog_items.css con esto */
 [x-cloak] { display: none !important; }
 
 body { 
@@ -13,12 +12,23 @@ body {
     transform: translateY(-2px);
     filter: brightness(0.95);
 }
+.btn.btn-outline-amarillo {
+    color: #c98d00;               /* Letras mostaza fuerte */
+    border: 1px solid #c98d00;    /* Borde del mismo tono */
+    background-color: transparent; 
+    font-weight: 500;             
+    transition: all 0.2s ease;
+}
 
-/* Modal estilos */
-.modal-content { border-radius: 4px; } /* Estilo más cuadrado/industrial */
-.modal-body { background: #fff; } /* Fondo blanco para que sea más limpio */
+.btn.btn-outline-amarillo:hover {
+    background-color: #c98d00;    /* Fondo mostaza sólido y opaco */
+    color: #ffffff;               /* Letras blancas para máximo contraste */
+    border-color: #c98d00;        
+}
 
-/* Focus gris pizarra (Consolidado) */
+.modal-content { border-radius: 4px; } 
+.modal-body { background: #fff; } 
+
 .form-control:focus,
 .form-select:focus {
     border-color: #6c757d !important; 

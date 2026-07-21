@@ -1,6 +1,6 @@
-    <!-- ============================================== -->
-    <!-- MODAL: REGISTRAR ITEM                          -->
-    <!-- ============================================== -->
+
+        <!-- MODAL DE REGISTRO DINAMICO -->
+
         <!-- Backdrop -->
         <div 
             x-show="showCreateModal" 
@@ -18,99 +18,50 @@
             x-transition
             class="fixed inset-0 z-50 flex items-center justify-center p-3">
 
-            <div class="bg-white shadow-lg overflow-hidden" style="width:100%; max-width:800px; border-radius:12px;">
+            <div class="bg-white shadow-lg overflow-hidden" 
+                style="transition: max-width 0.3s ease; width:100%; border-radius:12px;"
+                :style="modalFormType === 'item' ? 'max-width:800px;' : 'max-width:550px;'">
                 
-                <!-- Header -->
+                <!-- HEADER  -->
                 <div class="d-flex justify-content-between align-items-center px-4 py-3 text-white"
                     style="background: linear-gradient(90deg,#1f252d,#222b35);">
-                    <h5 class="mb-0 fw-bold">Registrar Item</h5>
+                    <h5 class="mb-0 fw-bold" x-text="getModalTitle()"></h5>
                     <button type="button" class="btn-close btn-close-white" @click="showCreateModal = false"></button>
                 </div>
-
-                <!-- Body -->
-                <div class="p-4 bg-light">
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Nombre de Item</label>
-                        <input type="text" class="form-control" x-model="newItem.nombre" placeholder="Ej. Tequila Don Julio 70">
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-semibold">SKU / Código</label>
-                            <input 
-                                type="text" 
-                                x-model="newItem.codigo" 
-                                @input="skuModificadoManualmente = true" 
-                                class="form-control"
-                            >
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Categoría</label>
-                            
-                            <div class="d-flex gap-2">
-                                
-                                <div class="position-relative flex-grow-1" @click.outside="modalOpenCategoryDropdown = false; modalLocalSearch = ''">
-                                    <div class="input-group">
-                                        <input 
-                                            type="text"
-                                            x-model="modalLocalSearch"
-                                            @focus="modalOpenCategoryDropdown = true"
-                                            @input="modalOpenCategoryDropdown = true"
-                                            @keydown.escape="modalOpenCategoryDropdown = false"
-                                            :placeholder="(categories.find(c => c.id === newItem.id_categoria) || {}).name || 'Buscar categoría...'"
-                                            class="form-control"
-                                        >
-                                        <button 
-                                            type="button" 
-                                            @click="modalOpenCategoryDropdown = !modalOpenCategoryDropdown; if(modalOpenCategoryDropdown) $el.previousElementSibling.focus()"
-                                            class="btn btn-outline-secondary px-2"
-                                        >
-                                            ▼
-                                        </button>
-                                    </div>
-
-                                    <div 
-                                        x-show="modalOpenCategoryDropdown" 
-                                        class="dropdown-menu show position-absolute w-100 mt-1 shadow border rounded" 
-                                        style="max-height: 200px; overflow-y: auto; z-index: 1060;" 
-                                        x-cloak>
-                                        
-                                        <template x-for="cat in categories.filter(c => c.id !== 0 && c.name.toLowerCase().includes(modalLocalSearch.toLowerCase()))" :key="cat.id">
-                                            <button 
-                                                type="button" 
-                                                @click="newItem.id_categoria = cat.id; proposeSKU(cat.id); modalOpenCategoryDropdown = false; modalLocalSearch = '';" 
-                                                class="dropdown-item py-2 small" 
-                                                :class="newItem.id_categoria === cat.id ? 'bg-light fw-bold text-dark' : ''">
-                                                <span x-text="cat.code ? cat.code + ' - ' + cat.name : cat.name"></span>
-                                            </button>
-                                        </template>
-
-                                        <div 
-                                            x-show="categories.filter(c => c.id !== 0 && c.name.toLowerCase().includes(modalLocalSearch.toLowerCase())).length === 0" 
-                                            class="px-3 py-2 text-muted small text-center">
-                                            No hay coincidencias
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <button type="button" @click="showCategoryModal = true" class="btn btn-dark px-3 d-flex align-items-center justify-content-center" title="Administrar Categorías">
-                                    <span class="fw-bold fs-5" style="line-height: 1;">+</span>
-                                </button>
-
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Descripción</label>
-                        <textarea rows="4" class="form-control" x-model="newItem.descripcion"></textarea>
-                    </div>
+                
+                <div class="p-4 bg-light text-start">
+                    {% include 'catalog_items/modals/modal_item.html' %}
                 </div>
 
-                <!-- Footer -->
+                <!-- FOOTER  -->
                 <div class="bg-white border-top px-4 py-3 d-flex justify-content-end gap-2">
-                    <button class="btn btn-outline-secondary" @click="showCreateModal = false">Cancelar</button>
-                    <button class="btn btn-dark" @click="submitNewItem()" :disabled="isSubmitting">
+                    
+                    <!-- BOTÓN CANCELAR -->
+                    <button class="btn btn-outline-secondary" 
+                            type="button"
+                            @click="modalFormType !== 'item' ? modalFormType = 'item' : (showCreateModal = false, showEditModal = false)">
+                        Cancelar
+                    </button>
+                    
+                    <!-- BOTÓN GUARDAR -->
+                    <button class="btn btn-dark" 
+                            type="button"
+                            @click="
+                                if (modalFormType === 'brand') {
+                                    procesarFormulario('guardar_marca');
+                                } else if (modalFormType === 'brandCategory') {
+                                    procesarFormulario('guardar_brand_category');
+                                } else if (modalFormType === 'category') {
+                                    procesarFormulario('guardar_category');
+                                } else {
+                                    // Caso por defecto: Ítem (Crear o Editar Básico)
+                                    procesarFormulario(newItem.id ? 'editar_basico' : 'crear');
+                                }
+                            " 
+                            :disabled="isSubmitting">
+                        
                         <span x-show="isSubmitting" class="spinner-border spinner-border-sm me-2"></span>
-                        <span x-text="isSubmitting ? 'Guardando...' : 'Registrar Item'"></span>
+                        <span x-text="getSubmitButtonText()"></span>
                     </button>
                 </div>
 
@@ -148,96 +99,29 @@
 
                 <!-- Body scrollable -->
                 <div class="overflow-y-auto" style="max-height: 70vh;">
-
-                    <!-- Ficha Operativa -->
-                    <div class="p-4 bg-light border-bottom">
-                        <p class="fw-bold text-uppercase text-secondary mb-3" style="font-size:11px; letter-spacing:.08em;">Ficha Operativa (Logística)</p>
-
-                        <div class="row g-3 mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold">Unidad de Medida</label>
-                                <select x-model.number="ficha.unidad" class="form-select">
-                                    <option value="0" disabled>Selecciona...</option>
-                                    <option value="1">Pz</option>
-                                    <option value="2">Kg</option>
-                                    <option value="3">Litro</option>
-                                    <option value="4">Caja</option>
-                                    <option value="5">Paquete</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold">Cont. Empaque</label>
-                                <input type="number" step="0.01" x-model.number="ficha.contenido_empaque" placeholder="1.0" class="form-control">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold">Peso (Kg/gr)</label>
-                                <input type="number" step="0.01" x-model.number="ficha.peso" placeholder="0.0" class="form-control">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold">Rendimiento (%)</label>
-                                <input type="number" step="0.01" x-model.number="ficha.rendimiento" placeholder="100" class="form-control">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Ficha Financiera -->
-                    <div class="p-4 bg-light">
-                        <p class="fw-bold text-uppercase text-secondary mb-3" style="font-size:11px; letter-spacing:.08em;">Ficha Financiera (Precios)</p>
-
-                        <div class="mb-3" style="max-width: 50%;">
-                            <label class="form-label fw-semibold">Tipo de Precio</label>
-                            <select x-model="ficha.tipo_precio" class="form-select">
-                                <option value="">Omitir Precios (Opcional)</option>
-                                <option value="Menudeo">Menudeo</option>
-                                <option value="Mayoreo">Mayoreo</option>
-                            </select>
-                        </div>
-
-                        <div :class="ficha.tipo_precio === '' ? 'opacity-50 pointer-events-none' : ''" class="transition-all">
-                            <div class="row g-3 mb-3 pt-3 border-top">
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">Precio de Venta</label>
-                                    <input type="number" step="0.01" x-model.number="ficha.precio" placeholder="0.00" class="form-control">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">Margen Objetivo (%)</label>
-                                    <input type="number" step="0.01" x-model.number="ficha.utilidad" placeholder="Ej. 35" class="form-control">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">Moneda</label>
-                                    <select x-model="ficha.moneda" class="form-select">
-                                        <option value="MXN">MXN</option>
-                                        <option value="USD">USD</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">Impuesto (IVA)</label>
-                                    <div class="d-flex gap-2">
-                                        <select x-model="ivaType" class="form-select">
-                                            <option value="0.16">16% (Predeterminado)</option>
-                                            <option value="0.00">Exento (0%)</option>
-                                            <option value="custom">Personalizado...</option>
-                                        </select>
-                                        <input
-                                            x-show="ivaType === 'custom'"
-                                            x-cloak
-                                            type="number" step="0.01"
-                                            x-model.number="ficha.tasa_cuota"
-                                            placeholder="0.08"
-                                            class="form-control"
-                                            style="width: 90px;">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    {% include 'catalog_items/modals/modal_ficha.html' %}
                 </div>
+                
 
                 <!-- Footer -->
                 <div class="bg-white border-top px-4 py-3 d-flex justify-content-end gap-2">
-                    <button class="btn btn-outline-secondary" @click="showCompleteModal = false">Cancelar</button>
-                    <button class="btn btn-dark" @click="submitFichaTecnica()" :disabled="isSavingFicha">
+                    <!-- Botón Cancelar -->
+                    <button class="btn btn-outline-secondary" 
+                            type="button" 
+                            @click="showCompleteModal = false">
+                        Cancelar
+                    </button>
+                    
+                    <!-- Botón Guardar Ficha -->
+                    <button class="btn btn-dark" 
+                            type="button" 
+                            @click="procesarFormulario('ficha_tecnica')" 
+                            :disabled="isSavingFicha">
+                        
+                        <!-- Spinner alineado -->
                         <span x-show="isSavingFicha" class="spinner-border spinner-border-sm me-2"></span>
+                        
+                        <!-- Texto dinámico -->
                         <span x-text="isSavingFicha ? 'Guardando...' : 'Guardar Ficha Técnica'"></span>
                     </button>
                 </div>
@@ -246,7 +130,7 @@
         </div>
 
     <!-- ============================================== -->
-    <!-- MODAL: EDITAR DATOS BÁSICOS (ITEM INCOMPLETO)  -->
+    <!-- MODAL: EDITAR DATOS BÁSICOS -->
     <!-- ============================================== -->
         <!-- Backdrop -->
         <div
@@ -265,106 +149,68 @@
             x-transition
             class="fixed inset-0 z-50 flex items-center justify-center p-3">
 
-            <div class="bg-white overflow-hidden" style="width:100%; max-width:650px; border-radius:8px;">
+            <!-- Ancho dinámico -->
+            <div class="bg-white overflow-hidden shadow-lg" 
+                style="transition: max-width 0.3s ease; width:100%; border-radius:8px;"
+                :style="modalFormType === 'item' ? 'max-width:650px;' : 'max-width:550px;'">
 
-                <!-- Header -->
+                <!-- Header Dinámico -->
                 <div class="d-flex justify-content-between align-items-center px-4 py-3 text-white"
                     style="background: linear-gradient(90deg,#1f252d,#222b35);">
                     <h5 class="mb-0 fw-bold">
-                        Editar Datos Básicos: <span class="fw-normal opacity-75" x-text="newItem.nombre"></span>
+                        <span x-text="modalFormType === 'item' ? 'Editar Datos Básicos: ' : 'Crud Marca: '"></span>
+                        <span class="fw-normal opacity-75" x-text="modalFormType === 'item' ? newItem.nombre : newBrand.nombre"></span>
                     </h5>
                     <button type="button" class="btn-close btn-close-white" @click="showEditModal = false"></button>
                 </div>
 
-                <!-- Body -->
-                <div class="p-4 bg-light">
-                    
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Nombre de Item</label>
-                        <input type="text" x-model="newItem.nombre" class="form-control">
-                    </div>
-                    
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">SKU / Código</label>
-                            <input 
-                                type="text" 
-                                x-model="newItem.codigo" 
-                                @input="skuModificadoManualmente = true" 
-                                class="form-control"
-                            >
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Categoría</label>
-                            
-                            <div class="d-flex gap-2">
-                                
-                                <div class="position-relative flex-grow-1" @click.outside="modalOpenCategoryDropdown = false; modalLocalSearch = ''">
-                                    <div class="input-group">
-                                        <input 
-                                            type="text"
-                                            x-model="modalLocalSearch"
-                                            @focus="modalOpenCategoryDropdown = true"
-                                            @input="modalOpenCategoryDropdown = true"
-                                            @keydown.escape="modalOpenCategoryDropdown = false"
-                                            :placeholder="(categories.find(c => c.id === newItem.id_categoria) || {}).name || 'Buscar categoría...'"
-                                            class="form-control"
-                                        >
-                                        <button 
-                                            type="button" 
-                                            @click="modalOpenCategoryDropdown = !modalOpenCategoryDropdown; if(modalOpenCategoryDropdown) $el.previousElementSibling.focus()"
-                                            class="btn btn-outline-secondary px-2"
-                                        >
-                                            ▼
-                                        </button>
-                                    </div>
-
-                                    <div 
-                                        x-show="modalOpenCategoryDropdown" 
-                                        class="dropdown-menu show position-absolute w-100 mt-1 shadow border rounded" 
-                                        style="max-height: 200px; overflow-y: auto; z-index: 1060;" 
-                                        x-cloak>
-                                        
-                                        <template x-for="cat in categories.filter(c => c.id !== 0 && c.name.toLowerCase().includes(modalLocalSearch.toLowerCase()))" :key="cat.id">
-                                            <button 
-                                                type="button" 
-                                                @click="newItem.id_categoria = cat.id; modalOpenCategoryDropdown = false; modalLocalSearch = '';" 
-                                                class="dropdown-item py-2 small" 
-                                                :class="newItem.id_categoria === cat.id ? 'bg-light fw-bold text-dark' : ''">
-                                                <span x-text="cat.code ? cat.code + ' - ' + cat.name : cat.name"></span>
-                                            </button>
-                                        </template>
-
-                                        <div 
-                                            x-show="categories.filter(c => c.id !== 0 && c.name.toLowerCase().includes(modalLocalSearch.toLowerCase())).length === 0" 
-                                            class="px-3 py-2 text-muted small text-center">
-                                            No hay coincidencias
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <button type="button" @click="showCategoryModal = true" class="btn btn-dark px-3 d-flex align-items-center justify-content-center" title="Administrar Categorías">
-                                    <span class="fw-bold fs-5" style="line-height: 1;">+</span>
-                                </button>
-
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div>
-                        <label class="form-label fw-semibold">Descripción</label>
-                        <textarea rows="3" x-model="newItem.descripcion" class="form-control"></textarea>
-                    </div>
-                    
+                <!-- Body Universal -->
+                <div class="p-4 bg-light text-start">
+                    {% include 'catalog_items/modals/modal_item.html' %}
                 </div>
+                    
+                <!-- Footer Dinámico -->
+                <div class="bg-white border-top px-4 py-3 d-flex align-items-center"
+                    :class="modalFormType === 'item' ? 'justify-content-between' : 'justify-content-end'">
 
-                <!-- Footer -->
-                <div class="bg-white border-top px-4 py-3 d-flex justify-content-end gap-2">
-                    <button class="btn btn-outline-secondary" @click="showEditModal = false">Cancelar</button>
-                    <button class="btn btn-dark" @click="submitEdit()" :disabled="isSubmitting">
-                        <span x-show="isSubmitting" class="spinner-border spinner-border-sm me-2"></span>
-                        <span x-text="isSubmitting ? 'Guardando...' : 'Guardar Cambios'"></span>
+                    <!-- Botón Completar Ficha: Exclusivo para Items -->
+                    <button x-show="modalFormType === 'item'"
+                            type="button" 
+                            class="btn btn-outline-amarillo px-4"
+                            @click="showEditModal = false; openCompleteModal(newItem)">
+                        Completar Ficha
                     </button>
+
+                    <!-- Grupo de botones: Cancelar y Guardar -->
+                    <div class="d-flex gap-2">
+                        <!-- BOTÓN CANCELAR -->
+                        <button class="btn btn-outline-secondary" 
+                                type="button"
+                                @click="modalFormType === 'brand' && newItem.nombre !== '' ? modalFormType = 'item' : (showCreateModal = false, showEditModal = false)">
+                            Cancelar
+                        </button>
+                        
+                        <!-- BOTÓN GUARDAR (Dinámico) -->
+                        <button class="btn btn-dark" 
+                                type="button"
+                                @click="
+                                    if (modalFormType === 'brand') {
+                                        procesarFormulario('guardar_marca');
+                                    } else if (modalFormType === 'brandCategory') {
+                                        procesarFormulario('guardar_brand_category');
+                                    } else if (modalFormType === 'category') {
+                                        procesarFormulario('guardar_category');
+                                    } else {
+                                        // Caso por defecto: Ítem (Crear o Editar Básico)
+                                        procesarFormulario(newItem.id ? 'editar_basico' : 'crear');
+                                    }
+                                " 
+                                :disabled="isSubmitting">
+                            
+                            <span x-show="isSubmitting" class="spinner-border spinner-border-sm me-2"></span>
+                            <span x-text="getSubmitButtonText()"></span>
+                        </button>
+                    </div>
                 </div>
 
             </div>
@@ -399,174 +245,52 @@
                     <button type="button" class="btn-close btn-close-white" @click="showEditAllModal = false"></button>
                 </div>
 
+         
+                
                 <div class="overflow-y-auto" style="max-height: 75vh;">
-
                     <div class="p-4 bg-light border-bottom">
-                        <p class="fw-bold text-uppercase text-secondary mb-3" style="font-size:11px; letter-spacing:.08em;">Datos Generales</p>
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Nombre de Item</label>
-                            <input type="text" x-model="newItem.nombre" class="form-control">
-                        </div>
-                        <div class="row g-3 mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold">SKU / Código</label>
-                                <input 
-                                    type="text" 
-                                    x-model="newItem.codigo" 
-                                    @input="skuModificadoManualmente = true" 
-                                    class="form-control"
-                                >
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold">Categoría</label>
-                                
-                                <div class="d-flex gap-2">
-                                    
-                                    <div class="position-relative flex-grow-1" @click.outside="modalOpenCategoryDropdown = false; modalLocalSearch = ''">
-                                        <div class="input-group">
-                                            <input 
-                                                type="text"
-                                                x-model="modalLocalSearch"
-                                                @focus="modalOpenCategoryDropdown = true"
-                                                @input="modalOpenCategoryDropdown = true"
-                                                @keydown.escape="modalOpenCategoryDropdown = false"
-                                                :placeholder="(categories.find(c => c.id === newItem.id_categoria) || {}).name || 'Buscar categoría...'"
-                                                class="form-control"
-                                            >
-                                            <button 
-                                                type="button" 
-                                                @click="modalOpenCategoryDropdown = !modalOpenCategoryDropdown; if(modalOpenCategoryDropdown) $el.previousElementSibling.focus()"
-                                                class="btn btn-outline-secondary px-2"
-                                            >
-                                                ▼
-                                            </button>
-                                        </div>
-
-                                        <div 
-                                            x-show="modalOpenCategoryDropdown" 
-                                            class="dropdown-menu show position-absolute w-100 mt-1 shadow border rounded" 
-                                            style="max-height: 200px; overflow-y: auto; z-index: 1060;" 
-                                            x-cloak>
-                                            
-                                            <template x-for="cat in categories.filter(c => c.id !== 0 && c.name.toLowerCase().includes(modalLocalSearch.toLowerCase()))" :key="cat.id">
-                                                <button 
-                                                    type="button" 
-                                                    @click="newItem.id_categoria = cat.id; modalOpenCategoryDropdown = false; modalLocalSearch = '';" 
-                                                    class="dropdown-item py-2 small" 
-                                                    :class="newItem.id_categoria === cat.id ? 'bg-light fw-bold text-dark' : ''">
-                                                    <span x-text="cat.code ? cat.code + ' - ' + cat.name : cat.name"></span>
-                                                </button>
-                                            </template>
-
-                                            <div 
-                                                x-show="categories.filter(c => c.id !== 0 && c.name.toLowerCase().includes(modalLocalSearch.toLowerCase())).length === 0" 
-                                                class="px-3 py-2 text-muted small text-center">
-                                                No hay coincidencias
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <button type="button" @click="showCategoryModal = true" class="btn btn-dark px-3 d-flex align-items-center justify-content-center" title="Administrar Categorías">
-                                        <span class="fw-bold fs-5" style="line-height: 1;">+</span>
-                                    </button>
-
-                                </div>
-                            </div>
-                            
-                        </div>
-                        <div>
-                            <label class="form-label fw-semibold">Descripción</label>
-                            <textarea rows="2" x-model="newItem.descripcion" class="form-control"></textarea>
-                        </div>
+                        {% include 'catalog_items/modals/modal_item.html' %}
                     </div>
-
-                    <div class="p-4 bg-light border-bottom">
-                        <p class="fw-bold text-uppercase text-secondary mb-3" style="font-size:11px; letter-spacing:.08em;">Ficha Operativa (Logística)</p>
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold">Unidad de Medida</label>
-                                <select x-model.number="ficha.unidad" class="form-select">
-                                    <option value="0" disabled>Selecciona...</option>
-                                    <option value="1">Pz</option>
-                                    <option value="2">Kg</option>
-                                    <option value="3">Litro</option>
-                                    <option value="4">Caja</option>
-                                    <option value="5">Paquete</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold">Cont. Empaque</label>
-                                <input type="number" step="0.01" x-model.number="ficha.contenido_empaque" class="form-control">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold">Peso (Kg/gr)</label>
-                                <input type="number" step="0.01" x-model.number="ficha.peso" class="form-control">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold">Rendimiento (%)</label>
-                                <input type="number" step="0.01" x-model.number="ficha.rendimiento" class="form-control">
-                            </div>
-                        </div>
-                    </div>
-
                     <div class="p-4 bg-light">
-                        <p class="fw-bold text-uppercase text-secondary mb-3" style="font-size:11px; letter-spacing:.08em;">Ficha Financiera (Precios)</p>
-
-                        <div class="mb-3" style="max-width: 50%;">
-                            <label class="form-label fw-semibold">Tipo de Precio</label>
-                            <select x-model="ficha.tipo_precio" class="form-select">
-                                <option value="">Omitir Precios (Opcional)</option>
-                                <option value="Menudeo">Menudeo</option>
-                                <option value="Mayoreo">Mayoreo</option>
-                            </select>
-                        </div>
-
-                        <div :class="ficha.tipo_precio === '' ? 'opacity-50 pointer-events-none' : ''" class="transition-all">
-                            <div class="row g-3 pt-3 border-top">
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">Precio de Venta</label>
-                                    <input type="number" step="0.01" x-model.number="ficha.precio" class="form-control">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">Margen Objetivo (%)</label>
-                                    <input type="number" step="0.01" x-model.number="ficha.utilidad" class="form-control">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">Moneda</label>
-                                    <select x-model="ficha.moneda" class="form-select">
-                                        <option value="MXN">MXN</option>
-                                        <option value="USD">USD</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">Impuesto (IVA)</label>
-                                    <div class="d-flex gap-2">
-                                        <select x-model="ivaType" class="form-select">
-                                            <option value="0.16">16% (Predeterminado)</option>
-                                            <option value="0.00">Exento (0%)</option>
-                                            <option value="custom">Personalizado...</option>
-                                        </select>
-                                        <input
-                                            x-show="ivaType === 'custom'"
-                                            x-cloak
-                                            type="number" step="0.01"
-                                            x-model.number="ficha.tasa_cuota"
-                                            placeholder="0.08"
-                                            class="form-control"
-                                            style="width: 90px;">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        {% include 'catalog_items/modals/modal_ficha.html' %}
                     </div>
                 </div>
+               
 
-                <div class="bg-white border-top px-4 py-3 d-flex justify-content-end gap-2">
-                    <button class="btn btn-outline-secondary" @click="showEditAllModal = false">Cancelar</button>
-                    <button class="btn btn-dark" @click="submitEditAll()" :disabled="isEditingAll">
-                        <span x-show="isEditingAll" class="spinner-border spinner-border-sm me-2"></span>
-                        <span x-text="isEditingAll ? 'Guardando Cambios...' : 'Guardar Cambios'"></span>
-                    </button>
+                <div class="bg-white border-top px-4 py-3 d-flex align-items-center"
+                    :class="modalFormType === 'item' ? 'justify-content-between' : 'justify-content-end'">
+
+                   
+                    <!-- Cancelar y Guardar -->
+                    <div class="d-flex gap-2">
+                        <!-- BOTÓN CANCELAR -->
+                        <button class="btn btn-outline-secondary" 
+                                type="button"
+                                @click="modalFormType !== 'item' ? modalFormType = 'item' : showEditAllModal = false">
+                            Cancelar
+                        </button>
+                        
+                        <!-- BOTÓN GUARDAR -->
+                        <button class="btn btn-dark" 
+                                type="button"
+                                @click="
+                                    if (modalFormType === 'brand') {
+                                        procesarFormulario('guardar_marca');
+                                    } else if (modalFormType === 'brandCategory') {
+                                        procesarFormulario('guardar_brand_category');
+                                    } else if (modalFormType === 'category') {
+                                        procesarFormulario('guardar_category');
+                                    } else {
+                                        // Caso por defecto para este modal: Editar Todo
+                                        procesarFormulario('editar_todo');
+                                    }
+                                " 
+                                :disabled="isEditingAll || isSubmitting">
+                            
+                            <span x-show="isEditingAll || isSubmitting" class="spinner-border spinner-border-sm me-2"></span>
+                            <span x-text="(isEditingAll || isSubmitting) ? 'Guardando...' : (modalFormType === 'item' ? 'Guardar Cambios' : getSubmitButtonText())"></span>
+                        </button>
+                    </div>
                 </div>
 
             </div>
@@ -714,16 +438,16 @@
     <!-- ============================================== -->   
 
         <div
-            x-show="showCategoryModal"
+            x-show="showCrudModal"
             x-cloak
             x-transition.opacity
-            @click="showCategoryModal = false"
+            @click="showCrudModal = false"
             class="fixed inset-0" 
             style="background: rgba(0,0,0,.6); z-index: 1055;">
         </div>
 
         <div
-            x-show="showCategoryModal"
+            x-show="showCrudModal"
             x-cloak
             x-transition
             class="fixed inset-0 flex items-center justify-center p-3"
@@ -732,21 +456,21 @@
             <div class="bg-white overflow-hidden shadow-lg d-flex flex-column" style="width:100%; max-width:1000px; border-radius:8px; max-height: 85vh;">
                 
                 <div class="d-flex justify-content-between align-items-center px-4 py-3 border-bottom bg-dark text-white">
-                    <h6 class="mb-0 fw-bold">Administrar Categorías</h6>
-                    <button @click="showCategoryModal = false" class="btn-close btn-close-white" aria-label="Close"></button>
+                    <h6 class="mb-0 fw-bold" x-text="crudTitle">Administrar Registros</h6>
+                    <button @click="showCrudModal = false" class="btn-close btn-close-white" aria-label="Close"></button>
                 </div>
 
                 <div class="p-4 overflow-auto flex-grow-1">
                     
                     <div class="row g-2 mb-4">
-                        <div class="col-sm-3">
-                            <input type="text" x-model="newCategoryCode" class="form-control" placeholder="Código">
+                        <div class="col-sm-3" x-show="crudShowCode">
+                            <input type="text" x-model="crudNewCode" class="form-control" placeholder="Código">
                         </div>
-                        <div class="col-sm-7">
-                            <input type="text" x-model="newCategoryName" class="form-control" placeholder="Nombre de la nueva categoría...">
+                        <div :class="crudShowCode ? 'col-sm-7' : 'col-sm-10'">
+                            <input type="text" x-model="crudNewName" class="form-control" :placeholder="crudPlaceholder">
                         </div>
                         <div class="col-sm-2 d-grid">
-                            <button class="btn btn-primary" @click="saveCategory()">
+                            <button type="button" class="btn btn-primary" @click="saveCrudItem()">
                                 <i class="bi bi-plus-lg me-1"></i> Agregar
                             </button>
                         </div>
@@ -757,37 +481,37 @@
                             <thead class="table-light">
                                 <tr>
                                     <th class="px-3 py-2" style="width: 80px;">ID</th>
-                                    <th class="px-3 py-2" style="width: 150px;">Código</th>
-                                    <th class="px-3 py-2">Nombre de Categoría</th>
+                                    <th class="px-3 py-2" style="width: 150px;" x-show="crudShowCode">Código</th>
+                                    <th class="px-3 py-2" x-text="crudNameLabel">Nombre</th>
                                     <th class="px-3 py-2 text-end" style="width: 180px;">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <template x-for="cat in categories.filter(c => c.id !== 0)" :key="cat.id">
+                                <template x-for="item in crudItems.filter(i => i.id !== 0)" :key="item.id">
                                     <tr>
-                                        <td class="px-3 text-secondary" x-text="cat.id"></td>
+                                        <td class="px-3 text-secondary" x-text="item.id"></td>
                                         
-                                        <td class="px-3">
-                                            <span x-show="editingCategoryId !== cat.id" class="badge bg-secondary" x-text="cat.code"></span>
-                                            <div x-show="editingCategoryId === cat.id" style="display: none;">
+                                        <td class="px-3" x-show="crudShowCode">
+                                            <span x-show="crudEditingId !== item.id" class="badge bg-secondary" x-text="item.code"></span>
+                                            <div x-show="crudEditingId === item.id" style="display: none;">
                                                 <input 
                                                     type="text" 
-                                                    x-model="inlineEditCode" 
-                                                    @keyup.enter="saveInlineCategory(cat)"
-                                                    @keyup.escape="cancelEdit()"
+                                                    x-model="crudInlineCode" 
+                                                    @keyup.enter="saveInlineCrud(item)"
+                                                    @keyup.escape="cancelCrudEdit()"
                                                     class="form-control form-control-sm border-primary"
                                                 >
                                             </div>
                                         </td>
 
                                         <td class="px-3 fw-medium">
-                                            <span x-show="editingCategoryId !== cat.id" x-text="cat.name"></span>
-                                            <div x-show="editingCategoryId === cat.id" style="display: none;">
+                                            <span x-show="crudEditingId !== item.id" x-text="item.name"></span>
+                                            <div x-show="crudEditingId === item.id" style="display: none;">
                                                 <input 
                                                     type="text" 
-                                                    x-model="inlineEditName" 
-                                                    @keyup.enter="saveInlineCategory(cat)"
-                                                    @keyup.escape="cancelEdit()"
+                                                    x-model="crudInlineName" 
+                                                    @keyup.enter="saveInlineCrud(item)"
+                                                    @keyup.escape="cancelCrudEdit()"
                                                     class="form-control form-control-sm border-primary shadow-sm"
                                                 >
                                                 <small class="text-muted d-block mt-1" style="font-size: 11px;">
@@ -797,16 +521,16 @@
                                         </td>
                                         
                                         <td class="px-3 text-end">
-                                            <div x-show="editingCategoryId !== cat.id">
-                                                <button @click="editCategory(cat)" class="btn btn-sm btn-outline-primary opacity-75 px-2" title="Editar">
+                                            <div x-show="crudEditingId !== item.id">
+                                                <button @click="editCrudItem(item)" class="btn btn-sm btn-outline-primary opacity-75 px-2" title="Editar">
                                                     Editar
                                                 </button>
-                                                <button @click="deleteCategory(cat.id)" class="btn btn-sm btn-outline-danger opacity-75 px-2" title="Eliminar">
+                                                <button @click="deleteCrudItem(item.id)" class="btn btn-sm btn-outline-danger opacity-75 px-2" title="Eliminar">
                                                     Eliminar
                                                 </button>
                                             </div>
-                                            <div x-show="editingCategoryId === cat.id" style="display: none;">
-                                                <button @click="cancelEdit()" class="btn btn-sm btn-outline-secondary opacity-75 px-2" title="Cancelar">
+                                            <div x-show="crudEditingId === item.id" style="display: none;">
+                                                <button @click="cancelCrudEdit()" class="btn btn-sm btn-outline-secondary opacity-75 px-2" title="Cancelar">
                                                     Cancelar
                                                 </button>
                                             </div>
@@ -820,11 +544,11 @@
                 </div>
 
                 <div class="px-4 py-3 border-top bg-light text-end">
-                    <button @click="showCategoryModal = false" class="btn btn-secondary px-4">
+                    <button @click="showCrudModal = false" class="btn btn-secondary px-4">
                         Cerrar
                     </button>
                 </div>
 
             </div>
         </div>
-        
+                

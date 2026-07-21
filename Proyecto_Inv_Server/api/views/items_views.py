@@ -12,6 +12,11 @@ from rest_framework.permissions import IsAuthenticated
 
 from xhtml2pdf import pisa
 
+
+
+
+
+
 from ..utils.pagination import get_sp_pagination_params,respond_paginated_sp
 from api.utils.item_utils import generar_codigo_barras_bytes
 #? API del panel de vinculación de items y facturas
@@ -253,8 +258,10 @@ def get_dashboard_detail(request):
 def get_items(request):
     if request.method == 'GET':
         search = request.GET.get('search', '')
-        try: category_id = int(request.GET.get('category_id', 0))
-        except ValueError: category_id = 0
+        try: 
+            category_id = int(request.GET.get('category_id', 0))
+        except ValueError: 
+            category_id = 0
 
         page, limit, offset = get_sp_pagination_params(request, default_limit=10)
 
@@ -266,7 +273,9 @@ def get_items(request):
                 results = [dict(zip(columns, row)) for row in cursor.fetchall()]
                 
                 for item in results:
-                    item['isComplete'] = bool(item['isComplete'])
+                    item['isComplete'] = bool(item.get('isComplete', 0))
+                    item['id_brand'] = int(item.get('id_brand', 0))
+                    item['descripcion'] = item.get('descripcion', '')
 
             return respond_paginated_sp(page, limit, results)
 
@@ -317,19 +326,20 @@ def get_pending_count(request):
 @api_view(['POST']) 
 @permission_classes([IsAuthenticated])
 def set_insert_item(request):
-    item_id = int(request.data.get('id', 0))
-    nombre = request.data.get('nombre', '')
-    codigo = request.data.get('codigo', '')
-    id_categoria = int(request.data.get('id_categoria', 0))
-    descripcion = request.data.get('descripcion', '')
+    item_id = int(request.data.get('id') or 0)
+    nombre = request.data.get('nombre') or ''
+    codigo = request.data.get('codigo') or ''
+    id_categoria = int(request.data.get('id_categoria') or 0)
+    id_brand = int(request.data.get('id_brand') or 1)
+    descripcion = request.data.get('descripcion') or ''
 
     if not nombre.strip():
         return Response({"error": "El nombre del ítem es obligatorio."}, status=400)
 
     try:
         with connection.cursor() as cursor:
-            cursor.execute("CALL sp_insert_item(%s, %s, %s, %s, %s)", 
-                           [item_id, nombre, codigo, id_categoria, descripcion])
+            cursor.execute("CALL sp_insert_item(%s, %s, %s, %s, %s, %s)", 
+                           [item_id, nombre, codigo, id_categoria, id_brand, descripcion])
             
             columns = [col[0] for col in cursor.description]
             row = cursor.fetchone()
@@ -506,3 +516,102 @@ def set_save_category(request):
 
 
 
+#* APIS RELACIONADAS A BRANDS (MARCAS)
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_brands(request):
+    search_term = request.GET.get('search', '').strip()
+    
+    try:
+        with connection.cursor() as cursor:
+            cursor.callproc('sp_get_brands', [search_term])
+            
+            brands = [
+                {
+                    "id": row[0], 
+                    "brand_category_id": row[1],
+                    "name": row[2],
+                    "descripcion": row[3]
+                } 
+                for row in cursor.fetchall()
+            ]
+
+        return JsonResponse({
+            "status": "success", 
+            "brands": brands
+        })
+        
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_brands_categories(request):
+    search_term = request.GET.get('search', '').strip()
+    
+    try:
+        with connection.cursor() as cursor:
+            cursor.callproc('sp_get_categories_brands', [search_term])
+            
+            categories = [
+                {
+                    "id": row[0], 
+                    "name": row[1]
+                } 
+                for row in cursor.fetchall()
+            ]
+
+        return JsonResponse({
+            "status": "success", 
+            "brandCategories": categories
+        })
+        
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def set_brand(request):
+    try:
+        data = request.data
+        
+        brand_id = data.get('id') or None 
+        brandcategorie_id = data.get('id_brandcategory')
+        name = data.get('nombre')
+        description = data.get('descripcion', '')
+        is_active = data.get('is_active', 1)
+
+        if not name or not brandcategorie_id:
+            return JsonResponse({"status": "error", "message": "El nombre y la categoría son obligatorios"}, status=400)
+
+        with connection.cursor() as cursor:
+            cursor.callproc('sp_save_brands', [brand_id, brandcategorie_id, name, description, is_active])
+        
+        return JsonResponse({"status": "success", "message": "Marca guardada correctamente"})
+    
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def set_brand_category(request):
+    try:
+        data = request.data
+        
+        brandcategorie_id = data.get('brandcategorie_id') or None
+        name = data.get('name')
+        is_active = data.get('is_active', 1)
+
+        if not name:
+            return JsonResponse({"status": "error", "message": "El nombre de la categoría es obligatorio"}, status=400)
+
+        with connection.cursor() as cursor:
+            cursor.callproc('sp_save_brands_categories', [brandcategorie_id, name, is_active])
+        
+        return JsonResponse({"status": "success", "message": "Categoría de marca guardada correctamente"})
+    
+    except Exception as e:
+        print(f" ERROR EN LA BASE DE DATOS: {str(e)}") 
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)

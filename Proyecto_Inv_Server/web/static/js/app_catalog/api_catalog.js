@@ -15,6 +15,9 @@ function getCookie(name) {
     return cookieValue;
 }
 
+//? GETTERS
+
+//* --- ITEMS ---
 export async function fetchCatalogItems(filters = {}, page = 1, signal) {
     const params = new URLSearchParams({ 
         page: page 
@@ -62,7 +65,50 @@ export async function fetchPendingCount(signal) {
     return await fetchData(url, signal);
 }
 
+//* --- BRANDS ---
+export async function fetchBrands(searchTerm = '', signal) {
+    const query = encodeURIComponent(searchTerm);
+    const url = `/api/items/get-brands/?search=${query}`;
+    return await fetchData(url, signal);
+}
 
+export async function fetchBrandCategories(searchTerm = '', signal) {
+    const query = encodeURIComponent(searchTerm);
+    const url = `/api/items/get-brands-categories/?search=${query}`;
+    return await fetchData(url, signal);
+}
+
+//* --- BARCODES ---
+  
+export async function fetchBarcodeImage(codigo) {
+    try {
+        const response = await fetch(`/api/items/get-barcode/?codigo=${codigo}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken'),
+            },
+
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error ${response.status}: No se pudo generar el código`);
+        }
+
+        const blob = await response.blob();
+        return blob;
+
+    } catch (error) {
+        console.error("Error en fetchBarcodeImage:", error);
+        throw error; 
+    }
+}
+
+
+
+//? SETTERS
+
+//* --- ITEMS ---
 export async function createItem(itemData) {
     const url = `/api/items/set-insert-item/`; 
     
@@ -87,7 +133,6 @@ export async function createItem(itemData) {
         return { error: "Error de conexión con el servidor" };
     }
 }
-
 
 export async function saveFichaTecnica(fichaData) {
     const url = `/api/items/set-complete-item/`; 
@@ -114,7 +159,6 @@ export async function saveFichaTecnica(fichaData) {
     }
 }
 
-
 export async function deleteItemAPI(itemId) {
     try {
         const csrftoken = getCookie('csrftoken');
@@ -132,7 +176,6 @@ export async function deleteItemAPI(itemId) {
         return { status: 'error' };
     }
 }
-
 
 export async function setCategoryItem(payload) {
     const url = `/api/items/set-category/`;
@@ -161,26 +204,47 @@ export async function setCategoryItem(payload) {
     }
 }
 
-export async function fetchBarcodeImage(codigo) {
-    try {
-        const response = await fetch(`/api/items/get-barcode/?codigo=${codigo}`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCookie('csrftoken'),
-            },
-
-        });
-
-        if (!response.ok) {
-            throw new Error(`Error ${response.status}: No se pudo generar el código`);
-        }
-
-        const blob = await response.blob();
-        return blob;
-
-    } catch (error) {
-        console.error("Error en fetchBarcodeImage:", error);
-        throw error; 
-    }
+//* --- BRANDS ---
+/**
+ * @param {Object} brandData 
+ */
+export async function saveBrand(brandData, signal) {
+    const url = '/api/items/set-brand/';
+    
+    if (typeof fetchDataWithConfig === 'function') {
+        return await fetchDataWithConfig(url, { method: 'POST', body: brandData, signal });
+    } Southern:
+    
+    return await fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken') 
+        },
+        body: JSON.stringify(brandData),
+        signal
+    }).then(res => res.json());
 }
+
+/**
+ * @param {Object} categoryData 
+ */
+export async function saveBrandCategory(categoryData, signal) {
+    const url = '/api/items/set-brand-category/';
+    
+    return await fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken') 
+        },
+        body: JSON.stringify(categoryData),
+        signal
+    }).then(res => res.json());
+}
+
+
+
+
+
+

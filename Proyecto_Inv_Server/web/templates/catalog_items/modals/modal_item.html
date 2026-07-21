@@ -1,0 +1,152 @@
+                    <!-- COMPONENTE: NOMBRE (Universal) -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" x-text="getNombreLabel()"></label>
+                        <input x-show="modalFormType === 'item'" type="text" x-model="newItem.nombre" class="form-control" :placeholder="getPlaceholderText()">
+                        <input x-show="modalFormType === 'brand'" type="text" x-model="newBrand.nombre" class="form-control" :placeholder="getPlaceholderText()">
+                    </div>
+
+                    <!-- COMPONENTES: SKU Y CATEGORÍAS (Híbrido) -->
+                    <div class="row g-3 mb-3">
+                        
+                        <!-- Columna: SKU (Solo Item) -->
+                        <div class="col-md-6" x-show="modalFormType === 'item'">
+                            <label class="form-label fw-semibold">SKU / Código</label>
+                            <input type="text" x-model="newItem.codigo" @input="skuModificadoManualmente = true" class="form-control">
+                        </div>
+                        
+                        <!-- Columna: Categoría de Item (Solo Item) -->
+                        <div class="col-md-6" x-show="modalFormType === 'item'">
+                            <label class="form-label fw-semibold">Categoría</label>
+                            <div class="d-flex gap-2">
+                                <div class="position-relative flex-grow-1" @click.outside="cerrarDropdown('categoria')">
+                                    <div class="input-group">
+                                        <input type="text" x-model="modalLocalSearch" @focus="modalOpenCategoryDropdown = true" @input="modalOpenCategoryDropdown = true; debounceBuscador('categoria', $event.target.value)" @keydown.escape="cerrarDropdown('categoria')" :placeholder="(categories.find(c => c.id === newItem.id_categoria) || {}).name || 'Buscar categoría...'" class="form-control">
+                                        <button type="button" @click="modalOpenCategoryDropdown = !modalOpenCategoryDropdown; if(modalOpenCategoryDropdown) $el.previousElementSibling.focus()" class="btn btn-outline-secondary px-2">▼</button>
+                                    </div>
+                                    <div x-show="modalOpenCategoryDropdown" class="dropdown-menu show position-absolute w-100 mt-1 shadow border rounded" style="max-height: 200px; overflow-y: auto; z-index: 1060;" x-cloak>
+                                        <template x-for="cat in categories" :key="cat.id">
+                                            <button type="button" @click="seleccionarDropdown('categoria', cat.id)" class="dropdown-item py-2 small" :class="newItem.id_categoria === cat.id ? 'bg-light fw-bold text-dark' : ''">
+                                                <span x-text="cat.code ? cat.code + ' - ' + cat.name : cat.name"></span>
+                                            </button>
+                                        </template>
+                                    </div>
+                                </div>
+                                
+                                <!-- BOTÓN EDITAR CATEGORÍA -->
+                                <button type="button" 
+                                        x-show="newItem.id_categoria"
+                                        @click="
+                                            openCrud('category'); 
+                                            $nextTick(() => {
+                                                const cat = categories.find(c => c.id == newItem.id_categoria);
+                                                if(cat) editCrudItem(cat);
+                                            });
+                                        " |
+                                        class="btn btn-outline-secondary px-3 d-flex align-items-center justify-content-center" 
+                                        title="Editar Categoría Seleccionada">
+                                    <span class="fw-bold fs-5" style="line-height: 1;">✎</span>
+                                </button>
+
+                                <!-- BOTÓN NUEVA CATEGORÍA -->
+                                <button type="button" 
+                                        @click="openCrud('category')" 
+                                        class="btn btn-dark px-3 d-flex align-items-center justify-content-center" 
+                                        title="Administrar Categorías">
+                                    <span class="fw-bold fs-5" style="line-height: 1;">+</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Columna: Categoría de Marca (Solo Marca) -->
+                        <div class="col-12" x-show="modalFormType === 'brand'">
+                            <label class="form-label fw-semibold">Categoría de Marca</label>
+                            <div class="d-flex gap-2">
+                                <div class="position-relative flex-grow-1" @click.outside="cerrarDropdown('categoria_marca')">
+                                    <div class="input-group">
+                                        <input type="text" x-model="modalLocalSearchBrandCat" @focus="modalOpenBrandCatDropdown = true" @input="modalOpenBrandCatDropdown = true; debounceBuscador('categoria_marca', $event.target.value)" @keydown.escape="cerrarDropdown('categoria_marca')" :placeholder="(brandCategories.find(bc => bc.id == newBrand.id_brandcategory) || {}).name || 'Buscar categoría de marca...'" class="form-control">
+                                        <button type="button" @click="modalOpenBrandCatDropdown = !modalOpenBrandCatDropdown; if(modalOpenBrandCatDropdown) $el.previousElementSibling.focus()" class="btn btn-outline-secondary px-2">▼</button>
+                                    </div>
+                                    <div x-show="modalOpenBrandCatDropdown" class="dropdown-menu show position-absolute w-100 mt-1 shadow border rounded" style="max-height: 200px; overflow-y: auto; z-index: 1070;" x-cloak>
+                                        <template x-for="bcat in brandCategories" :key="bcat.id">
+                                            <button type="button" @click="seleccionarDropdown('categoria_marca', bcat.id)" class="dropdown-item py-2 small" :class="newBrand.id_brandcategory == bcat.id ? 'bg-light fw-bold text-dark' : ''">
+                                                <span x-text="bcat.name"></span>
+                                            </button>
+                                        </template>
+                                    </div>
+                                </div>
+                                
+                                <!-- BOTÓN EDITAR CATEGORÍA DE MARCA -->
+                                <button type="button" 
+                                        x-show="newBrand.id_brandcategory"
+                                        @click="
+                                            openCrud('brandCategory'); 
+                                            $nextTick(() => {
+                                                const bcat = brandCategories.find(bc => bc.id == newBrand.id_brandcategory);
+                                                if(bcat) editCrudItem(bcat);
+                                            });
+                                        " 
+                                        class="btn btn-outline-secondary px-3 d-flex align-items-center justify-content-center" 
+                                        title="Editar Categoría de Marca">
+                                    <span class="fw-bold fs-5" style="line-height: 1;">✎</span>
+                                </button>
+
+                                <!-- BOTÓN NUEVA CATEGORÍA DE MARCA -->
+                                <button type="button" 
+                                        @click="openCrud('brandCategory')" 
+                                        class="btn btn-dark px-3 d-flex align-items-center justify-content-center" 
+                                        title="Administrar Categorías de Marca">
+                                    <span class="fw-bold fs-5" style="line-height: 1;">+</span>
+                                </button>
+                            </div>
+                        </div>
+                        
+                    </div>
+
+                    <!--  MARCA (Solo Item) -->
+                    <div class="row g-3 mb-3" x-show="modalFormType === 'item'">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Marca</label>
+                            <div class="d-flex gap-2">
+                                <div class="position-relative flex-grow-1" @click.outside="cerrarDropdown('marca')">
+                                    <div class="input-group">
+                                        <input type="text" x-model="modalLocalSearchBrand" @focus="modalOpenBrandDropdown = true" @input="modalOpenBrandDropdown = true; debounceBuscador('marca', $event.target.value)" @keydown.escape="cerrarDropdown('marca')" :placeholder="(brands.find(b => b.id === newItem.id_brand) || {}).name || 'Buscar marca...'" class="form-control">
+                                        <button type="button" @click="modalOpenBrandDropdown = !modalOpenBrandDropdown; if(modalOpenBrandDropdown) $el.previousElementSibling.focus()" class="btn btn-outline-secondary px-2">▼</button>
+                                    </div>
+                                    <div x-show="modalOpenBrandDropdown" class="dropdown-menu show position-absolute w-100 mt-1 shadow border rounded" style="max-height: 200px; overflow-y: auto; z-index: 1060;" x-cloak>
+                                        <template x-for="brand in brands" :key="brand.id">
+                                            <button type="button" 
+                                                    @click="seleccionarDropdown('marca', brand.id)" 
+                                                    class="dropdown-item py-2 small" 
+                                                    :class="newItem.id_brand === brand.id ? 'bg-light fw-bold text-dark' : ''">
+                                                <span x-text="brand.name"></span>
+                                            </button>
+                                        </template>
+                                    </div>
+                                </div>
+                                
+                                <!-- BOTÓN EDITAR MARCA -->
+                                <button type="button" 
+                                        x-show="newItem.id_brand"
+                                        @click="openEditModal(brands.find(b => b.id == newItem.id_brand || b.brand_id == newItem.id_brand), 'brand')" 
+                                        class="btn btn-outline-secondary px-3 d-flex align-items-center justify-content-center" 
+                                        title="Editar Marca Seleccionada">
+                                    <span class="fw-bold fs-5" style="line-height: 1;">✎</span>
+                                </button>
+
+                                <!-- BOTÓN NUEVA MARCA -->
+                                <button type="button" 
+                                        @click="abrirModalRegistro('brand')" 
+                                        class="btn btn-dark px-3 d-flex align-items-center justify-content-center" 
+                                        title="Nueva Marca">
+                                    <span class="fw-bold fs-5" style="line-height: 1;">+</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- DESCRIPCIÓN (Universal) -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Descripción</label>
+                        <textarea x-show="modalFormType === 'item'" rows="3" x-model="newItem.descripcion" class="form-control"></textarea>
+                        <textarea x-show="modalFormType === 'brand'" rows="3" x-model="newBrand.descripcion" class="form-control"></textarea>
+                    </div>

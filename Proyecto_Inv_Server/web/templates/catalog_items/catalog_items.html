@@ -30,7 +30,7 @@
                     </button>
                     
                     <!-- Botón NUEVO ITEM -->
-                    <button @click="showCreateModal = true" class="btn btn-secondary btn-sm rounded-2 border-0 shadow-sm fw-bold px-3 py-2 btn-fluido">
+                    <button @click="abrirModalRegistro('item')" class="btn btn-secondary btn-sm rounded-2 border-0 shadow-sm fw-bold px-3 py-2 btn-fluido">
                         + NUEVO ITEM
                     </button>
                     
@@ -187,9 +187,7 @@
                                         
                                         <template x-if="!item.isComplete">
                                             <div class="d-flex gap-2">
-                                                <button @click="openCompleteModal(item)" class="btn btn-sm btn-outline-secondary opacity-75 px-3">
-                                                    Completar Ficha
-                                                </button>
+                                             
                                                 <button @click="openEditModal(item)" class="btn btn-sm btn-outline-primary opacity-75 px-3">
                                                     Editar
                                                 </button>

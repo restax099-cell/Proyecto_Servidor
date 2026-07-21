@@ -13,6 +13,11 @@ urlpatterns = [
     path('deactivate-item/', items_views.set_deactivate_item, name='set_deactivate_item'),
     path('get-barcode/', items_views.get_barcode_image, name='get_barcode_image'),
     path('set-category/', items_views.set_save_category, name='set_save_category'),
+    path('get-brands/', items_views.get_brands, name='get_brands'),
+    path('get-brands-categories/', items_views.get_brands_categories, name='get_brands_categories'),
+    path('set-brand/', items_views.set_brand, name='set_brand'),
+    path('set-brand-category/', items_views.set_brand_category, name='set_brand_category'),
+
     
     # ==========================================
     #  CREACIÓN Y EDICIÓN DE ÍTEMS Y FICHAS
