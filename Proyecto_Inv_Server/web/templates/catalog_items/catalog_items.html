@@ -230,6 +230,11 @@
 {% endblock %}
 
 {% block extra_scripts %}
-    <script type="module" src="{% static 'js/app_catalog/app_catalog_items.js' %}"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://unpkg.com/@zxing/browser@latest"></script>
+
+    <script src="{% static 'js/app_catalog/scan_barcode_catalog.js' %}"></script>
+
+    <script type="module" src="{% static 'js/app_catalog/app_catalog_items.js' %}"></script>
+    
 {% endblock %}

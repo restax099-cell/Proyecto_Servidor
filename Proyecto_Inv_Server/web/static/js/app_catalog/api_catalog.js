@@ -43,6 +43,17 @@ export async function fetchCategories(search = '', signal) {
     return await fetchData(url, signal);
 }
 
+export async function fetchOperationItem(idItem, signal) {
+    const params = new URLSearchParams({ 
+        id_item: idItem 
+    });
+
+    const url = `/api/items/get-operation-item/?${params.toString()}`;
+    
+    return await fetchData(url, signal);
+}
+
+
 export async function fetchFichaTecnica(itemId) {
     try {
         const response = await fetch(`/api/items/get-item-complete-ficha/?item_id=${itemId}`);
@@ -130,6 +141,31 @@ export async function createItem(itemData) {
         return await response.json();
     } catch (error) {
         console.error("Error de red al crear ítem:", error);
+        return { error: "Error de conexión con el servidor" };
+    }
+}
+
+export async function saveOperationItem(fichaData) {
+    const url = `/api/items/set-operation-item/`; 
+    
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken') 
+            },
+            body: JSON.stringify(fichaData)
+        });
+        
+        if (response.status === 403) {
+            console.error("Acceso denegado: Revisa tu token CSRF o tu inicio de sesión.");
+            return { error: "Acceso denegado por seguridad (403)" };
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error("Error de red al guardar ficha operativa:", error);
         return { error: "Error de conexión con el servidor" };
     }
 }

@@ -1,6 +1,6 @@
 import {
     deleteItemAPI,
-    fetchFichaTecnica,
+    fetchOperationItem,
     saveBrand,
     saveBrandCategory,
     setCategoryItem
@@ -9,7 +9,6 @@ import {
 export const modalFunctions = {
     
     //? ABRIR MODALS 
-    
     abrirModalRegistro(tipo) {
         this.modalFormType = tipo;
 
@@ -17,9 +16,17 @@ export const modalFunctions = {
             this.newItem.id = 0;
             this.newItem.nombre = '';
             this.newItem.codigo = '';
+            this.newItem.barcode = '';
             this.newItem.id_categoria = 0;
             this.newItem.id_brand = 0;
             this.newItem.descripcion = '';
+            
+            this.operationItem = { 
+                unidad: 0, 
+                contenido_empaque: 1.0, 
+                peso: 0.0, 
+                rendimiento: 100.0 
+            };
             
             this.modalLocalSearch = '';
             this.modalLocalSearchBrand = '';
@@ -32,7 +39,6 @@ export const modalFunctions = {
             this.newBrand.descripcion = '';
             
             this.modalLocalSearchBrandCat = '';
-            
         }
         
         if (!this.showEditModal && !this.showEditAllModal) {
@@ -40,7 +46,7 @@ export const modalFunctions = {
         }
     },
 
-    openEditModal(target, tipo = 'item') {
+    async openEditModal(target, tipo = 'item') { 
         if (!target) {
             console.error("No se encontró el registro para editar.");
             return;
@@ -59,10 +65,30 @@ export const modalFunctions = {
                 id: target.id,
                 nombre: target.nombre || target.name || '',
                 codigo: target.codigo || target.sku || '',
+                barcode: target.barcode || '', 
                 id_categoria: correctCategoryId,
                 id_brand: correctBrandId,
                 descripcion: target.descripcion || target.description || '' 
             };
+
+            try {
+                const res = await fetchOperationItem(target.id);
+                
+                if (res && res.status === 'success' && res.data) {
+                    this.operationItem = {
+                        unidad: res.data.unidad,
+                        contenido_empaque: res.data.contenido_empaque,
+                        peso: res.data.peso,
+                        rendimiento: res.data.rendimiento
+                    };
+                } else {
+                    this.operationItem = { unidad: 0, contenido_empaque: 1.0, peso: 0.0, rendimiento: 100.0 };
+                }
+            } catch (error) {
+                console.error("Error al cargar operation_item:", error);
+                this.operationItem = { unidad: 0, contenido_empaque: 1.0, peso: 0.0, rendimiento: 100.0 };
+            }
+
         } 
         else if (tipo === 'brand') {
             const matchedBrandCat = this.brandCategories.find(bc => bc.name === target.categoria_marca);
@@ -90,42 +116,58 @@ export const modalFunctions = {
         const correctCategoryId = item.id_categoria || item.category_id || (matchedCategory ? matchedCategory.id : 0);
         const correctBrandId = item.id_brand || item.brand_id || (matchedBrand ? matchedBrand.id : 0);
 
+
         this.newItem = {
             id: item.id,
             nombre: item.nombre || item.name || '',
             codigo: item.codigo || item.sku || '',
+            barcode: item.barcode || '', 
             id_categoria: correctCategoryId,
             id_brand: correctBrandId, 
             descripcion: item.descripcion || item.description || ''
         };
         
-        const fichaData = await fetchFichaTecnica(item.id);
-        
-        if (fichaData) {
-            this.ficha = {
-                unidad: fichaData.id_unidad || 0, 
-                contenido_empaque: fichaData.contenido_empaque || 1.0,
-                peso: fichaData.peso || 0.0,
-                rendimiento: fichaData.rendimiento || 100.0,
-                tipo_precio: fichaData.tipo_precio || '',
-                precio: fichaData.precio || 0.0,
-                utilidad: fichaData.utilidad || 0.0,
-                moneda: fichaData.moneda || 'MXN',
-                tasa_cuota: fichaData.tasa_cuota || 0.16
+        const operationResponse = await fetchOperationItem(item.id); 
+    
+        // ...
+        if (operationResponse && operationResponse.status === 'success' && operationResponse.data) {
+            
+            const opData = operationResponse.data;
+
+            this.operationItem = {
+                unidad: opData.id_unidad || opData.unidad || 0, 
+                contenido_empaque: opData.contenido_empaque || 1.0,
+                peso: opData.peso || 0.0,
+                rendimiento: opData.rendimiento || 100.0,
+                tipo_precio: opData.tipo_precio || '',
+                precio: opData.precio || 0.0,
+                utilidad: opData.utilidad || 0.0,
+                moneda: opData.moneda || 'MXN',
+                tasa_cuota: opData.tasa_cuota || 0.16
             };
 
-            const tasaNum = Number(fichaData.tasa_cuota);
+            const tasaNum = Number(opData.tasa_cuota);
             this.ivaType = tasaNum === 0.16 ? '0.16' : (tasaNum === 0.00 ? '0.00' : 'custom');
-
+            
             this.showEditAllModal = true;
             
         } else {
-            alert("No se pudo cargar la información de la ficha técnica.");
+            this.operationItem = {
+                unidad: 0, 
+                contenido_empaque: 1.0,
+                peso: 0.0,
+                rendimiento: 100.0,
+                tipo_precio: '',
+                precio: 0.0,
+                utilidad: 0.0,
+                moneda: 'MXN',
+                tasa_cuota: 0.16
+            };
+            this.showEditAllModal = true;
         }
     },
 
     //? ELIMINACIÓN 
-
     openDeleteModal(target, tipo = 'item') {
         this.deleteTarget = target;       
         this.deleteType = tipo;
@@ -216,7 +258,6 @@ export const modalFunctions = {
     },
 
     //? MODALS CRUD (Solo Categorías ahora)
-
     openCrud(type) {
         this.crudType = type;
         this.crudNewCode = '';

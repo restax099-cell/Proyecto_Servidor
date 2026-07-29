@@ -276,6 +276,7 @@ def get_items(request):
                     item['isComplete'] = bool(item.get('isComplete', 0))
                     item['id_brand'] = int(item.get('id_brand', 0))
                     item['descripcion'] = item.get('descripcion', '')
+                    item['barcode'] = item.get('barcode', '')
 
             return respond_paginated_sp(page, limit, results)
 
@@ -323,12 +324,14 @@ def get_pending_count(request):
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
     
+
 @api_view(['POST']) 
 @permission_classes([IsAuthenticated])
 def set_insert_item(request):
     item_id = int(request.data.get('id') or 0)
     nombre = request.data.get('nombre') or ''
     codigo = request.data.get('codigo') or ''
+    barcode = request.data.get('barcode') or '' 
     id_categoria = int(request.data.get('id_categoria') or 0)
     id_brand = int(request.data.get('id_brand') or 1)
     descripcion = request.data.get('descripcion') or ''
@@ -338,8 +341,8 @@ def set_insert_item(request):
 
     try:
         with connection.cursor() as cursor:
-            cursor.execute("CALL sp_insert_item(%s, %s, %s, %s, %s, %s)", 
-                           [item_id, nombre, codigo, id_categoria, id_brand, descripcion])
+            cursor.execute("CALL sp_insert_item(%s, %s, %s, %s, %s, %s, %s)", 
+                           [item_id, nombre, codigo, barcode, id_categoria, id_brand, descripcion])
             
             columns = [col[0] for col in cursor.description]
             row = cursor.fetchone()
@@ -354,6 +357,79 @@ def set_insert_item(request):
     except Exception as e:
         print(f"Error en SP sp_insert_item: {e}")
         return Response({"error": "Error interno al guardar en base de datos"}, status=500)
+
+
+
+#* Datos Empaque Item (Operation_item)
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_operation_item(request):
+    id_item = request.GET.get('id_item')
+
+    if not id_item:
+        return JsonResponse({
+            "status": "error", 
+            "message": "Falta el parámetro id_item en la petición"
+        }, status=400)
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("CALL sp_get_operation_item(%s)", [id_item])
+            
+            columns = [col[0] for col in cursor.description]
+            row = cursor.fetchone()
+
+        if row:
+            operation_data = dict(zip(columns, row))
+            
+            operation_data['contenido_empaque'] = float(operation_data.get('contenido_empaque') if operation_data.get('contenido_empaque') is not None else 1.000)
+            operation_data['peso'] = float(operation_data.get('peso') if operation_data.get('peso') is not None else 0.000)
+            operation_data['rendimiento'] = float(operation_data.get('rendimiento') if operation_data.get('rendimiento') is not None else 100.00)
+
+            return JsonResponse({
+                "status": "success", 
+                "data": operation_data
+            })
+        else:
+            return JsonResponse({
+                "status": "success", 
+                "data": None
+            })
+
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def set_operation_item(request):
+    try:
+        data = request.data
+        
+        id_item = data.get('id_item')
+        unidad = data.get('unidad', 0)
+        contenido_empaque = data.get('contenido_empaque', 1.000)
+        peso = data.get('peso', 0.000)
+        rendimiento = data.get('rendimiento', 100.00)
+
+        if not id_item:
+            return JsonResponse({"status": "error", "message": "El id_item es obligatorio"}, status=400)
+
+        with connection.cursor() as cursor:
+            cursor.callproc('sp_save_operation_items', [
+                id_item, 
+                unidad, 
+                contenido_empaque, 
+                peso, 
+                rendimiento
+            ])
+        
+        return JsonResponse({"status": "success", "message": "Ficha operativa guardada correctamente"})
+    
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+
+
     
 @api_view(['POST']) 
 @permission_classes([IsAuthenticated])

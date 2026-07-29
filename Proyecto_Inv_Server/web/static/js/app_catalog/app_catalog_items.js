@@ -9,7 +9,7 @@ import {
     fetchCategories,
     fetchPendingCount,
     saveBrand,
-    saveFichaTecnica,
+    saveOperationItem,
 } from './api_catalog.js';
 
 import { modalHelpers } from './dynamic_modals.js';
@@ -55,10 +55,19 @@ Alpine.data('catalogApp', () => ({
         id: null,
         nombre: '',
         codigo: '',
+        barcode: '',      
         id_categoria: 0,
         id_brand: 1,       
         descripcion: ''
     },
+
+    operationItem: { 
+        unidad: 0, 
+        contenido_empaque: 1.0, 
+        peso: 0.0, 
+        rendimiento: 100.0 
+    },
+
     newBrand: {
         id: null, 
         nombre: '', 
@@ -319,40 +328,51 @@ Alpine.data('catalogApp', () => ({
     },
 
     async procesarFormulario(accion) {
-        // 1. Configuración de estados
-        const isFichaTecnica = accion === 'ficha_tecnica';
-        const isEditarTodo = accion === 'editar_todo';
-        const isItem = ['crear', 'editar_basico', 'editar_todo', 'ficha_tecnica'].includes(accion);
+        const isOperationAction = accion === 'operation_item';
+        const isItem = ['crear', 'editar_basico', 'editar_todo', 'operation_item'].includes(accion);
         
-        // Determinamos la variable de carga
-        const loadingVar = isFichaTecnica ? 'isSavingFicha' : (isEditarTodo ? 'isEditingAll' : 'isSubmitting');
+        const loadingVar = isOperationAction ? 'isSavingOperation' : 'isSubmitting';
         this[loadingVar] = true;
 
-        // 2. Validación
         if (accion === 'guardar_marca' && !this.newBrand.nombre.trim()) return alert("El nombre de la marca es obligatorio");
         if (accion === 'guardar_brand_category' && !this.newBrandCategory.name.trim()) return alert("El nombre es obligatorio");
         if (accion === 'guardar_category' && !this.newCategory.name.trim()) return alert("El nombre es obligatorio");
-        if ((accion === 'crear' || accion === 'editar_basico') && !this.newItem.nombre.trim()) return alert("El nombre del ítem es obligatorio");
+        if (isItem && accion !== 'operation_item' && !this.newItem.nombre.trim()) return alert("El nombre del ítem es obligatorio");
 
         try {
             let exito = true;
             let respuesta = null;
 
-            // 3. Ejecución de APIs
             switch (accion) {
                 case 'crear':
                 case 'editar_basico':
+                case 'editar_todo':
                     respuesta = await createItem(this.newItem);
+                    
+                    if (respuesta?.status !== 'success') {
+                        throw new Error(respuesta?.error || "Error al guardar los datos básicos del ítem");
+                    }
+
+                    const idGenerado = this.newItem.id || respuesta.id || respuesta.data?.id;
+
+                    if (idGenerado) {
+                        const resOperation = await saveOperationItem({
+                            id_item: idGenerado,
+                            ...this.operationItem 
+                        });
+                        
+                        if (resOperation?.status !== 'success') {
+                            console.warn("Error secundario al guardar operation_item:", resOperation?.error);
+                        }
+                    } else {
+                        console.warn("No se detectó el ID del ítem, por lo que operation_item no se guardó.");
+                    }
                     break;
 
-                case 'editar_todo':
-                    const resBase = await createItem(this.newItem);
-                    if (resBase?.status !== 'success') throw new Error(resBase?.error || "Error al guardar base");
-                    // Fall-through intencional para guardar ficha técnica también
-                case 'ficha_tecnica':
-                    respuesta = await saveFichaTecnica({
-                        id_item: isFichaTecnica ? this.activeItem.id : this.newItem.id,
-                        ...this.ficha
+                case 'operation_item': 
+                    respuesta = await saveOperationItem({
+                        id_item: this.activeItem.id,
+                        ...this.operationItem 
                     });
                     break;
 
@@ -381,44 +401,60 @@ Alpine.data('catalogApp', () => ({
 
         } catch (error) {
             console.error(`Error en submit (${accion}):`, error);
-            alert("Error de conexión al servidor");
+            alert(error.message || "Error de conexión al servidor");
         } finally {
             this[loadingVar] = false;
         }
     },
 
     handleSuccessCleanup(accion, isItem) {
-        // Cerrar todos los modales
         this.showCreateModal = false;
         this.showEditModal = false;
         this.showEditAllModal = false;
         this.showCompleteModal = false;
 
-        // Limpieza general para Ítems
         if (isItem) {
             this.newItem = { id: null, nombre: '', codigo: '', id_categoria: 0, id_brandcategory: 0, id_brand: 0, descripcion: '' };
+            
+            this.operationItem = { unidad: 0, contenido_empaque: 1.0, peso: 0.0, rendimiento: 100.0 };
+            
             this.loadItems();
+            
+            if (typeof this.loadPendingCount === 'function') {
+                this.loadPendingCount();
+            }
+
             if (accion === 'crear') this.currentPage = 1;
         }
 
-        // Limpieza específica de Ficha Técnica
-        if (['editar_todo', 'ficha_tecnica'].includes(accion)) {
-            this.ficha = { unidad: 0, contenido_empaque: 1.0, peso: 0.0, rendimiento: 100.0, tipo_precio: '', precio: 0.0, utilidad: 0.0, moneda: 'MXN', tasa_cuota: 0.16 };
-            this.loadPendingCount();
-        }
-
-        // Limpieza de Catálogos (Marcas/Categorías)
         if (accion === 'guardar_marca') {
             this.newBrand = { id: 0, nombre: '', id_brandcategory: 0, descripcion: '' };
             this.loadCatalogs('marcas');
         }
-        if (accion === 'guardar_brand_category') this.loadCatalogs('brand_categories');
-        if (accion === 'guardar_category') this.loadCatalogs('categories');
+        
+        if (accion === 'guardar_brand_category') {
+            if (this.newBrandCategory) this.newBrandCategory = { id: 0, name: '' };
+            this.loadCatalogs('brand_categories');
+        }
+        
+        if (accion === 'guardar_category') {
+            if (this.newCategory) this.newCategory = { id: 0, name: '' };
+            this.loadCatalogs('categories');
+        }
 
-        // Mensajes
         this.successTitle = isItem ? '¡Ítem Procesado!' : '¡Datos Actualizados!';
         this.successMessage = 'La información se ha guardado correctamente.';
     },
+
+    //? BARCODE
+    activarCamara() {
+        iniciarEscaner((codigoEscaneado) => {
+            this.newItem.barcode = codigoEscaneado;
+            
+            console.log("¡Código capturado!", codigoEscaneado);
+        });
+    },
+
 
     //? GENERADOR DE SKU 
     _limpiarTexto(texto) {
