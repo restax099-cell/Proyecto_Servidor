@@ -150,6 +150,11 @@
                             <th class="px-4 py-4 fw-bold border-0">ID / SKU</th>
                             <th class="py-4 fw-bold border-0">Item</th>
                             <th class="py-4 fw-bold border-0">Categoría</th>
+                            
+                            <!-- NUEVAS COLUMNAS -->
+                            <th class="py-4 fw-bold border-0">Código de Barras</th>
+                            <th class="py-4 fw-bold border-0">Existencias</th>
+                            
                             <th class="py-4 fw-bold border-0">Estado</th>
                             <th class="text-end px-4 py-4 fw-bold border-0">Acciones</th>
                         </tr>
@@ -171,6 +176,16 @@
                                 <!-- Categoría -->
                                 <td class="py-3 text-secondary border-0" x-text="item.category"></td>
                                 
+                                <!-- Código de Barras -->
+                                <td class="py-3 text-secondary border-0">
+                                    <span x-text="item.barcode || '0'"></span>
+                                </td>
+
+                                <!-- Existencias  -->
+                                <td class="py-3 fw-bold text-secondary border-0">
+                                    <span>0</span>
+                                </td>
+                                
                                 <!-- Estado -->
                                 <td class="py-3 border-0">
                                     <template x-if="!item.isComplete">
@@ -187,7 +202,7 @@
                                         
                                         <template x-if="!item.isComplete">
                                             <div class="d-flex gap-2">
-                                             
+                                            
                                                 <button @click="openEditModal(item)" class="btn btn-sm btn-outline-primary opacity-75 px-3">
                                                     Editar
                                                 </button>
@@ -208,15 +223,14 @@
                                         <button @click="openDeleteModal(item)" class="btn btn-sm btn-outline-danger opacity-75 px-3">
                                             Eliminar
                                         </button>
-                                     
+                                    
                                     </div>
                                 </td>
                             </tr>
                         </template>
                         
-                        <!-- ESTADO VACÍO -->
                         <tr x-show="filteredItems.length === 0" x-cloak>
-                            <td colspan="5" class="text-center py-5 text-muted border-0 fw-bold">
+                            <td colspan="7" class="text-center py-5 text-muted border-0 fw-bold">
                                 No se encontraron resultados.
                             </td>
                         </tr>
