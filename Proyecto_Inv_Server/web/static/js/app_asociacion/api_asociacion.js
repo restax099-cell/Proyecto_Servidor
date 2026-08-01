@@ -30,6 +30,18 @@ export async function fetchInventorySync(page, filters, signal) {
     return await fetchData(url, signal);
 }
 
+export async function fetchAssociateItem(searchQuery, limit = 50, offset = 0, signal) {
+    const params = new URLSearchParams({ 
+        search: searchQuery,
+        limit: limit,
+        offset: offset
+    });
+
+    const url = `/api/items/get-associate-item/?${params.toString()}`;
+    
+    return await fetchData(url, signal);
+}
+
 export async function fetchModalItems(searchTerm = '', signal) {
     const params = new URLSearchParams();
     if (searchTerm) {

@@ -1,11 +1,22 @@
 <div class="bg-white/60 backdrop-blur-sm rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white p-1 mb-10">
     <div class="bg-white rounded-[22px] p-5 sm:p-6">
-        <div class="flex items-center gap-2 mb-5">
-            <span x-html="renderIcon('filter', 'w-4 h-4 text-indigo-500')"></span>
-            <h2 class="text-sm font-bold text-slate-700">Filtros</h2>
+        
+        <!-- HEADER DE FILTROS Y BOTÓN DE CONSULTA -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
+            <div class="flex items-center gap-2">
+                <span x-html="renderIcon('filter', 'w-4 h-4 text-indigo-500')"></span>
+                <h2 class="text-sm font-bold text-slate-700">Filtros</h2>
+            </div>
+            
+            <!-- EL NUEVO BOTÓN TOGGLE -->
+            <button @click="showItemSearch = !showItemSearch" 
+                    class="flex items-center justify-center gap-2 px-4 py-2 text-[11px] font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 rounded-xl hover:bg-indigo-100 transition-colors shadow-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                <span x-text="showItemSearch ? 'Cerrar Consulta' : 'Consultar Vínculos por Ítem'"></span>
+            </button>
         </div>
-        <div class="grid grid-cols-2 lg:grid-cols-6 gap-4 sm:gap-5">
 
+        <div class="grid grid-cols-2 lg:grid-cols-6 gap-4 sm:gap-5">
             <!-- PROOVEDOR SEARCH -->
             <div class="group col-span-2 lg:col-span-1">
                 <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 transition-colors group-focus-within:text-indigo-500">Proveedor</label>
@@ -24,7 +35,6 @@
                     Filtrar por Estado
                 </label>
                 <div class="bg-slate-100 p-1 rounded-xl flex items-center relative h-[46px]">
-                    
                     <div class="absolute top-1 bottom-1 left-1 w-[calc(33.33%-4px)] bg-white rounded-lg shadow-sm transition-all duration-300 ease-out z-0"
                         :style="filters.status === 0 ? 'transform: translateX(0%)' : 
                                 (filters.status === 2 ? 'transform: translateX(100%)' : 'transform: translateX(200%)')">
@@ -35,13 +45,11 @@
                             :class="filters.status === 0 ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-600'">
                         <span class="block sm:hidden">Pend.</span><span class="hidden sm:block">Pendientes</span>
                     </button>
-
                     <button @click="filters.status = 2; loadFromApi(1)" 
                             class="flex-1 text-center text-[10px] sm:text-[11px] font-bold uppercase tracking-tight transition-colors relative z-10" 
                             :class="filters.status === 2 ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-600'">
                         Todos
                     </button>
-
                     <button @click="filters.status = 1; loadFromApi(1)" 
                             class="flex-1 text-center text-[10px] sm:text-[11px] font-bold uppercase tracking-tight transition-colors relative z-10" 
                             :class="filters.status === 1 ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-600'">
@@ -61,7 +69,67 @@
                 <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 transition-colors group-focus-within:text-indigo-500">Hasta</label>
                 <input type="date" x-model="filters.dateTo" class="w-full bg-slate-50/50 border border-slate-200 text-slate-500 text-sm rounded-xl focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 block p-3 outline-none transition-all">
             </div>
-            
         </div>
+
+        <!-- CONSULTA DE ITEM -->  
+        <div x-show="showItemSearch" x-collapse x-cloak>
+            
+            <div class="mt-6 pt-6 border-t border-slate-100" x-data="itemAssociationManager()">
+                
+                <div class="flex items-center gap-2 mb-4">
+                    <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                    <h3 class="text-sm font-bold text-slate-700">Explorador de Vínculos</h3>
+                </div>
+                
+                <div class="relative mb-4">
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+                        <svg class="w-4 h-4 text-slate-400 focus-within:text-indigo-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    </div>
+                    
+                    <input type="text" 
+                        x-model="searchQuery" 
+                        @input.debounce.300ms="handleSearchInput()" 
+                        placeholder="Escribe un nombre o coincidencia parcial (Ej. Aguacate)..." 
+                        class="w-full bg-slate-50/50 border border-slate-200 text-slate-800 text-sm rounded-xl focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 block pl-11 p-3 outline-none transition-all placeholder:text-slate-300">
+                </div>
+
+                <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden" style="max-height: 280px; overflow-y: auto;">
+                    
+                    <div x-show="!isLoadingXmls && linkedXmls.length === 0 && searchQuery.length < 3" class="p-6 text-center text-slate-400 text-sm font-medium">
+                        Escribe al menos 3 letras para ver los vínculos correspondientes.
+                    </div>
+                    
+                    <div x-show="isLoadingXmls" class="p-6 text-center text-indigo-400 text-sm font-medium animate-pulse">
+                        Consultando facturas vinculadas...
+                    </div>
+                    
+                    <div x-show="!isLoadingXmls && linkedXmls.length === 0 && searchQuery.length >= 3" class="p-6 text-center text-slate-400 text-sm font-medium">
+                        No se encontraron XMLs vinculados con esa palabra.
+                    </div>
+
+                    <ul x-show="!isLoadingXmls && linkedXmls.length > 0" class="divide-y divide-slate-100">
+                        <template x-for="xml in linkedXmls" :key="xml.id_item + xml.descripcion_concepto + xml.proveedor">
+                            <li class="p-4 hover:bg-slate-50 transition-colors flex justify-between items-center">
+                                <div>
+                                    <div class="text-sm font-bold text-slate-700" x-text="xml.descripcion_concepto"></div>
+                                    <div class="text-xs text-slate-500 mt-1">
+                                        <span class="font-semibold text-indigo-600" x-text="xml.nombre_item"></span> 
+                                        <span class="mx-1">•</span>
+                                        <span class="font-medium text-slate-600" x-text="xml.proveedor"></span> 
+                                        <span class="mx-1">•</span> 
+                                        SAT: <span class="text-slate-400" x-text="xml.clave_sat ? (xml.clave_sat.substring(0, 15) + '...') : 'N/A'"></span>
+                                    </div>
+                                </div>
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-600 text-[10px] font-bold uppercase tracking-wider border border-emerald-100">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+                                    Vinculado
+                                </span>
+                            </li>
+                        </template>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
     </div>
 </div>

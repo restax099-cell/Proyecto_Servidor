@@ -1,13 +1,17 @@
-// 1. Importamos Alpine y su plugin de Collapse como módulos directamente
 import collapse from 'https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/module.esm.js';
 import Alpine from 'https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/module.esm.js';
 
-// 2. Importamos tus utilidades
 import { renderIcon } from '../../utils/icons.js';
 import { fetchInventorySync, fetchModalItems, saveAssociation, unregisterAssociation } from './api_asociacion.js';
 import { getTheme } from './theme_asociacion.js';
 
+import { itemAssociationManager } from './search_item_associate.js';
+
 Alpine.plugin(collapse);
+
+Alpine.data('itemAssociationManager', itemAssociationManager);
+
+
 
 Alpine.data('inventoryApp', () => ({
     
@@ -25,6 +29,9 @@ Alpine.data('inventoryApp', () => ({
     totalPages: 1,
     itemsPerPage: 20, 
     abortController: null,
+
+
+    showItemSearch: false,
     
 
     renderIcon,

@@ -249,7 +249,31 @@ def get_dashboard_detail(request):
         print(f"Error en SP Item Detail: {e}")
         return Response({"error": "Error interno al procesar el detalle del ítem"}, status=500)
 
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_associate_item(request):
+    search = request.GET.get('search', '')
+    
+    try:
+        limit = int(request.GET.get('limit', 50))
+        offset = int(request.GET.get('offset', 0))
+    except ValueError:
+        limit = 50
+        offset = 0
 
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("CALL sp_get_associate_item(%s, %s, %s)", [search, limit, offset])
+            columns = [col[0] for col in cursor.description]
+            results = [dict(zip(columns, row)) for row in cursor.fetchall()]
+
+        return JsonResponse({
+            "status": "success",
+            "data": results
+        })
+
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
 
 #? API'S RELACIONADAS AL CATOLOGO DE ITEMS
