@@ -150,13 +150,11 @@ Alpine.data('inventoryApp', () => ({
         return [1, '...', current - 1, current, current + 1, '...', total];
     },
 
+
+
+
     // --- ACCIONES ---
-    nextPage() { if (this.currentPage < this.totalPages) this.loadFromApi(this.currentPage + 1); },
-    prevPage() { if (this.currentPage > 1) this.loadFromApi(this.currentPage - 1); },
-    goToPage(pageInput) {
-        const p = parseInt(pageInput);
-        if (!isNaN(p) && p >= 1 && p <= this.totalPages && p !== this.currentPage) this.loadFromApi(p);
-    },
+    
     
     openModal(itemId) {
         this.activeItemId = itemId;
@@ -235,7 +233,34 @@ Alpine.data('inventoryApp', () => ({
             console.error("Fallo al desvincular:", error);
             alert("Error al desvincular: " + error.message);
         }
-    }
+    },
+
+
+    //? -- PAGINACIÓN --
+
+
+    get visiblePages() {
+        let pages = [];
+        let current = this.currentPage || 1;
+        let total = this.totalPages || 1;
+
+        let start = Math.max(1, current - 2);
+        let end = Math.min(total, current + 2);
+
+        for (let i = start; i <= end; i++) {
+            pages.push(i);
+        }
+        return pages;
+    },
+
+    nextPage() { if (this.currentPage < this.totalPages) this.loadFromApi(this.currentPage + 1); },
+    prevPage() { if (this.currentPage > 1) this.loadFromApi(this.currentPage - 1); },
+    goToPage(pageInput) {
+        const p = parseInt(pageInput);
+        if (!isNaN(p) && p >= 1 && p <= this.totalPages && p !== this.currentPage) this.loadFromApi(p);
+    },
+
+    
 }));
 
 window.Alpine = Alpine;
