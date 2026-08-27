@@ -21,6 +21,9 @@ urlpatterns = [
     path('get-barcode/', items_views.get_barcode_image, name='get_barcode_image'),
     path('get-brands/', items_views.get_brands, name='get_brands'),
     path('get-brands-categories/', items_views.get_brands_categories, name='get_brands_categories'),
+    path('get-dashboard/', items_views.get_dashboard, name='get_dashboard'),
+    path('get-dashboard-detail/', items_views.get_dashboard_detail, name='get_dashboard_detail'),
+
 
 
     
