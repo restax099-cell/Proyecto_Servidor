@@ -1,0 +1,149 @@
+{% extends 'cont_panel/base_conteo.html' %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/styles_conteo.css' %}">
+{% endblock %}
+
+{% block content_panel %}
+<div x-data="conteoApp()" class="container-fluid" style="max-width: 1200px; padding: 0 1.5rem;">
+    
+    <!-- BARRA SUPERIOR (BREADCRUMBS) -->
+    <div class="topbar-nav fs-7">
+        <div class="text-muted-custom">
+            Inventarios &rsaquo; <span class="fw-bold text-dark fs-6">Conteo de Items</span> 
+            <span style="font-size: 0.65rem; letter-spacing: 1px; margin-left: 5px;">ITEMS COUNTING</span>
+        </div>
+        <div class="text-muted-custom">
+            Juan Pérez Martínez
+        </div>
+    </div>
+
+    <main class="pb-5">
+        
+        <!-- TARJETA 1: ENCABEZADO Y BÚSQUEDA -->
+        <div class="custom-card">
+            <div class="text-muted-custom fs-8 fw-bold mb-2 letter-spacing-1">PASO 1 DE 2</div>
+            <h1 class="fw-extrabold text-dark mb-2" style="font-size: 1.75rem;">Selecciona la plantilla de conteo</h1>
+            <p class="text-muted-custom mb-4 fs-7" style="max-width: 800px;">
+                La plantilla define el almacén a contar, los catálogos de items que se enlistan, la fecha y hora límite de captura y la frecuencia del conteo.
+            </p>
+
+            <div class="position-relative">
+                <span class="search-icon-wrapper">
+                    <i class="bi bi-search"></i>
+                </span>
+                <input type="text" 
+                        class="form-control form-control-soft input-with-icon w-100" 
+                        placeholder="Buscar plantilla" 
+                        x-model="busqueda">
+            </div>
+        </div>
+
+        <!-- TARJETA 2: TABLA DE PLANTILLAS (Diseño Oscuro) -->
+        <div class="custom-card-table">
+            <div class="table-responsive">
+                <table class="table-modern">
+                    <thead>
+                        <tr>
+                            <th style="width: 5%;"></th> <!-- Para el checkbox -->
+                            <th style="width: 35%;">PLANTILLA</th>
+                            <th style="width: 20%;">ALMACÉN</th>
+                            <th style="width: 20%;">FRECUENCIA</th>
+                            <th style="width: 20%;">LÍMITE DE CAPTURA</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Iteración de Plantillas -->
+                        <template x-for="plantilla in plantillasFiltradas" :key="plantilla.id">
+                            <tr :class="{'selected-row': plantillaSeleccionada === plantilla.id}" 
+                                @click="seleccionarPlantilla(plantilla)">
+                                
+                                <!-- Columna Checkbox Cuadrado -->
+                                <td class="text-center">
+                                    <div class="custom-square-check"></div>
+                                </td>
+
+                                <!-- Columna Plantilla -->
+                                <td>
+                                    <div class="fw-bold mb-1" 
+                                            x-text="plantilla.nombre"
+                                            :class="plantilla.inactiva ? 'text-muted' : 'text-dark'"></div>
+                                    <div class="fs-8" 
+                                            x-text="plantilla.descripcion"
+                                            :class="plantilla.inactiva ? 'text-muted' : 'text-muted-custom'"></div>
+                                </td>
+
+                                <!-- Columna Almacén -->
+                                <td>
+                                    <span class="fs-7" 
+                                            x-text="plantilla.almacen"
+                                            :class="plantilla.inactiva ? 'text-muted' : ''"></span>
+                                </td>
+
+                                <!-- Columna Frecuencia -->
+                                <td>
+                                    <span class="fs-7" 
+                                            x-text="plantilla.frecuencia"
+                                            :class="plantilla.inactiva ? 'text-muted' : ''"></span>
+                                </td>
+
+                                <!-- Columna Límite de Captura -->
+                                <td>
+                                    <span class="fs-7" 
+                                            x-text="plantilla.limiteCaptura"
+                                            :class="obtenerClaseLimite(plantilla)"></span>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TARJETA 3: FOOTER DE ACCIONES Y RESUMEN -->
+        <div class="custom-card">
+            <div class="row g-4 mb-4">
+                <!-- Almacén a contar (Readonly/Soft) -->
+                <div class="col-md-6">
+                    <label class="form-label-soft">ALMACÉN A CONTAR</label>
+                    <input type="text" class="form-control form-control-soft" readonly 
+                            :value="textoAlmacenSeleccionado">
+                </div>
+                
+                <!-- Fecha del Conteo (Soft) -->
+                <div class="col-md-6">
+                    <label class="form-label-soft">FECHA DEL CONTEO</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control form-control-soft" 
+                                value="20/08/2026" readonly>
+                        <span class="input-group-text" style="background: var(--input-bg); border: none; border-radius: 0 0.5rem 0.5rem 0; color: #718096;">
+                            <i class="bi bi-calendar3"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botones y Texto de Ayuda -->
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center pt-3 border-top" style="border-color: var(--border-soft) !important;">
+                <div class="text-muted-custom fs-7 mb-3 mb-md-0">
+                    Un conteo abierto por plantilla y fecha. Al vencer el límite la captura se cierra.
+                </div>
+                <div class="d-flex gap-3">
+                    <button class="btn btn-outline-soft">Ver conteos anteriores</button>
+                    <button class="btn btn-primary-dark">Iniciar conteo</button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+</div>
+{% endblock %}
+
+
+{% block extra_scripts %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://unpkg.com/@zxing/browser@latest"></script>
+
+    <script type="module" src="{% static 'js/app_conteo_panel/app_conteo_panel.js' %}"></script>
+{% endblock %}

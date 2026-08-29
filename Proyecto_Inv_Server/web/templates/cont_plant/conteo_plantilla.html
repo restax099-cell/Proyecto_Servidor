@@ -1,0 +1,240 @@
+{% extends 'cont_plant/base_cont_plant.html' %}
+{% load static %}
+{% block content_panel %}
+
+<div x-data="plantillasApp()" class="container-fluid" style="max-width: 1500px; padding: 1.5rem;">
+        
+    <!-- HEADER PRINCIPAL -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
+        <div class="mb-3 mb-md-0 d-flex align-items-center">
+            <div class="fs-7 text-muted-custom">
+                Catálogos &rsaquo; 
+                <span class="fw-extrabold text-dark fs-5 ms-1">Plantillas de conteo de items</span>
+            </div>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-soft bg-white">Cancelar</button>
+            <button class="btn btn-primary-dark">Guardar plantilla</button> <!-- Usando el nuevo color pizarra -->
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- COLUMNA IZQUIERDA: LISTA DE PLANTILLAS -->
+        <div class="col-lg-4 col-xl-3">
+            <div class="custom-card custom-card-p0 d-flex flex-column" style="height: calc(100vh - 120px); max-height: 800px;">
+                <!-- Buscador -->
+                <div class="p-3 border-bottom" style="border-color: var(--border-soft) !important;">
+                    <div class="d-flex gap-2">
+                        <div class="position-relative flex-grow-1">
+                            <input type="text" class="form-control form-control-soft w-100" placeholder="Buscar plantilla...">
+                        </div>
+                        <button class="btn btn-outline-soft px-3">Nueva</button>
+                    </div>
+                </div>
+                
+                <!-- Lista de Items -->
+                <div class="list-group list-group-flush overflow-auto">
+                    <template x-for="item in listaPlantillas" :key="item.id">
+                        <div class="template-list-item" 
+                                :class="{'active': plantillaActiva === item.id}"
+                                @click="plantillaActiva = item.id">
+                            <div class="d-flex justify-content-between align-items-start mb-1">
+                                <span class="fw-bold fs-7 text-dark" x-text="`${item.clave} · ${item.nombre}`"></span>
+                                <span x-show="item.activa" class="badge-status activa">Activa</span>
+                            </div>
+                            <div class="fs-8 text-muted-custom" x-text="item.detalle"></div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+
+        <!-- COLUMNA DERECHA: DETALLE DE LA PLANTILLA -->
+        <div class="col-lg-8 col-xl-9">
+            <div class="d-flex flex-column gap-3">
+                
+                <!-- Tarjeta 1: Información General -->
+                <div class="custom-card mb-0">
+                    <div class="text-muted-custom fs-8 text-uppercase fw-bold mb-1">DETALLE DE LA PLANTILLA</div>
+                    <h4 class="fw-extrabold text-dark mb-4">PC-01 · CONTEO DIARIO — COCINA</h4>
+
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label-soft">CLAVE</label>
+                            <input type="text" class="form-control form-control-soft" value="PC-01 · automático" disabled>
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label-soft">NOMBRE DE LA PLANTILLA</label>
+                            <input type="text" class="form-control form-control-soft" value="Conteo diario — cocina">
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label class="form-label-soft">ALMACÉN A CONTAR</label>
+                            <select class="form-select form-select-soft">
+                                <option selected>Almacén cocina A</option>
+                                <option>Almacén general</option>
+                                <option>Bodega bebidas</option>
+                            </select>
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label-soft">RESPONSABLES DE CAPTURA</label>
+                            <select class="form-select form-select-soft">
+                                <option selected>Chef de cocina, Almacenista</option>
+                                <option>Gerente</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label-soft">ESTADO</label>
+                            <select class="form-select form-select-soft">
+                                <option selected>Activa</option>
+                                <option>Inactiva</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tarjeta 2: Catálogos de Items -->
+                <div class="custom-card mb-0">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h6 class="fw-bold mb-1">CATÁLOGOS DE ITEMS A ENLISTAR</h6>
+                            <p class="fs-8 text-muted-custom mb-0">Los items del conteo se enlistan a partir de estos catálogos y se muestran agrupados por categoría.</p>
+                        </div>
+                        <button class="btn btn-outline-soft">Agregar catálogo</button>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table-modern">
+                            <thead>
+                                <tr>
+                                    <th style="width: 5%"></th>
+                                    <th style="width: 15%">CATÁLOGO</th>
+                                    <th style="width: 35%">CATEGORÍA</th>
+                                    <th style="width: 15%; text-align: center;">ITEMS</th>
+                                    <th style="width: 20%">ORDEN EN CAPTURA</th>
+                                    <th style="width: 10%; text-align: center;"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template x-for="cat in catalogos" :key="cat.codigo">
+                                    <tr>
+                                        <td>
+                                            <input type="checkbox" class="custom-checkbox" checked>
+                                        </td>
+                                        <td class="fw-semibold text-dark" x-text="cat.codigo"></td>
+                                        <td class="fw-semibold text-dark" x-text="cat.categoria"></td>
+                                        <td class="text-center text-muted-custom fs-8" x-text="`${cat.items} items`"></td>
+                                        <td>
+                                            <input type="number" class="form-control form-control-soft text-center" :value="cat.orden" style="width: 80px;">
+                                        </td>
+                                        <td class="text-center">
+                                            <button class="delete-btn"><i class="bi bi-x-lg"></i></button>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tarjeta 3: Frecuencia y Límites -->
+                <div class="row g-3">
+                    <!-- Frecuencia -->
+                    <div class="col-md-6">
+                        <div class="custom-card h-100">
+                            <h6 class="fw-bold mb-4">FRECUENCIA DEL CONTEO</h6>
+                            
+                            <div class="toggle-group mb-4">
+                                <button class="toggle-btn" :class="{'active': frecuencia === 'Diario'}" @click="frecuencia = 'Diario'">Diario</button>
+                                <button class="toggle-btn" :class="{'active': frecuencia === 'Semanal'}" @click="frecuencia = 'Semanal'">Semanal</button>
+                                <button class="toggle-btn" :class="{'active': frecuencia === 'Mensual'}" @click="frecuencia = 'Mensual'">Mensual</button>
+                                <button class="toggle-btn" :class="{'active': frecuencia === 'Trimestral'}" @click="frecuencia = 'Trimestral'">Trimestral</button>
+                            </div>
+
+                            <label class="form-label-soft">DÍAS DE LA SEMANA</label>
+                            <div class="days-group mb-4">
+                                <template x-for="dia in ['L', 'Ma', 'Mi', 'J', 'V', 'S', 'D']" :key="dia">
+                                    <button class="day-btn" 
+                                            :class="{'active': diasSeleccionados.includes(dia)}"
+                                            @click="toggleDia(dia)"
+                                            x-text="dia"></button>
+                                </template>
+                            </div>
+
+                            <div class="row g-3">
+                                <div class="col-6">
+                                    <label class="form-label-soft">DÍA DEL MES</label>
+                                    <input type="text" class="form-control form-control-soft" value="No aplica" disabled>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label-soft">VIGENTE DESDE</label>
+                                    <input type="text" class="form-control form-control-soft" value="01/08/2026">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Límite de Captura -->
+                    <div class="col-md-6">
+                        <div class="custom-card h-100">
+                            <h6 class="fw-bold mb-4">LÍMITE DE CAPTURA</h6>
+                            
+                            <div class="row g-3 mb-4">
+                                <div class="col-6">
+                                    <label class="form-label-soft">HORA LÍMITE</label>
+                                    <input type="time" class="form-control form-control-soft" value="11:00">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label-soft">DÍA LÍMITE</label>
+                                    <select class="form-select form-select-soft">
+                                        <option selected>Mismo día del conteo</option>
+                                        <option>Día siguiente</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label-soft">SE ABRE LA CAPTURA</label>
+                                <select class="form-select form-select-soft">
+                                    <option selected>06:00 del día del conteo</option>
+                                </select>
+                            </div>
+
+                            <div class="d-flex flex-column gap-1 mt-2">
+                                <label class="custom-checkbox-wrapper">
+                                    <input type="checkbox" class="custom-checkbox" checked>
+                                    <span class="fs-7 fw-semibold text-dark">Bloquear captura al vencer el límite</span>
+                                </label>
+                                <label class="custom-checkbox-wrapper">
+                                    <input type="checkbox" class="custom-checkbox" checked>
+                                    <span class="fs-7 fw-semibold text-dark">Permitir buscar items fuera de los catálogos</span>
+                                </label>
+                                <label class="custom-checkbox-wrapper">
+                                    <input type="checkbox" class="custom-checkbox">
+                                    <span class="fs-7 fw-semibold text-dark">Mostrar existencia teórica al capturar</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Footer Info -->
+                <div class="fs-8 text-muted-custom px-3 py-2">
+                    34 items en la lista de captura · último conteo cerrado 19/08/2026 10:47
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}
+
+
+{% block extra_scripts %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://unpkg.com/@zxing/browser@latest"></script>
+
+    <script type="module" src="{% static 'js/app_cont_plant/app_cont_plant.js' %}"></script>
+{% endblock %}

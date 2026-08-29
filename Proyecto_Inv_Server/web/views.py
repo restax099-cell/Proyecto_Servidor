@@ -90,3 +90,18 @@ def requisition_panel(request):
 @login_required
 def catalog_items(request):
     return render(request, 'catalog_items/catalog_items.html')
+
+
+
+#*-------------- SECCION WEB CREACIÓN Y ADMINISTRACIÓN DE PLANTILLAS DE CONTEO DE INVENTARIO --------------*#
+@login_required
+def cont_plant(request):
+    return render(request, 'cont_plant/conteo_plantilla.html')
+
+@login_required
+def cont_panel(request):
+    return render(request, 'cont_panel/conteo.html')
+
+@login_required
+def cont_panel_detalle(request):
+    return render(request, 'cont_panel/conteo_detalle.html')

@@ -1,0 +1,283 @@
+:root {
+    /* Colores del diseño moderno */
+    --bg-app: #f4f6f8; 
+    --card-bg: #ffffff;
+    --input-bg: #f0f3f5; 
+    --text-main: #2d3748;
+    --text-muted: #718096;
+    --dark-header: #212529;
+    --border-soft: #e2e8f0;
+    
+    /* Colores de acento (Ajustados al tono pizarra oscuro de la imagen) */
+    --brand-dark: #2b3544; /* Tono gris/azul oscuro elegante */
+    --brand-dark-hover: #1e2632;
+    
+    --danger-text: #dc2626;
+    --danger-bg: #fef2f2;
+    --danger-border: #f87171;
+    
+    --success-text: #059669;
+    --success-bg: #ecfdf5;
+    --success-border: #34d399;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    color: var(--text-main);
+    background-color: var(--bg-app);
+    background-image: radial-gradient(circle at top left, #ffffff 0%, var(--bg-app) 100%);
+    min-height: 100vh;
+}
+
+/* Utilidades de texto */
+.fw-semibold { font-weight: 600 !important; }
+.fw-bold { font-weight: 700 !important; }
+.fw-extrabold { font-weight: 800 !important; }
+.fs-7 { font-size: 0.85rem; }
+.fs-8 { font-size: 0.75rem; }
+.text-muted-custom { color: var(--text-muted); }
+
+/* Tarjetas (Cards) Modernas */
+.custom-card {
+    background-color: var(--card-bg);
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    border: none;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Inputs y Botones Estilo "Soft" */
+.form-label-soft {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.form-control-soft {
+    background-color: var(--input-bg);
+    border: 1px solid transparent;
+    border-radius: 0.5rem;
+    padding: 0.6rem 1rem;
+    font-size: 0.875rem;
+    color: var(--text-main);
+    box-shadow: none !important;
+    transition: all 0.2s;
+}
+.form-control-soft:focus {
+    background-color: #ffffff;
+    border-color: #cbd5e0;
+    box-shadow: 0 0 0 3px rgba(203, 213, 224, 0.2) !important;
+}
+
+.search-icon-wrapper {
+    position: absolute;
+    top: 50%;
+    left: 1rem;
+    transform: translateY(-50%);
+    color: #a0aec0;
+}
+.input-with-icon { padding-left: 2.5rem !important; }
+
+/* Botones oscuros y outlines */
+.btn-primary-dark {
+    background-color: var(--brand-dark);
+    color: white;
+    font-weight: 600;
+    padding: 0.6rem 1.5rem;
+    border-radius: 0.5rem;
+    border: none;
+    transition: background-color 0.2s;
+}
+.btn-primary-dark:hover { background-color: var(--brand-dark-hover); color: white; }
+
+.btn-outline-soft {
+    background-color: transparent;
+    border: 1px solid #cbd5e0;
+    color: #4a5568;
+    font-weight: 600;
+    padding: 0.6rem 1.5rem;
+    border-radius: 0.5rem;
+    transition: all 0.2s;
+}
+.btn-outline-soft:hover {
+    background-color: #f7fafc;
+    border-color: #a0aec0;
+    color: #2d3748;
+}
+
+/* Toggle Button Group */
+.toggle-group {
+    display: inline-flex;
+    background-color: var(--input-bg);
+    border-radius: 0.5rem;
+    padding: 0.25rem;
+}
+.toggle-btn {
+    background: transparent;
+    border: none;
+    padding: 0.5rem 1.25rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    border-radius: 0.375rem;
+    transition: all 0.2s;
+}
+.toggle-btn.active {
+    background-color: var(--brand-dark);
+    color: white;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* Tabla Principal (Diseño Moderno) */
+.custom-card-table {
+    background-color: var(--card-bg);
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    margin-bottom: 1.5rem;
+}
+
+.table-modern {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-bottom: 0;
+    table-layout: fixed; /* Esto fuerza a respetar los anchos de columna */
+}
+
+.table-modern thead th {
+    background-color: var(--brand-dark); /* Color oscuro alineado al nuevo diseño */
+    color: white;
+    padding: 1rem 1.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border: none;
+}
+/* Bordes redondeados en la cabecera de la tabla */
+.table-modern thead th:first-child { border-top-left-radius: 0.75rem; }
+.table-modern thead th:last-child { border-top-right-radius: 0.75rem; }
+
+.table-modern tbody tr.group-header {
+    background-color: #f8fafc;
+    border-bottom: 2px solid var(--border-soft);
+}
+.table-modern tbody tr.group-header td {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.85rem;
+}
+
+.table-modern tbody tr.item-row td {
+    padding: 1rem 1.5rem;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--border-soft);
+    font-size: 0.875rem;
+}
+
+.table-modern tbody tr:last-child td { border-bottom: none; }
+
+/* Widget de Conteo Físico (+ / Input / -) */
+.counter-widget {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid #cbd5e0;
+    border-radius: 0.375rem;
+    overflow: hidden;
+    background: #ffffff;
+    height: 36px;
+}
+.counter-btn {
+    background: #f7fafc;
+    border: none;
+    padding: 0 0.85rem;
+    height: 100%;
+    color: #4a5568;
+    font-weight: 600;
+    font-size: 1.1rem;
+    line-height: 1;
+    transition: background 0.2s;
+    cursor: pointer;
+}
+.counter-btn:hover { background: #e2e8f0; color: #2d3748; }
+.counter-btn:active { background: #cbd5e0; }
+
+.counter-input {
+    width: 50px;
+    height: 100%;
+    color: #4a5568;
+    font-weight: 500;
+    transition: background 0.2s;
+    cursor: pointer;
+}
+.counter-btn:hover { background: #e2e8f0; color: #2d3748; }
+.counter-btn:active { background: #cbd5e0; }
+
+.counter-input {
+    width: 60px;
+    height: 100%;
+    text-align: center;
+    border: none;
+    border-left: 1px solid #cbd5e0;
+    border-right: 1px solid #cbd5e0;
+    background: transparent;
+    font-weight: 600;
+    color: var(--text-main);
+    /* Ocultar flechas nativas del input number */
+    -moz-appearance: textfield;
+}
+.counter-input::-webkit-outer-spin-button,
+.counter-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+.counter-input:focus { outline: none; background: #ebf4ff; }
+
+/* Badges personalizados */
+.badge-outline {
+    padding: 0.35rem 0.75rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border: 1px solid;
+    display: inline-block;
+}
+.badge-danger {
+    color: var(--danger-text);
+    border-color: var(--danger-border);
+    background-color: var(--danger-bg);
+}
+.badge-dark {
+    color: #4a5568;
+    border-color: #cbd5e0;
+    background-color: #f7fafc;
+}
+.badge-brand {
+    color: var(--brand-dark);
+    border-color: var(--brand-dark);
+    background-color: #f8fafc;
+}
+.badge-alert { /* Específico para el "Límite hoy" */
+    color: var(--danger-text);
+    border: 1px solid var(--danger-border);
+    border-radius: 0.25rem;
+    padding: 0.2rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: transparent;
+}
+
+/* Progress Bar */
+.progress-slim {
+    height: 6px;
+    background-color: var(--border-soft);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 0.5rem;
+}
+.progress-slim .progress-bar {
+    background-color: var(--brand-dark); /* Color oscuro en lugar de rojo */
+}

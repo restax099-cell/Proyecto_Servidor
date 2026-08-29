@@ -1,0 +1,167 @@
+{% extends 'cont_panel/base_conteo.html' %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/styles_conteo_detalle.css' %}">
+{% endblock %}
+
+{% block content_panel %}
+<div x-data="detalleConteoApp()" class="container-fluid" style="max-width: 1400px; padding: 1.5rem;">
+    
+    <!-- CARD 1: HEADER & ACCIONES -->
+    <div class="custom-card d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3">
+        <div class="mb-3 mb-md-0 d-flex align-items-center flex-wrap gap-2">
+            <div class="fs-7 text-muted-custom">
+                Conteo de Items &rsaquo; 
+                <span class="fw-extrabold text-dark fs-5 ms-1">Conteo diario — cocina</span>
+            </div>
+            <span class="badge-alert ms-3">Límite hoy 11:00</span>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-soft">Guardar borrador</button>
+            <button class="btn btn-primary-dark">Cerrar conteo</button> <!-- Botón en negro/oscuro -->
+        </div>
+    </div>
+
+    <!-- CARD 2: INFORMACIÓN GENERAL (Grid 4 columnas) -->
+    <div class="custom-card mb-4 py-3">
+        <div class="row text-center text-md-start">
+            <div class="col-6 col-md-3 border-end-md mb-3 mb-md-0" style="border-color: var(--border-soft) !important;">
+                <div class="form-label-soft">ALMACÉN</div>
+                <div class="fw-bold fs-6">Almacén cocina A</div>
+            </div>
+            <div class="col-6 col-md-3 border-end-md mb-3 mb-md-0" style="border-color: var(--border-soft) !important;">
+                <div class="form-label-soft">FECHA</div>
+                <div class="fw-bold fs-6">20/08/2026</div>
+            </div>
+            <div class="col-6 col-md-3 border-end-md" style="border-color: var(--border-soft) !important;">
+                <div class="form-label-soft">CAPTURÓ</div>
+                <div class="fw-bold fs-6">Juan Pérez M.</div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="form-label-soft">AVANCE</div>
+                <div class="fw-bold fs-6">
+                    <span x-text="itemsContados"></span> de <span x-text="totalItems"></span> items
+                </div>
+                <div class="progress-slim">
+                    <div class="progress-bar" role="progressbar" :style="`width: ${porcentajeAvance}%`"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CARD 3: BUSCADOR Y FILTROS -->
+    <div class="custom-card mb-3 py-3 d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+        <div class="d-flex w-100" style="max-width: 600px; gap: 0.5rem;">
+            <div class="position-relative flex-grow-1">
+                <span class="search-icon-wrapper">
+                    <i class="bi bi-search"></i>
+                </span>
+                <input type="text" 
+                        class="form-control form-control-soft input-with-icon w-100" 
+                        placeholder="Buscar SKU, descripción o código de barras" 
+                        x-model="busqueda">
+            </div>
+            <button class="btn btn-outline-soft" style="white-space: nowrap;">Escanear</button>
+        </div>
+
+        <!-- Botones Toggle Modernos (Todos, Pendientes, Contados) -->
+        <div class="toggle-group">
+            <button class="toggle-btn" 
+                    :class="{'active': filtro === 'Todos'}" 
+                    @click="filtro = 'Todos'">Todos</button>
+            <button class="toggle-btn" 
+                    :class="{'active': filtro === 'Pendientes'}" 
+                    @click="filtro = 'Pendientes'">Pendientes</button>
+            <button class="toggle-btn" 
+                    :class="{'active': filtro === 'Contados'}" 
+                    @click="filtro = 'Contados'">Contados</button>
+        </div>
+    </div>
+
+    <!-- TABLA PRINCIPAL DE CAPTURA -->
+    <div class="custom-card-table">
+        <div class="table-responsive">
+            <table class="table-modern">
+                <thead>
+                    <tr>
+                        <th style="width: 15%;">SKU</th>
+                        <th style="width: 25%;">DESCRIPCIÓN</th>
+                        <th style="width: 20%;">CÓDIGO BARRAS</th>
+                        <th style="width: 10%;">UNIDAD</th>
+                        <th style="width: 15%; text-align: center;">CONTEO FÍSICO</th>
+                        <th style="width: 15%; text-align: right;">ESTADO</th>
+                    </tr>
+                </thead>
+                <!-- Usar múltiples tbody en lugar de fragmentos rompe-tablas -->
+                <template x-for="categoria in categoriasFiltradas" :key="categoria.nombre">
+                    <tbody x-show="categoria.itemsFiltrados.length > 0">
+                        
+                        <!-- Fila Agrupadora de Categoría -->
+                        <tr class="group-header">
+                            <td colspan="6">
+                                <div class="d-flex justify-content-between align-items-center w-100">
+                                    <span class="fw-extrabold text-dark fs-6" x-text="categoria.nombre"></span>
+                                    <span class="text-muted-custom fs-8" 
+                                            x-text="`${contadosPorCategoria(categoria)} de ${categoria.items.length} contados · catálogo ${categoria.codigo}`"></span>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Filas de Items -->
+                        <template x-for="item in categoria.itemsFiltrados" :key="item.sku">
+                            <tr class="item-row">
+                                <td class="text-muted-custom" x-text="item.sku"></td>
+                                <td class="fw-semibold text-dark text-wrap" style="line-height: 1.3;" x-text="item.descripcion"></td>
+                                <td class="text-muted-custom fs-8" x-text="item.codigoBarras"></td>
+                                <td class="text-muted-custom fw-semibold" x-text="item.unidad"></td>
+                                
+                                <!-- Control de Conteo Físico -->
+                                <td class="text-center">
+                                    <div class="counter-widget">
+                                        <button class="counter-btn" @click="decrementar(item)">−</button>
+                                        <input type="number" 
+                                                class="counter-input" 
+                                                x-model="item.cantidad"
+                                                @input="actualizarEstado(item)"
+                                                placeholder="—"
+                                                step="any">
+                                        <button class="counter-btn" @click="incrementar(item)">+</button>
+                                    </div>
+                                </td>
+
+                                <!-- Estado (Badge) -->
+                                <td class="text-end">
+                                    <span class="badge-outline" 
+                                            :class="claseEstado(item)" 
+                                            x-text="item.estado"></span>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </template>
+            </table>
+        </div>
+    </div>
+
+    <!-- FOOTER DE AYUDA Y ACCIONES -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center pt-2 pb-4">
+        <div class="text-muted-custom fs-7 mb-3 mb-md-0" style="max-width: 600px;">
+            Los botones + / − ajustan de uno en uno; el número central se puede escribir directamente (acepta decimales según la unidad).
+        </div>
+        <div class="d-flex gap-3">
+            <button class="btn btn-outline-soft bg-white">Marcar en cero los pendientes</button>
+            <button class="btn btn-primary-dark">Cerrar conteo</button> <!-- Botón Oscuro -->
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+
+{% block extra_scripts %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://unpkg.com/@zxing/browser@latest"></script>
+
+    <script type="module" src="{% static 'js/app_conteo_panel/app_conteo_detalle.js' %}"></script>
+{% endblock %}

@@ -1,46 +1,52 @@
 body {
-    background-color: rgb(20, 20, 20);
-    display: flex; 
-    justify-content: center; 
-    align-items: center; 
-    min-height: 100vh;
-    margin: 0;
-    flex-direction: column; 
+    background-color: #f1f5f9; /* Tono gris claro para contrastar con las tarjetas blancas */
+    font-family: system-ui, -apple-system, sans-serif;
 }
 
-h1 {
-    font-family: 'Courier New', Courier, monospace;
-    color: aquamarine;
-    text-align: center;
-    margin-top: 0; 
+/* Tarjeta limpia y estructurada */
+.menu-card {
+    background-color: #ffffff;
+    border: 1px solid rgba(0,0,0,0.05);
+    border-radius: 0.75rem;
+    transition: all 0.2s ease-in-out;
+    min-height: 120px; /* Altura mínima para que todas sean exactamente iguales */
 }
 
-.go_panel {
-    display: flex; 
-    flex-direction: column; 
-    justify-content: center;
-    align-items: center;
-    height: 80vh;
-    margin-top: 20px;
-    gap: 15px; 
+/* Efecto al pasar el mouse */
+.menu-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05) !important;
+    border-color: rgba(0,0,0,0.1);
 }
 
-.go_panel .btn {
-    min-width: 250px; 
-    text-align: center;
+/* Texto de la tarjeta */
+.menu-card h5 {
+    color: #475569; /* Gris pizarra oscuro, más suave que el negro puro */
+    font-size: 1.05rem;
+    transition: color 0.2s ease;
 }
 
-#admin-panel-link {
-    padding: 1rem 2rem; 
-    background: #007bff; 
-    color: #fff; 
-    border-radius: 8px; 
-    text-decoration: none; 
-    font-size: 1.2rem; 
-    font-weight: bold; 
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1); 
-    transition: background 0.2s;
+.menu-card:hover h5 {
+    color: #0f172a; /* Oscurece el texto al hacer hover para dar respuesta visual */
 }
 
+/* Estilo especial para tarjetas pendientes/en desarrollo */
+.menu-card-pending {
+    background-color: #f8fafc; /* Ligeramente distinto al blanco puro */
+    border: 1px dashed #cbd5e1 !important; /* Borde punteado */
+    box-shadow: none !important; /* Quitamos la sombra inicial para que se vea más plano */
+}
 
+.menu-card-pending:hover {
+    background-color: #ffffff;
+    border: 1px dashed #94a3b8 !important;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05) !important; /* Sombra muy sutil al pasar el mouse */
+}
 
+.menu-card-pending h5 {
+    color: #64748b; /* Texto un poco más atenuado */
+}
+
+.menu-card-pending:hover h5 {
+    color: #334155;
+}

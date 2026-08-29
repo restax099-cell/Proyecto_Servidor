@@ -1,0 +1,187 @@
+
+:root {
+    /* Colores del diseño moderno */
+    --bg-app: #f4f6f8; 
+    --card-bg: #ffffff;
+    --input-bg: #f0f3f5; 
+    --text-main: #2d3748;
+    --text-muted: #718096;
+    --dark-header: #212529;
+    --border-soft: #e2e8f0;
+    
+    /* Colores de acento */
+    --brand-dark: #2d3748; /* Negro suave para botones y selección */
+    --brand-dark-hover: #1a202c;
+    --danger-text: #dc2626; /* Texto rojo (ej. Hoy 11:00) */
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    color: var(--text-main);
+    background-color: var(--bg-app);
+    background-image: radial-gradient(circle at top left, #ffffff 0%, var(--bg-app) 100%);
+    min-height: 100vh;
+}
+
+/* Utilidades de texto */
+.fw-semibold { font-weight: 600 !important; }
+.fw-bold { font-weight: 700 !important; }
+.fw-extrabold { font-weight: 800 !important; }
+.fs-7 { font-size: 0.85rem; }
+.fs-8 { font-size: 0.75rem; }
+.text-muted-custom { color: var(--text-muted); }
+
+/* Tarjetas (Cards) Modernas */
+.custom-card {
+    background-color: var(--card-bg);
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    border: none;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Inputs Estilo "Soft" */
+.form-label-soft {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.form-control-soft, .form-select-soft {
+    background-color: var(--input-bg);
+    border: 1px solid transparent;
+    border-radius: 0.5rem;
+    padding: 0.6rem 1rem;
+    font-size: 0.875rem;
+    color: var(--text-main);
+    box-shadow: none !important;
+    transition: all 0.2s;
+}
+
+.form-control-soft::placeholder { color: #a0aec0; }
+
+.form-control-soft:focus {
+    background-color: #ffffff;
+    border-color: #cbd5e0;
+    box-shadow: 0 0 0 3px rgba(203, 213, 224, 0.2) !important;
+}
+
+.search-icon-wrapper {
+    position: absolute;
+    top: 50%;
+    left: 1rem;
+    transform: translateY(-50%);
+    color: #a0aec0;
+}
+.input-with-icon {
+    padding-left: 2.5rem !important;
+}
+
+/* Tabla Principal (Diseño Tarjeta + Cabecera Oscura) */
+.custom-card-table {
+    background-color: var(--card-bg);
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+}
+
+.table-modern {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-bottom: 0;
+}
+
+.table-modern thead th {
+    background-color: var(--dark-header);
+    color: white;
+    padding: 1rem 1.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border: none;
+}
+
+.table-modern tbody tr {
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.table-modern tbody tr:hover {
+    background-color: #f8fafc;
+}
+
+.table-modern tbody tr.selected-row {
+    background-color: #f1f5f9; /* Fondo gris sutil para fila seleccionada */
+}
+
+.table-modern tbody tr td {
+    padding: 1.25rem 1.5rem;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--border-soft);
+}
+
+.table-modern tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Custom Square Radio/Checkbox */
+.custom-square-check {
+    width: 18px;
+    height: 18px;
+    border: 2px solid #a0aec0;
+    border-radius: 2px;
+    display: inline-block;
+    transition: all 0.2s;
+    position: relative;
+}
+.selected-row .custom-square-check {
+    background-color: var(--brand-dark);
+    border-color: var(--brand-dark);
+}
+
+/* Botones y Footer */
+.btn-primary-dark {
+    background-color: var(--brand-dark);
+    color: white;
+    font-weight: 600;
+    padding: 0.6rem 1.5rem;
+    border-radius: 0.375rem;
+    border: none;
+    transition: background-color 0.2s;
+}
+.btn-primary-dark:hover {
+    background-color: var(--brand-dark-hover);
+    color: white;
+}
+
+.btn-outline-soft {
+    background-color: transparent;
+    border: 1px solid #cbd5e0;
+    color: #4a5568;
+    font-weight: 600;
+    padding: 0.6rem 1.5rem;
+    border-radius: 0.375rem;
+    transition: all 0.2s;
+}
+.btn-outline-soft:hover {
+    background-color: #f7fafc;
+    border-color: #a0aec0;
+    color: #2d3748;
+}
+
+/* Topbar Breadcrumb */
+.topbar-nav {
+    padding: 1rem 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #e2e8f0;
+    margin-bottom: 1.5rem;
+}

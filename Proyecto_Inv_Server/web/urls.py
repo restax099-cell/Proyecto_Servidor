@@ -21,4 +21,8 @@ urlpatterns = [
 
     path('requisicion-panel/', views.requisition_panel, name='requisicion_panel'),
     path('catalog-items/', views.catalog_items, name='catalog_items'),
+
+    path('cont-plant/', views.cont_plant, name='cont_plant'),
+    path('cont-panel/', views.cont_panel, name='cont_panel'),
+    path('cont-panel-detalle/', views.cont_panel_detalle, name='cont_panel_detalle'),
 ]
