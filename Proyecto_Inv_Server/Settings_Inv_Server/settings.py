@@ -32,7 +32,7 @@ DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
 ALLOWED_HOSTS = [os.getenv('HOST_DJ'),'127.0.0.1','localhost', '*']
 
-
+AUTH_USER_MODEL = 'api.VlxUser' 
 # Application definition
 
 INSTALLED_APPS = [
@@ -136,7 +136,7 @@ STATIC_URL = '/static/'
 
 STATICFILES_DIRS = [
     
-    #BASE_DIR / "web" / "static", 
+    BASE_DIR / "web" / "static",
 ]
 
 STATIC_ROOT = BASE_DIR / "staticfiles"

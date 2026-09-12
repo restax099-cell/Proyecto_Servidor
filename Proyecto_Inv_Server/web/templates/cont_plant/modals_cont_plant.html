@@ -1,0 +1,128 @@
+<!-- Modal Nueva Plantilla (Diseño oscuro y limpio) -->
+<div class="modal fade" id="modalNuevaPlantilla" tabindex="-1" aria-labelledby="modalNuevaPlantillaLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            
+            <!-- Encabezado Oscuro -->
+            <div class="modal-header bg-dark text-white border-bottom-0">
+                <h5 class="modal-title fw-semibold fs-6" id="modalNuevaPlantillaLabel">Crear nueva plantilla</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <!-- Cuerpo del Modal -->
+            <div class="modal-body p-4 bg-white">
+                
+                <!-- Nombre de la plantilla -->
+                <div class="mb-4">
+                    <label class="form-label fw-bold text-dark mb-1">Nombre de la plantilla</label>
+                    <input type="text" class="form-control" 
+                           x-model="formulario.nombre" 
+                           placeholder="Ej. Conteo diario - cocina">
+                </div>
+
+                <!-- Almacén a contar -->
+                <div class="mb-4">
+                    <label class="form-label fw-bold text-dark mb-1">Almacén a contar</label>
+                    <select class="form-select" x-model="formulario.store">
+                        <option value="" disabled selected>Selecciona un almacén...</option>
+                        <template x-for="s in stores" :key="s.id">
+                            <option :value="s.id" x-text="s.store"></option>
+                        </template>
+                    </select>
+                </div>
+
+                <!-- Responsables de captura (Dropdown Dinámico) -->
+                <div class="mb-2">
+                    <label class="form-label fw-bold text-dark mb-1">Responsables de captura</label>
+                    <select class="form-select" x-model="formulario.user_id">
+                        <option value="" disabled selected>Selecciona al responsable...</option>
+                        <template x-for="usuario in usuarios" :key="usuario.id">
+                            <option :value="usuario.id" x-text="usuario.username"></option>
+                        </template>
+                    </select>
+                </div>
+
+            </div>
+            
+            <!-- Pie del Modal (Fondo gris claro) -->
+            <div class="modal-footer bg-light border-top-0 py-3">
+                <button type="button" class="btn btn-white border px-4" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-dark px-4" 
+                        data-bs-dismiss="modal"
+                        @click="iniciarEdicionNueva()">
+                    Comenzar a configurar
+                </button>
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+
+<!-- Modal Buscar y Agregar Catálogos -->
+<div class="modal fade" id="modalCatalogos" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow">
+            
+            <div class="modal-header bg-dark text-white border-bottom-0">
+                <h5 class="modal-title fw-semibold fs-6">Seleccionar Catálogos</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <div class="modal-body p-4 bg-white">
+                <!-- Buscador que dispara la API al teclear -->
+                <div class="mb-3 position-relative">
+                    <input type="text" class="form-control" placeholder="Buscar por nombre o código..."
+                           x-model="searchCatalogo" 
+                           @keyup.debounce.500ms="buscarCatalogos()">
+                </div>
+                
+                <!-- Tabla de resultados con scroll interno -->
+                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light sticky-top">
+                            <tr>
+                                <th style="width: 15%">CÓDIGO</th>
+                                <th style="width: 50%">CATEGORÍA</th>
+                                <th style="width: 15%" class="text-center">ITEMS</th>
+                                <th style="width: 20%" class="text-end">ACCIÓN</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Iteramos sobre la respuesta de la API -->
+                            <template x-for="cat in catalogosDisponibles" :key="cat.categoria_id">
+                                <tr>
+                                    <td class="fw-bold text-dark" x-text="cat.catalogo"></td>
+                                    <td x-text="cat.categoria"></td>
+                                    <td class="text-center">
+                                        <span class="badge bg-light text-dark border" x-text="cat.cant_items"></span>
+                                    </td>
+                                    <td class="text-end">
+                                        <!-- Botón inteligente: Cambia de estado si ya se agregó -->
+                                        <button type="button" class="btn btn-sm fw-bold" 
+                                                :class="isCatalogoAgregado(cat.categoria_id) ? 'btn-success disabled' : 'btn-dark'"
+                                                @click="agregarCatalogo(cat)">
+                                            <span x-text="isCatalogoAgregado(cat.categoria_id) ? 'Agregado ✓' : 'Agregar +'"></span>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </template>
+                            
+                            <!-- Mensaje si no hay resultados -->
+                            <tr x-show="catalogosDisponibles.length === 0">
+                                <td colspan="4" class="text-center py-4 text-muted">
+                                    No se encontraron catálogos con esa búsqueda.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="modal-footer bg-light border-top-0 py-3">
+                <button type="button" class="btn btn-dark px-4" data-bs-dismiss="modal">Terminar y cerrar</button>
+            </div>
+            
+        </div>
+    </div>
+</div>

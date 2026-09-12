@@ -4,7 +4,7 @@ from django.views.decorators.csrf import csrf_exempt
 from .views import (
     codes_views, 
     prueba_views, 
-    user_views
+    user_views,
 )
 
 urlpatterns = [
@@ -21,5 +21,7 @@ urlpatterns = [
     path('xml/', include('api.routes.xml_urls')),
     
     path('requisition/', include('api.routes.requisiciones_urls')),
+
+    path('conteo/', include('api.routes.conteo_urls')),
 
 ]
