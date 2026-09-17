@@ -8,20 +8,20 @@
 {% block content_panel %}
 <div x-data="conteoApp()" class="container-fluid" style="max-width: 1200px; padding: 0 1.5rem;">
     
-    <!-- BARRA SUPERIOR (BREADCRUMBS) -->
+    <!-- BARRA SUPERIOR -->
     <div class="topbar-nav fs-7">
-        <div class="text-muted-custom">
-            Inventarios &rsaquo; <span class="fw-bold text-dark fs-6">Conteo de Items</span> 
-            <span style="font-size: 0.65rem; letter-spacing: 1px; margin-left: 5px;">ITEMS COUNTING</span>
+        <div class="d-flex align-items-center gap-2">
+            <div class="bg-dark rounded-1" style="width: 6px; height: 24px;"></div>
+            <h1 class="fw-bold text-dark mb-0 fs-4">Conteo de items</h1>
         </div>
         <div class="text-muted-custom">
-            Juan Pérez Martínez
+            {{ request.user.get_full_name|default:request.user.username }}
         </div>
     </div>
 
     <main class="pb-5">
         
-        <!-- TARJETA 1: ENCABEZADO Y BÚSQUEDA -->
+        <!-- ENCABEZADO Y BÚSQUEDA -->
         <div class="custom-card">
             <div class="text-muted-custom fs-8 fw-bold mb-2 letter-spacing-1">PASO 1 DE 2</div>
             <h1 class="fw-extrabold text-dark mb-2" style="font-size: 1.75rem;">Selecciona la plantilla de conteo</h1>
@@ -40,13 +40,13 @@
             </div>
         </div>
 
-        <!-- TARJETA 2: TABLA DE PLANTILLAS (Diseño Oscuro) -->
+        <!-- TABLA DE PLANTILLAS -->
         <div class="custom-card-table">
             <div class="table-responsive">
                 <table class="table-modern">
                     <thead>
                         <tr>
-                            <th style="width: 5%;"></th> <!-- Para el checkbox -->
+                            <th style="width: 5%;"></th> 
                             <th style="width: 35%;">PLANTILLA</th>
                             <th style="width: 20%;">ALMACÉN</th>
                             <th style="width: 20%;">FRECUENCIA</th>
@@ -82,17 +82,57 @@
                                 </td>
 
                                 <!-- Columna Frecuencia -->
-                                <td>
-                                    <span class="fs-7" 
-                                            x-text="plantilla.frecuencia"
-                                            :class="plantilla.inactiva ? 'text-muted' : ''"></span>
+                                <td class="align-middle">
+                                    <div class="fs-7" :class="plantilla.inactiva ? 'text-muted opacity-50' : ''">
+                                        <template x-if="plantilla.diasFrecuencia && plantilla.diasFrecuencia.length > 0">
+                                            
+                                            <div style="display: grid; grid-template-columns: repeat(3, 28px); gap: 4px;">
+                                                <template x-for="dia in plantilla.diasFrecuencia" :key="dia">
+                                                    
+                                                    <span class="badge rounded-1 border px-0 py-1 fw-normal w-100"
+                                                        :class="plantilla.inactiva ? 'bg-transparent text-muted border-secondary' : 'bg-white text-secondary border-secondary-subtle'" 
+                                                        x-text="dia"
+                                                        style="text-align: center;">
+                                                    </span>
+                                                    
+                                                </template>
+                                            </div>
+                                            
+                                        </template>
+                                    </div>
                                 </td>
-
                                 <!-- Columna Límite de Captura -->
-                                <td>
-                                    <span class="fs-7" 
-                                            x-text="plantilla.limiteCaptura"
-                                            :class="obtenerClaseLimite(plantilla)"></span>
+                                <td class="align-middle">
+                                    <template x-if="plantilla.limiteCaptura">
+                                        <div class="d-flex flex-column fs-7" :class="plantilla.inactiva ? 'text-muted opacity-50' : ''">
+                                            
+                                            <!-- HORA -->
+                                            <div class="d-flex align-items-center gap-2">
+                                                <span class="fw-medium"
+                                                    :class="(plantilla.alertaRoja || plantilla.estaVencida) ? 'text-danger fw-bold' : 'text-body'"
+                                                    x-text="plantilla.limiteCaptura.hora">
+                                                </span>
+                                                
+                                                <!-- GAFETE -->
+                                                <template x-if="plantilla.estaVencida">
+                                                    <span class="badge bg-danger rounded-1" style="font-size: 0.65em; padding: 0.25em 0.4em;">
+                                                        Vencido
+                                                    </span>
+                                                </template>
+                                            </div>
+
+                                            <!-- FECHA: -->
+                                            <span style="font-size: 0.85em;" 
+                                                :class="(plantilla.alertaRoja || plantilla.estaVencida) ? 'text-danger opacity-75' : 'text-secondary'" 
+                                                x-text="plantilla.limiteCaptura.fecha">
+                                            </span>
+                                            
+                                        </div>
+                                    </template>
+                                    
+                                    <template x-if="!plantilla.limiteCaptura">
+                                        <span class="fs-7 text-muted">Sin límite</span>
+                                    </template>
                                 </td>
                             </tr>
                         </template>
@@ -101,22 +141,23 @@
             </div>
         </div>
 
-        <!-- TARJETA 3: FOOTER DE ACCIONES Y RESUMEN -->
+        <!-- FOOTER DE ACCIONES Y RESUMEN -->
         <div class="custom-card">
             <div class="row g-4 mb-4">
-                <!-- Almacén a contar (Readonly/Soft) -->
+                <!-- Almacén a contar -->
                 <div class="col-md-6">
                     <label class="form-label-soft">ALMACÉN A CONTAR</label>
                     <input type="text" class="form-control form-control-soft" readonly 
                             :value="textoAlmacenSeleccionado">
                 </div>
                 
-                <!-- Fecha del Conteo (Soft) -->
+                <!-- Fecha del Conteo  -->
                 <div class="col-md-6">
                     <label class="form-label-soft">FECHA DEL CONTEO</label>
                     <div class="input-group">
+                        <!-- Reemplazamos value="20/08/2026" por :value="fechaConteo" -->
                         <input type="text" class="form-control form-control-soft" 
-                                value="20/08/2026" readonly>
+                            :value="fechaConteo" readonly>
                         <span class="input-group-text" style="background: var(--input-bg); border: none; border-radius: 0 0.5rem 0.5rem 0; color: #718096;">
                             <i class="bi bi-calendar3"></i>
                         </span>
