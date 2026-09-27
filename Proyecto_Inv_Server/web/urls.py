@@ -24,5 +24,5 @@ urlpatterns = [
 
     path('conteo-plantilla/', views.cont_plant, name='cont_plant'),
     path('cont-panel/', views.cont_panel, name='cont_panel'),
-    path('cont-panel-detalle/', views.cont_panel_detalle, name='cont_panel_detalle'),
+    path('cont-panel-detalle/<int:plantilla_id>/', views.cont_panel_detalle, name='cont_panel_detalle'),
 ]

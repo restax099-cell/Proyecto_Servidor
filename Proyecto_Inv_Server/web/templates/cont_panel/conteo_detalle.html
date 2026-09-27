@@ -6,20 +6,25 @@
 {% endblock %}
 
 {% block content_panel %}
-<div x-data="detalleConteoApp()" class="container-fluid" style="max-width: 1400px; padding: 1.5rem;">
-    
+<div x-data="detalleConteoApp({{ plantilla_id }})" class="container-fluid" style="max-width: 1400px; padding: 1.5rem;">    
     <!-- CARD 1: HEADER & ACCIONES -->
     <div class="custom-card d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3">
         <div class="mb-3 mb-md-0 d-flex align-items-center flex-wrap gap-2">
             <div class="fs-7 text-muted-custom">
                 Conteo de Items &rsaquo; 
-                <span class="fw-extrabold text-dark fs-5 ms-1">Conteo diario — cocina</span>
+                <!-- Vinculamos el nombre -->
+                <span class="fw-extrabold text-dark fs-5 ms-1" x-text="encabezado.nombre"></span>
             </div>
-            <span class="badge-alert ms-3">Límite hoy 11:00</span>
+            <!-- Vinculamos el límite y lo ocultamos si viene vacío -->
+            <template x-if="encabezado.limite">
+                <span class="badge-alert ms-3" x-text="encabezado.limite"></span>
+            </template>
         </div>
         <div class="d-flex gap-2">
-            <button class="btn btn-outline-soft">Guardar borrador</button>
-            <button class="btn btn-primary-dark">Cerrar conteo</button> <!-- Botón en negro/oscuro -->
+            <button class="btn btn-outline-secondary" @click="guardarConteo('Borrador')">
+                Guardar borrador
+            </button>
+            <button class="btn btn-primary-dark">Cerrar conteo</button>
         </div>
     </div>
 
@@ -28,15 +33,20 @@
         <div class="row text-center text-md-start">
             <div class="col-6 col-md-3 border-end-md mb-3 mb-md-0" style="border-color: var(--border-soft) !important;">
                 <div class="form-label-soft">ALMACÉN</div>
-                <div class="fw-bold fs-6">Almacén cocina A</div>
+                <!-- Vinculamos el almacén -->
+                <div class="fw-bold fs-6" x-text="encabezado.almacen"></div>
             </div>
             <div class="col-6 col-md-3 border-end-md mb-3 mb-md-0" style="border-color: var(--border-soft) !important;">
                 <div class="form-label-soft">FECHA</div>
-                <div class="fw-bold fs-6">20/08/2026</div>
+                <!-- Vinculamos la fecha calculada en el JS -->
+                <div class="fw-bold fs-6" x-text="encabezado.fecha"></div>
             </div>
             <div class="col-6 col-md-3 border-end-md" style="border-color: var(--border-soft) !important;">
                 <div class="form-label-soft">CAPTURÓ</div>
-                <div class="fw-bold fs-6">Juan Pérez M.</div>
+                <!-- Usamos Django para mostrar el usuario logueado al instante -->
+                <div class="fw-bold fs-6">
+                    {{ request.user.get_full_name|default:request.user.username }}
+                </div>
             </div>
             <div class="col-6 col-md-3">
                 <div class="form-label-soft">AVANCE</div>
@@ -93,24 +103,72 @@
                         <th style="width: 15%; text-align: right;">ESTADO</th>
                     </tr>
                 </thead>
-                <!-- Usar múltiples tbody en lugar de fragmentos rompe-tablas -->
+
+                <tbody x-show="isLoading">
+                    <tr>
+                        <td colspan="6" class="text-center" style="padding: 6rem 0;">
+                            <!-- Usamos el spinner de Bootstrap en un tamaño más grande -->
+                            <div class="spinner-border text-primary" role="status" style="width: 3.5rem; height: 3.5rem;">
+                                <span class="visually-hidden">Cargando...</span>
+                            </div>
+                            <div class="mt-3 text-muted-custom fw-semibold fs-6">
+                                Cargando items...
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+                <!-- TABLA DE CONTEO POR CATEGORIA -->
                 <template x-for="categoria in categoriasFiltradas" :key="categoria.nombre">
-                    <tbody x-show="categoria.itemsFiltrados.length > 0">
+                    
+                    <tbody x-show="categoria.itemsFiltrados.length > 0" x-data="{ expandido: false }">
                         
-                        <!-- Fila Agrupadora de Categoría -->
-                        <tr class="group-header">
-                            <td colspan="6">
-                                <div class="d-flex justify-content-between align-items-center w-100">
-                                    <span class="fw-extrabold text-dark fs-6" x-text="categoria.nombre"></span>
-                                    <span class="text-muted-custom fs-8" 
-                                            x-text="`${contadosPorCategoria(categoria)} de ${categoria.items.length} contados · catálogo ${categoria.codigo}`"></span>
+                        <!-- Fila Agrupadora de Categoría (Diseño Mejorado) -->
+                        <tr class="group-header" 
+                            style="cursor: pointer; user-select: none; background-color: #f8fafc; border-bottom: 1px solid var(--border-soft);" 
+                            @click="expandido = !expandido">
+                            <td colspan="6" class="py-3"> <!-- py-3 da más aire vertical -->
+                                <div class="d-flex justify-content-between align-items-center w-100 px-2">
+                                    
+                                    <!-- IZQUIERDA: Acento + Título + Catálogo -->
+                                    <div class="d-flex align-items-center gap-3">
+                                        <!-- Acento vertical (hace juego con el estilo estructurado) -->
+                                        <div class="rounded-1 bg-dark opacity-75" style="width: 4px; height: 22px;"></div>
+                                        
+                                        <!-- Título de la categoría -->
+                                        <span class="fw-extrabold text-dark fs-6 text-uppercase" style="letter-spacing: 0.5px;" x-text="categoria.nombre"></span>
+                                        
+                                        <!-- Gafete del código de catálogo -->
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary-subtle rounded-1 fw-normal" 
+                                            style="font-size: 0.65rem; letter-spacing: 0.5px;" 
+                                            x-text="'CAT. ' + categoria.codigo"></span>
+                                    </div>
+                                    
+                                    <!-- DERECHA: Progreso + Flecha -->
+                                    <div class="d-flex align-items-center gap-4">
+                                        <!-- Texto de progreso -->
+                                        <div class="fs-7">
+                                            <span class="fw-bold" 
+                                                :class="contadosPorCategoria(categoria) === categoria.items.length ? 'text-success' : 'text-dark'" 
+                                                x-text="contadosPorCategoria(categoria)"></span>
+                                            <span class="text-muted-custom" x-text="` de ${categoria.items.length} contados`"></span>
+                                        </div>
+                                        
+                                        <!-- Botón de flecha circular -->
+                                        <div class="d-flex justify-content-center align-items-center bg-white border border-secondary-subtle rounded-circle shadow-sm" 
+                                            style="width: 28px; height: 28px;">
+                                            <i class="bi bi-chevron-down text-dark" 
+                                            style="transition: transform 0.3s ease; font-size: 0.85rem;"
+                                            :style="expandido ? 'transform: rotate(-180deg);' : 'transform: rotate(0deg);'"></i>
+                                        </div>
+                                    </div>
+                                    
                                 </div>
                             </td>
                         </tr>
 
                         <!-- Filas de Items -->
                         <template x-for="item in categoria.itemsFiltrados" :key="item.sku">
-                            <tr class="item-row">
+                            <tr class="item-row" x-show="expandido">
                                 <td class="text-muted-custom" x-text="item.sku"></td>
                                 <td class="fw-semibold text-dark text-wrap" style="line-height: 1.3;" x-text="item.descripcion"></td>
                                 <td class="text-muted-custom fs-8" x-text="item.codigoBarras"></td>
@@ -119,14 +177,14 @@
                                 <!-- Control de Conteo Físico -->
                                 <td class="text-center">
                                     <div class="counter-widget">
-                                        <button class="counter-btn" @click="decrementar(item)">−</button>
+                                        <button class="counter-btn" @click.stop="decrementar(item)">−</button>
                                         <input type="number" 
                                                 class="counter-input" 
                                                 x-model="item.cantidad"
                                                 @input="actualizarEstado(item)"
                                                 placeholder="—"
                                                 step="any">
-                                        <button class="counter-btn" @click="incrementar(item)">+</button>
+                                        <button class="counter-btn" @click.stop="incrementar(item)">+</button>
                                     </div>
                                 </td>
 

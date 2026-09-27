@@ -172,7 +172,11 @@
                 </div>
                 <div class="d-flex gap-3">
                     <button class="btn btn-outline-soft">Ver conteos anteriores</button>
-                    <button class="btn btn-primary-dark">Iniciar conteo</button>
+                    <button class="btn btn-primary-dark" 
+                            :disabled="!plantillaSeleccionada" 
+                            @click="iniciarConteo()">
+                        Iniciar conteo
+                    </button>
                 </div>
             </div>
         </div>

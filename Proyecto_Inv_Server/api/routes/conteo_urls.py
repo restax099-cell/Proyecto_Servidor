@@ -7,5 +7,7 @@ urlpatterns = [
     path('get-lista-catalogos/', conteo_views.get_lista_catalogos, name='get_lista_catalogos'),
     path('set-conteo-plantilla/', conteo_views.set_conteo_plantilla, name='set_conteo_plantilla'),
     path('get-plantillas/', conteo_views.get_conteo_plantillas, name='get_conteo_plantillas'),
+    path('set-conteo-detalle/', conteo_views.set_conteo_detalle, name='set_conteo_detalle'),
+    path('get-conteo-detalle/', conteo_views.get_conteo_detalle, name='get_conteo_detalle'),
 
 ]

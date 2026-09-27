@@ -103,5 +103,8 @@ def cont_panel(request):
     return render(request, 'cont_panel/conteo.html')
 
 @login_required
-def cont_panel_detalle(request):
-    return render(request, 'cont_panel/conteo_detalle.html')
+def cont_panel_detalle(request, plantilla_id): 
+    context = {
+        'plantilla_id_desde_django': plantilla_id
+    }
+    return render(request, 'cont_panel/conteo_detalle.html', context)

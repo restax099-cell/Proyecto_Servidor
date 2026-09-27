@@ -159,6 +159,11 @@ Alpine.data('conteoApp', () => ({
         if (plantilla.inactiva) return 'text-muted';
         if (plantilla.alertaRoja) return 'text-danger fw-semibold'; // Clases de Bootstrap
         return '';
+    },
+
+    iniciarConteo() {
+        if (!this.plantillaSeleccionada) return;
+        window.location.href = `/cont-panel-detalle/${this.plantillaSeleccionada}/`;
     }
 }));
 

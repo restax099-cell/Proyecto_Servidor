@@ -188,13 +188,88 @@ def vista_principal_plantillas(request):
         'plantillas_iniciales': json.dumps(plantillas_iniciales),
         'stores_json': json.dumps(stores_list) 
     }
-    return render(request, 'tu_app/tu_template.html', contexto)
+    return render(request, 'cont_plant/conteo_plantilla.html', contexto)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def set_conteo_detalle(request):
+    try:
+        data = request.data
+        
+        #? 1. Extraer los datos generales
+        plantilla_id = data.get('conteo_plantilla_id')
+        estado_guardado = data.get('estado', 'Borrador')
+        
+        #? 2. Extraer y empaquetar el arreglo de items en un string JSON
+        items_list = data.get('items', [])
+        
+        # Validación de seguridad básica
+        if not plantilla_id or not items_list:
+            return JsonResponse({
+                "status": "error",
+                "error": "Faltan datos obligatorios (conteo_plantilla_id o items)."
+            }, status=400)
+            
+        json_items_string = json.dumps(items_list)
+
+        #? 3. Ejecutar el Stored Procedure
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                CALL sp_save_conteo_detalle(%s, %s)
+            """, [
+                plantilla_id, 
+                json_items_string
+            ])
+            
+            row = cursor.fetchone()
+            registros_afectados = row[0] if row else 0
 
 
+        return JsonResponse({
+            "status": "success",
+            "message": "Conteo guardado correctamente.",
+            "registros_afectados": registros_afectados
+        }, status=200)
+
+    except Exception as e:
+        return JsonResponse({
+            "status": "error",
+            "error": f"Error de BD: {str(e)}"
+        }, status=500)
 
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_conteo_detalle(request): 
+    try:
+        id = request.GET.get('id')
 
+        if not id:
+            return JsonResponse({"status": "error", "error": "ID de plantilla no proporcionado"}, status=400)
 
+        detalles = []
+        with connection.cursor() as cursor:
+            cursor.execute("CALL sp_get_conteo_detalle(%s)", [id])
+            columns = [col[0] for col in cursor.description]
+            
+            for row in cursor.fetchall():
+                fila = dict(zip(columns, row))
+                
+                if 'conteo' in fila and fila['conteo'] is not None:
+                    fila['conteo'] = float(fila['conteo'])
+                    
+                detalles.append(fila)
+
+        return JsonResponse({
+            "status": "success",
+            "data": detalles
+        }, status=200)
+
+    except Exception as e:
+        return JsonResponse({
+            "status": "error",
+            "error": f"Error de BD: {str(e)}"
+        }, status=500)
 
 
 
