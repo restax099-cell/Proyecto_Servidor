@@ -1,0 +1,66 @@
+[x-cloak] { display: none !important; }
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f1f5f9 !important;
+    color: #0f172a;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* Estilos de tarjetas de la lista */
+.count-card {
+    transition: all 0.15s ease-in-out;
+    background-color: #ffffff;
+    border: 1px solid #cbd5e1;
+}
+.count-card:hover {
+    background-color: #f8fafc;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+    border-color: #94a3b8;
+}
+.count-card.active {
+    background-color: #ffffff;
+    border-left: 4px solid #0f172a !important;
+    border-color: #0f172a;
+    box-shadow: 0 4px 10px rgba(15, 23, 42, 0.08);
+}
+
+/* Badges de alto contraste con tonos suaves */
+.badge-soft-success { background-color: #dcfce7; color: #14532d; border: 1px solid #bbf7d0; }
+.badge-soft-warning { background-color: #fef3c7; color: #78350f; border: 1px solid #fde68a; }
+.badge-soft-secondary { background-color: #f1f5f9; color: #1e293b; border: 1px solid #cbd5e1; }
+
+/* Scrollbar personalizado */
+.scrollable-column {
+    overflow-y: auto;
+}
+.scrollable-column::-webkit-scrollbar { width: 6px; }
+.scrollable-column::-webkit-scrollbar-track { background: transparent; }
+.scrollable-column::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+.scrollable-column::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+.search-input {
+    background-color: #ffffff;
+    border: 1px solid #cbd5e1;
+    color: #0f172a;
+}
+.search-input::placeholder {
+    color: #64748b;
+}
+.search-input:focus {
+    background-color: #ffffff;
+    border-color: #0f172a;
+    box-shadow: 0 0 0 0.2rem rgba(15, 23, 42, 0.12);
+}
+
+/* Utilidades para legibilidad */
+.text-label {
+    color: #475569 !important;
+    font-weight: 600;
+}
+.text-value {
+    color: #0f172a !important;
+    font-weight: 700;
+}

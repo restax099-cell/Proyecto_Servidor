@@ -108,3 +108,7 @@ def cont_panel_detalle(request, plantilla_id):
         'plantilla_id_desde_django': plantilla_id
     }
     return render(request, 'cont_panel/conteo_detalle.html', context)
+
+@login_required
+def consulta_conteo(request):
+    return render(request, 'consulta_conteo/consulta_conteo.html')

@@ -7,7 +7,7 @@
 
 {% block content_panel %}
 <div x-data="detalleConteoApp({{ plantilla_id }})" class="container-fluid" style="max-width: 1400px; padding: 1.5rem;">    
-    <!-- CARD 1: HEADER & ACCIONES -->
+    <!-- HEADER & ACCIONES -->
     <div class="custom-card d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3">
         <div class="mb-3 mb-md-0 d-flex align-items-center flex-wrap gap-2">
             <div class="fs-7 text-muted-custom">
@@ -28,7 +28,7 @@
         </div>
     </div>
 
-    <!-- CARD 2: INFORMACIÓN GENERAL (Grid 4 columnas) -->
+    <!-- INFORMACIÓN GENERAL -->
     <div class="custom-card mb-4 py-3">
         <div class="row text-center text-md-start">
             <div class="col-6 col-md-3 border-end-md mb-3 mb-md-0" style="border-color: var(--border-soft) !important;">
@@ -60,7 +60,7 @@
         </div>
     </div>
 
-    <!-- CARD 3: BUSCADOR Y FILTROS -->
+    <!-- BUSCADOR Y FILTROS -->
     <div class="custom-card mb-3 py-3 d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
         <div class="d-flex w-100" style="max-width: 600px; gap: 0.5rem;">
             <div class="position-relative flex-grow-1">
@@ -107,7 +107,6 @@
                 <tbody x-show="isLoading">
                     <tr>
                         <td colspan="6" class="text-center" style="padding: 6rem 0;">
-                            <!-- Usamos el spinner de Bootstrap en un tamaño más grande -->
                             <div class="spinner-border text-primary" role="status" style="width: 3.5rem; height: 3.5rem;">
                                 <span class="visually-hidden">Cargando...</span>
                             </div>
@@ -176,15 +175,48 @@
                                 
                                 <!-- Control de Conteo Físico -->
                                 <td class="text-center">
-                                    <div class="counter-widget">
-                                        <button class="counter-btn" @click.stop="decrementar(item)">−</button>
-                                        <input type="number" 
-                                                class="counter-input" 
+                                    <div class="d-inline-flex align-items-center gap-2">
+
+                                        <div class="counter-widget">
+                                            <button
+                                                type="button"
+                                                class="counter-btn"
+                                                @click.stop="decrementar(item)">
+                                                −
+                                            </button>
+
+                                            <input
+                                                type="number"
+                                                class="counter-input"
                                                 x-model="item.cantidad"
                                                 @input="actualizarEstado(item)"
                                                 placeholder="—"
                                                 step="any">
-                                        <button class="counter-btn" @click.stop="incrementar(item)">+</button>
+
+                                            <button
+                                                type="button"
+                                                class="counter-btn"
+                                                @click.stop="incrementar(item)">
+                                                +
+                                            </button>
+                                        </div>
+
+                                        <button
+                                            type="button"
+                                            class="btn-reset-counter"
+                                            x-show="item.cantidad !== null && item.cantidad !== ''"
+                                            x-transition.opacity
+                                            @click.stop="
+                                                item.cantidad = null;
+                                                actualizarEstado(item);
+                                            "
+                                            title="Limpiar conteo"
+                                            aria-label="Limpiar conteo">
+
+                                            <i class="bi bi-eraser"></i>
+                                            <span>Limpiar</span>
+                                        </button>
+
                                     </div>
                                 </td>
 
