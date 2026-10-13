@@ -1,45 +1,113 @@
 [x-cloak] { display: none !important; }
 
+
+/* Importar una fuente empresarial seria, nítida y cero redonda */
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+
+/* Tipografía empresarial compatible con Linux y Windows */
 body {
-    font-family: 'Inter', sans-serif;
+    font-family:
+    "IBM Plex Sans",
+    "Liberation Sans",
+    Arial,
+    sans-serif;
     background-color: #f1f5f9 !important;
     color: #0f172a;
-    height: 100vh;
-    overflow: hidden;
 }
 
-/* Estilos de tarjetas de la lista */
+/* Tabla de inventario: estilo empresarial */
+.table-erp {
+    font-family: 'IBM Plex Sans', 'Liberation Sans', Arial, sans-serif;
+    width: 100%;
+    border-collapse: collapse !important;
+    background-color: transparent !important;
+    font-size: 1rem;
+}
+
+/* Encabezados */
+.table-erp thead th {
+    padding: 7px 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1e293b;
+    white-space: nowrap;
+    border: none !important;
+    border-bottom: 2px solid #0f172a !important;
+}
+
+/* Celdas */
+.table-erp tbody td {
+padding-top: 5px;
+padding-bottom: 5px;
+border: none !important;
+border-bottom: 1px solid #d9dee5 !important;
+vertical-align: middle;
+}
+
+/* Mantener el efecto hover sutil */
+.table-erp tbody tr:hover td {
+    background-color: #f8fafc !important;
+}
+
+/* Alinear cantidades y precios */
+.table-erp .text-end {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+/* SKU compacto */
+.table-erp .badge {
+    font-family: inherit;
+    font-weight: 500;
+    line-height: 1.2;
+}
+
+
+
+
+/* Estilos limpios para las tarjetas de la izquierda */
 .count-card {
-    transition: all 0.15s ease-in-out;
+    transition: all 0.1s ease-in-out;
     background-color: #ffffff;
     border: 1px solid #cbd5e1;
 }
 .count-card:hover {
     background-color: #f8fafc;
     cursor: pointer;
-    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
     border-color: #94a3b8;
 }
+
+/* Tarjeta Activa Oscura */
 .count-card.active {
-    background-color: #ffffff;
-    border-left: 4px solid #0f172a !important;
-    border-color: #0f172a;
-    box-shadow: 0 4px 10px rgba(15, 23, 42, 0.08);
+    background-color: #0f172a !important;
+    border-color: #0f172a !important;
+    color: #ffffff !important;
+}
+.count-card.active .title-text {
+    color: #ffffff !important;
+}
+.count-card.active .date-text {
+    color: #cbd5e1 !important;
 }
 
-/* Badges de alto contraste con tonos suaves */
-.badge-soft-success { background-color: #dcfce7; color: #14532d; border: 1px solid #bbf7d0; }
-.badge-soft-warning { background-color: #fef3c7; color: #78350f; border: 1px solid #fde68a; }
-.badge-soft-secondary { background-color: #f1f5f9; color: #1e293b; border: 1px solid #cbd5e1; }
 
-/* Scrollbar personalizado */
-.scrollable-column {
-    overflow-y: auto;
+.badge-soft-success { 
+    background-color: #148441; 
+    color: #bbf7d0; 
+    border: 1px solid #136534; 
 }
-.scrollable-column::-webkit-scrollbar { width: 6px; }
-.scrollable-column::-webkit-scrollbar-track { background: transparent; }
-.scrollable-column::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-.scrollable-column::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+.badge-soft-warning { 
+    background-color: #dea61a; 
+    color: #fef9c3; 
+    border: 1px solid #bf8f17; 
+}
+
+.badge-soft-secondary { 
+    background-color: #334155; 
+    color: #f1f5f9; 
+    border: 1px solid #1e293b; 
+}
 
 .search-input {
     background-color: #ffffff;
@@ -52,10 +120,9 @@ body {
 .search-input:focus {
     background-color: #ffffff;
     border-color: #0f172a;
-    box-shadow: 0 0 0 0.2rem rgba(15, 23, 42, 0.12);
+    box-shadow: 0 0 0 0.15rem rgba(15, 23, 42, 0.12);
 }
 
-/* Utilidades para legibilidad */
 .text-label {
     color: #475569 !important;
     font-weight: 600;
@@ -64,3 +131,4 @@ body {
     color: #0f172a !important;
     font-weight: 700;
 }
+
