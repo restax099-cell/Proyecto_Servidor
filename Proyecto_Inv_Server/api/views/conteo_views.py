@@ -271,5 +271,47 @@ def get_conteo_detalle(request):
             "error": f"Error de BD: {str(e)}"
         }, status=500)
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_conteo_dtls(request):
+    try:
+        plantilla_id = request.GET.get('id')
 
+        if not plantilla_id:
+            return JsonResponse({
+                "status": "error", 
+                "error": "ID de plantilla no proporcionado"
+            }, status=400)
+
+        detalles = []
+        with connection.cursor() as cursor:
+            cursor.execute("CALL sp_get_conteo_dtls(%s)", [plantilla_id])
+            columns = [col[0] for col in cursor.description]
+   
+            for row in cursor.fetchall():
+                fila = dict(zip(columns, row))
+              
+                if 'detalle_id' in fila and fila['detalle_id'] is not None:
+                    fila['detalle_id'] = int(fila['detalle_id'])
+                if 'conteo_plantilla_id' in fila and fila['conteo_plantilla_id'] is not None:
+                    fila['conteo_plantilla_id'] = int(fila['conteo_plantilla_id'])
+                if 'item_id' in fila and fila['item_id'] is not None:
+                    fila['item_id'] = int(fila['item_id'])
+                if 'conteo' in fila and fila['conteo'] is not None:
+                    fila['conteo'] = float(fila['conteo'])
+                
+                
+                    
+                detalles.append(fila)
+
+        return JsonResponse({
+            "status": "success",
+            "data": detalles
+        }, status=200)
+
+    except Exception as e:
+        return JsonResponse({
+            "status": "error",
+            "error": f"Error de BD: {str(e)}"
+        }, status=500)
 

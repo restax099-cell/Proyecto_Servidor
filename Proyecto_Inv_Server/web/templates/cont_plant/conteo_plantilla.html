@@ -8,7 +8,7 @@
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
         <div class="mb-3 mb-md-0 d-flex align-items-center">
             <div class="fs-7 text-muted-custom">
-                Catálogos &rsaquo; 
+             
                 <span class="fw-extrabold text-dark fs-5 ms-1">Plantillas de conteo de items</span>
             </div>
         </div>
@@ -164,7 +164,7 @@
                                         <th style="width: 35%">CATEGORÍA</th>
                                         <th style="width: 15%; text-align: center;">ITEMS</th>
                                         <th style="width: 20%">ORDEN EN CAPTURA</th>
-                                        <th style="width: 10%; text-align: center;"></th>
+                                        <th style="width: 10%; text-align: center;"></th> <!-- Espacio para el botón de la derecha -->
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -177,10 +177,26 @@
                                             <td class="fw-semibold text-dark" x-text="cat.categoria"></td>
                                             <td class="text-center text-muted-custom fs-8" x-text="`${cat.items} items`"></td>
                                             <td>
-                                                <input type="number" class="form-control form-control-soft text-center" :value="cat.orden" style="width: 80px;">
+                                                <input type="number" class="form-control form-control-soft text-center" x-model.number="cat.orden" style="width: 80px;">
                                             </td>
+                                            <!-- Botón estándar de Bootstrap rojo con letras blancas -->
                                             <td class="text-center">
-                                                <button class="delete-btn" @click="removerCatalogo(cat.id)"><i class="bi bi-x-lg"></i></button>
+                                                <button type="button" 
+                                                        class="btn btn-sm btn-danger px-2 py-1 fw-medium" 
+                                                        style="font-size: 0.85rem;"
+                                                        @click="removerCatalogo(cat.id)" 
+                                                        title="Quitar catálogo">
+                                                    Eliminar
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                    
+                                    <!-- Mensaje por si no hay catálogos -->
+                                    <template x-if="catalogosSeleccionados.length === 0">
+                                        <tr>
+                                            <td colspan="6" class="text-center py-4 text-muted small">
+                                                No hay catálogos agregados. Haz clic en "Agregar catálogo" para comenzar.
                                             </td>
                                         </tr>
                                     </template>
@@ -198,17 +214,21 @@
                                 
                                 <!-- Frecuencia del conteo -->
                                 <div class="toggle-group mb-4">
-                                    <button class="toggle-btn" :class="{'active': formulario.frecuencia === 'Diario'}" @click="formulario.frecuencia = 'Diario'">Diario</button>
-                                    <button class="toggle-btn" :class="{'active': formulario.frecuencia === 'Semanal'}" @click="formulario.frecuencia = 'Semanal'">Semanal</button>
-                                    <button class="toggle-btn" :class="{'active': formulario.frecuencia === 'Mensual'}" @click="formulario.frecuencia = 'Mensual'">Mensual</button>
-                                    <button class="toggle-btn" :class="{'active': formulario.frecuencia === 'Trimestral'}" @click="formulario.frecuencia = 'Trimestral'">Trimestral</button>
+                                    <button type="button" class="toggle-btn" :class="{'active': formulario.frecuencia === 'Diario'}" @click="cambiarFrecuencia('Diario')">Diario</button>
+                                    <button type="button" class="toggle-btn" :class="{'active': formulario.frecuencia === 'Semanal'}" @click="cambiarFrecuencia('Semanal')">Semanal</button>
+                                    <button type="button" class="toggle-btn" :class="{'active': formulario.frecuencia === 'Mensual'}" @click="cambiarFrecuencia('Mensual')">Mensual</button>
+                                    <button type="button" class="toggle-btn" :class="{'active': formulario.frecuencia === 'Trimestral'}" @click="cambiarFrecuencia('Trimestral')">Trimestral</button>
                                 </div>
 
                                 <label class="form-label-soft">DÍAS DE LA SEMANA</label>
                                 <div class="days-group mb-4">
                                     <template x-for="dia in ['L', 'Ma', 'Mi', 'J', 'V', 'S', 'D']" :key="dia">
-                                        <button class="day-btn" 
-                                                :class="{'active': formulario.dias_semana.includes(dia)}"
+                                        <button type="button" class="day-btn" 
+                                                :class="{
+                                                    'active': formulario.dias_semana.includes(dia), 
+                                                    'opacity-50 bg-light text-muted': formulario.frecuencia === 'Mensual' || formulario.frecuencia === 'Trimestral'
+                                                }"
+                                                :disabled="formulario.frecuencia === 'Mensual' || formulario.frecuencia === 'Trimestral'"
                                                 @click="toggleDia(dia)"
                                                 x-text="dia"></button>
                                     </template>
@@ -217,7 +237,11 @@
                                 <div class="row g-3">
                                     <div class="col-6">
                                         <label class="form-label-soft">DÍA DEL MES</label>
-                                        <input type="text" class="form-control form-control-soft" x-model="formulario.dia_mes" disabled>
+                                        <!-- Se habilita solo si la frecuencia es 'Mensual' -->
+                                        <input type="text" class="form-control form-control-soft" 
+                                            x-model="formulario.dia_mes" 
+                                            :disabled="formulario.frecuencia !== 'Mensual'"
+                                            :placeholder="formulario.frecuencia === 'Mensual' ? 'Ej. 15' : 'No aplica'">
                                     </div>
                                     <div class="col-6">
                                         <label class="form-label-soft">VIGENTE DESDE</label>

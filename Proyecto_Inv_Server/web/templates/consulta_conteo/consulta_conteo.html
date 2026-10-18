@@ -65,19 +65,19 @@
 
                 <!-- Lista de Conteos -->
                 <div class="conteos-list">
-                    <template x-for="count in filteredCounts" :key="count.id">
+                    <template x-for="plantilla in filteredCounts" :key="plantilla.id">
                         <div class="count-card p-3 mb-2 rounded-1" 
-                                :class="{ 'active': selectedCount && selectedCount.id === count.id }"
-                                @click="selectCount(count)">
+                                :class="{ 'active': selectedPlantilla && selectedPlantilla.id === plantilla.id }"
+                                @click="selectCount(plantilla)">
                             <div class="d-flex justify-content-between align-items-start mb-1">
-                                <h6 class="mb-0 fw-bold title-text" style="font-size: 1rem;" x-text="count.code + ' · ' + count.title"></h6>
+                                <h6 class="mb-0 fw-bold title-text" style="font-size: 1rem;" x-text="plantilla.codigo + ' · ' + plantilla.nombre"></h6>
                             </div>
                             <div class="d-flex justify-content-between align-items-center mt-2">
-                                <span style="font-size: 0.95rem;" class="fw-medium date-text" x-text="formatDate(count.date)"></span>
+                                <span style="font-size: 0.95rem;" class="fw-medium date-text" x-text="formatDate(plantilla.vigencia)"></span>
                                 <span class="badge fw-bold px-2 py-1" 
-                                    :class="getStatusBadgeClass(count.status)"
+                                    :class="getStatusBadgeClass(plantilla.status)"
                                     style="font-size: 0.75rem;"
-                                    x-text="count.status">
+                                    x-text="plantilla.status">
                                 </span>
                             </div>
                         </div>
@@ -95,7 +95,7 @@
         <div class="col-12 col-lg-8 col-xl-9">
             
             <!-- ESTADO VACÍO -->
-            <template x-if="!selectedCount">
+            <template x-if="!selectedPlantilla">
                 <div class="bg-white rounded-1 border border-secondary-subtle p-5 text-center shadow-sm" style="min-height: 400px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
                     <svg width="48" height="48" fill="none" stroke="#64748b" viewBox="0 0 24 24" class="mb-2"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                     <h6 class="fw-bold text-dark mb-1">Ningún conteo seleccionado</h6>
@@ -104,155 +104,142 @@
             </template>
 
             <!-- SI HAY UN CONTEO SELECCIONADO -->
-            <template x-if="selectedCount">
+            <template x-if="selectedPlantilla">
                 <div class="d-flex flex-column gap-3">
                     
                     <!-- TARJETA SUPERIOR: ENCABEZADO Y METADATOS -->
                     <div class="bg-white rounded-1 border border-secondary-subtle p-3 p-lg-4 shadow-sm">
                         <span class="d-block text-label text-uppercase fw-bold mb-1" style="font-size: 0.7rem; letter-spacing: 0.8px;">DETALLE DEL CONTEO</span>
-                        <h5 class="fw-bold text-dark mb-3" style="font-size: 1.15rem;" x-text="selectedCount.code + ' · ' + selectedCount.title"></h5>
+                        <h5 class="fw-bold text-dark mb-3" style="font-size: 1.15rem;" x-text="selectedPlantilla.codigo + ' · ' + selectedPlantilla.nombre"></h5>
 
                         <!-- BLOQUES DE METADATOS (Grid de 12 columnas Bootstrap) -->
                         <div class="row g-2 mb-2">
+                            <!-- FECHA DE REGISTRO -->
                             <div class="col-6 col-md-2">
-                                <div class="p-2 px-3 rounded-1 border bg-light border-secondary-subtle h-100">
-                                    <span class="d-block text-label text-uppercase mb-1" style="font-size: 0.65rem;">CLAVE</span>
-                                    <span class="text-value d-block" style="font-size: 1.5rem;" x-text="selectedCount.code"></span>
-                                </div>
-                            </div>
-                            <div class="col-6 col-md-3">
-                                <div class="p-2 px-3 rounded-1 border bg-light border-secondary-subtle h-100">
+                                <div class="p-2 px-3 rounded-1 border bg-light border-secondary-subtle h-100 d-flex flex-column justify-content-between">
                                     <span class="d-block text-label text-uppercase mb-1" style="font-size: 0.65rem;">FECHA DE REGISTRO</span>
-                                    <span class="text-value d-block" style="font-size: 1.5rem;" x-text="formatDate(selectedCount.date)"></span>
+                                    <span class="text-value d-block" style="font-size: 1.25rem;" x-text="formatDate(selectedPlantilla.vigencia)"></span>
                                 </div>
                             </div>
-                            <div class="col-12 col-md-4">
-                                <div class="p-2 px-3 rounded-1 border bg-light border-secondary-subtle h-100">
-                                    <span class="d-block text-label text-uppercase mb-1" style="font-size: 0.65rem;">RESPONSABLE</span>
-                                    <span class="text-value d-block" style="font-size: 1.5rem;" x-text="selectedCount.assignee || 'Sin asignar'"></span>
-                                </div>
-                            </div>
+
+                            <!-- RESPONSABLE -->
                             <div class="col-12 col-md-3">
+                                <div class="p-2 px-3 rounded-1 border bg-light border-secondary-subtle h-100 d-flex flex-column justify-content-between">
+                                    <span class="d-block text-label text-uppercase mb-1" style="font-size: 0.65rem;">RESPONSABLE</span>
+                                    <span class="text-value d-block text-truncate" style="font-size: 1.25rem;" x-text="selectedPlantilla.username || 'Sin asignar'"></span>
+                                </div>
+                            </div>
+
+                            <!-- ESTADO -->
+                            <div class="col-6 col-md-2">
                                 <div class="p-2 px-3 rounded-1 border bg-light border-secondary-subtle h-100 d-flex flex-column justify-content-between">
                                     <span class="d-block text-label text-uppercase mb-1" style="font-size: 0.65rem;">ESTADO</span>
                                     <div>
                                         <span class="badge rounded-pill fw-bold px-2 py-1" 
-                                                :class="getStatusBadgeClass(selectedCount.status)"
+                                                :class="getStatusBadgeClass(selectedPlantilla.status)"
                                                 style="font-size: 0.80rem;"
-                                                x-text="selectedCount.status"></span>
+                                                x-text="selectedPlantilla.status"></span>
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <!-- INDICADORES FINANCIEROS -->
-                        <div class="row g-2">
-                            <div class="col-6 col-md-2">
-                                <div class="p-2 px-3 rounded-1 border bg-light border-secondary-subtle">
+                            <!-- VALOR TOTAL CONTADO -->
+                            <div class="col-6 col-md-3">
+                                <div class="p-2 px-3 rounded-1 border bg-light border-secondary-subtle h-100 d-flex flex-column justify-content-between">
                                     <span class="text-label text-uppercase d-block mb-1" style="font-size: 0.65rem;">VALOR TOTAL CONTADO</span>
-                                    <h6 class="fw-bold mb-0 text-value" style="font-size: 1.5rem;" x-text="formatCurrency(calculateTotalValue())"></h6>
+                                    <span class="fw-bold mb-0 text-value d-block" style="font-size: 1.25rem;" x-text="formatCurrency(calculateTotalValue())"></span>
                                 </div>
                             </div>
+
+                            <!-- TOTAL DE PRODUCTOS -->
                             <div class="col-6 col-md-2">
-                                <div class="p-2 px-3 rounded-1 border bg-light border-secondary-subtle">
+                                <div class="p-2 px-3 rounded-1 border bg-light border-secondary-subtle h-100 d-flex flex-column justify-content-between">
                                     <span class="text-label text-uppercase d-block mb-1" style="font-size: 0.65rem;">TOTAL DE PRODUCTOS</span>
-                                    <h6 class="fw-bold mb-0 text-value" style="font-size: 1.5rem;" x-text="selectedCount.products.length + ' SKUs'"></h6>
+                                    <span class="fw-bold mb-0 text-value d-block" style="font-size: 1.25rem;" x-text="detalleConteo.length + ' SKUs'"></span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- TARJETA INFERIOR: DESGLOSE POR CATEGORÍAS -->
+                    <!-- PRODUCTOS -->
                     <div class="bg-white rounded-1 border border-secondary-subtle p-3 p-lg-4 shadow-sm">
                         <span class="d-block text-label text-uppercase fw-bold mb-3" style="font-size: 0.7rem; letter-spacing: 0.8px;">DESGLOSE DE MERCANCÍA POR CATEGORÍA</span>
 
-                        <div class="d-flex flex-column gap-3">
-                            <template x-for="(products, category) in getGroupedProducts()" :key="category">
-                                <div class="border border-secondary-subtle rounded-1 overflow-hidden" x-data="{ isOpen: true }">
-                                    <!-- Cabecera de Categoría (Acordeón) -->
-                                    <div class="px-3 py-2 border-bottom border-secondary-subtle d-flex justify-content-between align-items-center bg-light" 
-                                            style="cursor: pointer; user-select: none;"
-                                            @click="isOpen = !isOpen">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <svg width="14" height="14" fill="none" stroke="#0f172a" viewBox="0 0 24 24" 
-                                                    style="transition: transform 0.2s ease;"
-                                                    :style="isOpen ? 'transform: rotate(180deg);' : 'transform: rotate(0deg);'">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path>
-                                            </svg>
-                                            <span class="fw-bold text-dark text-uppercase" style="font-size: 0.8rem; letter-spacing: 0.5px;" x-text="category"></span>
-                                        </div>
-                                        <span class="badge border border-secondary-subtle rounded-pill fw-bold px-2 py-1 bg-white text-dark" style="font-size: 0.68rem;" x-text="products.length + ' ítems'"></span>
-                                    </div>
+                        <div class="table-responsive mb-0">
+                            <table class="table table-sm mb-0 align-middle table-erp">
+                                <!-- CABECERA GLOBAL -->
+                                <thead>
+                                    <tr style="font-size: 0.95rem; font-weight: 700; background-color: transparent !important;">
+                                        <th class="ps-3 py-2 border-0 bg-transparent" style="width: 15%;">SKU</th>
+                                        <th class="py-2 border-0 bg-transparent" style="width: 45%;">Descripción</th>
+                                        <th class="text-end py-2 border-0 bg-transparent" style="width: 13%;">Cant. contada</th>
+                                        <th class="text-end py-2 border-0 bg-transparent" style="width: 13%;">Precio unit.</th>
+                                        <th class="text-end pe-3 py-2 border-0 bg-transparent" style="width: 14%;">Total</th>
+                                    </tr>
+                                </thead>
 
-                                    <!-- Tabla de Productos Estilo ERP -->
-                                    <div class="table-responsive mb-0" x-show="isOpen" x-transition>
-                                        <table class="table table-sm mb-0 align-middle table-erp">
-                                            <thead>
-                                                <tr class="text-dark border-bottom" style="font-size: 1.5rem; font-weight: 700; background-color: transparent !important;">
-                                                    <th class="ps-3 py-2 border-0 bg-transparent" style="width: 15%;">SKU</th>
-                                                    <th class="py-2 border-0 bg-transparent" style="width: 45%;">Descripción</th>
-                                                    <th class="text-end py-2 border-0 bg-transparent" style="width: 13%;">Cant. contada</th>
-                                                    <th class="text-end py-2 border-0 bg-transparent" style="width: 13%;">Precio unit.</th>
-                                                    <th class="text-end pe-3 py-2 border-0 bg-transparent" style="width: 14%;">Total</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody class="border-0">
-                                                <template x-for="product in products" :key="product.sku">
-                                                    <tr class="border-bottom border-secondary-subtle">
-                                                        <!-- SKU -->
-                                                        <td class="ps-2 py-1 border-0">
-                                                            <span
-                                                                class="badge text-secondary border px-2 py-1 fw-medium bg-white rounded-1"
-                                                                style="font-size: 1rem; border-color: #cbd5e1 !important;"
-                                                                x-text="product.sku">
-                                                            </span>
-                                                        </td>
-                                                        <!-- Descripción -->
-                                                        <td
-                                                            class="py-1 fw-semibold text-dark border-0"
-                                                            style="font-size: 1rem;"
-                                                            x-text="product.description">
-                                                        </td>
+                                <!-- FILA SEPARADORA -->
+                                <tbody class="border-0">
+                                    <tr class="border-0">
+                                        <td colspan="5" class="p-0 border-0">
+                                            <!-- mt-1 (o mt-0) reduce el espacio de arriba para subir la línea -->
+                                            <hr class="mt-1 mb-2 border-dark opacity-100" style="border-width: 2px;">
+                                        </td>
+                                    </tr>
+                                </tbody>
 
-                                                        <!-- Cantidad -->
-                                                        <td
-                                                            class="text-end py-1 fw-normal text-dark border-0"
-                                                            style="font-size: 1rem; font-variant-numeric: tabular-nums;"
-                                                            x-text="product.qty">
-                                                        </td>
+                                <!-- CADA CATEGORÍA ES UN CUERPO INDEPENDIENTE (TBODY) -->
+                                <!-- Filas de Productos -->
+                                <template x-for="(products, categoria) in getGroupedProducts()" :key="categoria">
+                                    <tbody class="border-0">
+                                        <!-- Fila de Categoría -->
+                                        <tr class="bg-light border-bottom border-secondary-subtle" 
+                                            style="cursor: pointer; user-select: none;" 
+                                            @click="toggleCategory(categoria)">
+                                            <td colspan="5" class="px-3 py-2 bg-light border-0">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <svg width="12" height="12" fill="none" stroke="#0f172a" viewBox="0 0 24 24" 
+                                                                style="transition: transform 0.2s ease;"
+                                                                :style="isCategoryOpen(categoria) ? 'transform: rotate(180deg);' : 'transform: rotate(0deg);'">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path>
+                                                        </svg>
+                                                        <span class="fw-bold text-dark text-uppercase" style="font-size: 0.82rem; letter-spacing: 0.6px;" x-text="categoria"></span>
+                                                    </div>
+                                                    <span class="badge border border-secondary-subtle rounded-pill fw-bold px-2 py-1 bg-white text-dark" style="font-size: 0.68rem;" x-text="products.length + ' ítems'"></span>
+                                                </div>
+                                            </td>
+                                        </tr>
 
-                                                        <!-- Precio unitario -->
-                                                        <td
-                                                            class="text-end py-1 fw-normal text-secondary border-0"
-                                                            style="font-size: 1rem; font-variant-numeric: tabular-nums;"
-                                                            x-text="formatCurrency(product.price)">
-                                                        </td>
-
-                                                        <!-- Total -->
-                                                        <td
-                                                            class="text-end pe-2 py-1 fw-semibold text-dark border-0"
-                                                            style="font-size: 1rem; font-variant-numeric: tabular-nums;"
-                                                            x-text="formatCurrency(product.qty * product.price)">
-                                                        </td>
-                                                    </tr>
-                                                </template>
-                                           
-
-                                            </tbody>
-
-                                        </table>
-                                    </div>
-                                </div>
-                            </template>
+                                        <!-- Filas de Productos -->
+                                        <template x-for="product in products" :key="product.id">
+                                            <tr class="border-bottom border-secondary-subtle" x-show="isCategoryOpen(categoria)" x-transition>
+                                                <td class="ps-3 py-2 border-0">
+                                                    <span class="badge text-secondary border px-2 py-1 fw-medium bg-white rounded-1"
+                                                        style="font-size: 0.85rem; border-color: #cbd5e1 !important;"
+                                                        x-text="product.sku">
+                                                    </span>
+                                                </td>
+                                                <td class="py-2 fw-semibold text-dark border-0" style="font-size: 0.9rem;" x-text="product.description"></td>
+                                                <td class="text-end py-2 fw-normal text-dark border-0" style="font-size: 0.9rem; font-variant-numeric: tabular-nums;" x-text="product.conteo"></td>
+                                                <td class="text-end py-2 fw-normal text-secondary border-0" style="font-size: 0.9rem; font-variant-numeric: tabular-nums;" x-text="formatCurrency(product.price)"></td>
+                                                <td class="text-end pe-3 py-2 fw-semibold text-dark border-0" style="font-size: 0.9rem; font-variant-numeric: tabular-nums;" x-text="formatCurrency(product.conteo * product.price)"></td>
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                </template>
+                            </table>
                         </div>
                     </div>
-
                 </div>
-            </template>
 
-        </div>
+                
+            </template>
+        </div>    
 
     </div>
+   
+    
 </div>
 {% endblock %}
 {% block extra_scripts %}

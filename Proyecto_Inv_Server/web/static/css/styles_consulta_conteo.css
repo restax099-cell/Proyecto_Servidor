@@ -16,51 +16,7 @@ body {
 }
 
 /* Tabla de inventario: estilo empresarial */
-.table-erp {
-    font-family: 'IBM Plex Sans', 'Liberation Sans', Arial, sans-serif;
-    width: 100%;
-    border-collapse: collapse !important;
-    background-color: transparent !important;
-    font-size: 1rem;
-}
 
-/* Encabezados */
-.table-erp thead th {
-    padding: 7px 8px;
-    font-size: 1rem;
-    font-weight: 600;
-    color: #1e293b;
-    white-space: nowrap;
-    border: none !important;
-    border-bottom: 2px solid #0f172a !important;
-}
-
-/* Celdas */
-.table-erp tbody td {
-padding-top: 5px;
-padding-bottom: 5px;
-border: none !important;
-border-bottom: 1px solid #d9dee5 !important;
-vertical-align: middle;
-}
-
-/* Mantener el efecto hover sutil */
-.table-erp tbody tr:hover td {
-    background-color: #f8fafc !important;
-}
-
-/* Alinear cantidades y precios */
-.table-erp .text-end {
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
-}
-
-/* SKU compacto */
-.table-erp .badge {
-    font-family: inherit;
-    font-weight: 500;
-    line-height: 1.2;
-}
 
 
 

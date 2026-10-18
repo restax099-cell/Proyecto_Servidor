@@ -47,6 +47,15 @@ Alpine.data('plantillasApp', () => ({
     isModalOpen: false,
     isLoading: false,
 
+    // --- 4. ALERTAS ---
+    alerta: {
+        tipo: 'warning',
+        titulo: '',
+        mensaje: '',
+        textoBoton: 'Aceptar',
+        onConfirm: null 
+    },
+
 
     init() {
         this.cargarLista();
@@ -144,61 +153,141 @@ Alpine.data('plantillasApp', () => ({
 
     // --- 6. MÉTODO DE GUARDADO (POST) ---
     async guardarPlantilla() {
-        if (!this.formulario.nombre || !this.formulario.store) {
-            alert("Por favor, ingresa el nombre de la plantilla y selecciona un almacén.");
+        // --- 1. VALIDACIÓN AMARILLA (WARNING): Validar ABSOLUTAMENTE TODOS los campos obligatorios ---
+
+        // A. Datos Generales, Horarios y Vigencia
+        if (!this.formulario.nombre || !this.formulario.store || !this.formulario.user_id || 
+            !this.formulario.hora_apertura || !this.formulario.hora_limite || !this.formulario.vigencia) {
+            this.mostrarAlerta({
+                tipo: 'warning',
+                titulo: 'Campos obligatorios incompletos',
+                mensaje: 'Hay espacios vacíos esenciales. Por favor, completa el Nombre, Almacén, Responsable, Horarios de apertura/límite y la Vigencia.',
+                textoBoton: 'Entendido'
+            });
             return;
         }
-        
-        if (this.catalogosSeleccionados.length === 0) {
-            alert("Debes agregar al menos un catálogo a la lista antes de guardar.");
+
+        // B. Frecuencia y sus reglas específicas
+        if (!this.formulario.frecuencia) {
+            this.mostrarAlerta({
+                tipo: 'warning',
+                titulo: 'Frecuencia no seleccionada',
+                mensaje: 'Por favor, selecciona la frecuencia de ejecución (Diario, Semanal, Mensual o Trimestral).',
+                textoBoton: 'Entendido'
+            });
             return;
         }
+
+        // Si la frecuencia es Semanal, debe seleccionar al menos un día de la semana
+        if (this.formulario.frecuencia === 'Semanal' || this.formulario.frecuencia === 'semanal') {
+            const dias = Array.isArray(this.formulario.dias_semana) 
+                        ? this.formulario.dias_semana 
+                        : (this.formulario.dias_semana ? this.formulario.dias_semana.split(',') : []);
+                        
+            if (dias.length === 0) {
+                this.mostrarAlerta({
+                    tipo: 'warning',
+                    titulo: 'Día de la semana requerido',
+                    mensaje: 'Para la frecuencia semanal, debes seleccionar el día de la semana en que se ejecutará.',
+                    textoBoton: 'Entendido'
+                });
+                return;
+            }
+        }
+
+        // Si es Mensual o Trimestral, debe haber ingresado el día del mes
+        if ((this.formulario.frecuencia === 'Mensual' || this.formulario.frecuencia === 'Trimestral' || 
+            this.formulario.frecuencia === 'mensual' || this.formulario.frecuencia === 'trimestral') && !this.formulario.dia_mes) {
+            this.mostrarAlerta({
+                tipo: 'warning',
+                titulo: 'Día del mes requerido',
+                mensaje: 'Por favor, especifica el día del mes en que se debe realizar el conteo.',
+                textoBoton: 'Entendido'
+            });
+            return;
+        }
+
+        // C. Límite de Captura
+        if (this.formulario.dia_limite === null || this.formulario.dia_limite === undefined || this.formulario.dia_limite === '') {
+            this.mostrarAlerta({
+                tipo: 'warning',
+                titulo: 'Límite de captura requerido',
+                mensaje: 'Debes seleccionar el límite de captura para la plantilla.',
+                textoBoton: 'Entendido'
+            });
+            return;
+        }
+
+        // D. Catálogos Seleccionados
+        if (!this.catalogosSeleccionados || this.catalogosSeleccionados.length === 0) {
+            this.mostrarAlerta({
+                tipo: 'warning',
+                titulo: 'Catálogos requeridos',
+                mensaje: 'Debes agregar al menos un catálogo a la lista antes de guardar la plantilla.',
+                textoBoton: 'Entendido'
+            });
+            return;
+        }
+
+        // --- FIN DE VALIDACIONES: SI PASA TODO, PROCEDE A GUARDAR ---
 
         this.isLoading = true; 
         
         try {
-            // 1. Calcular la fecha límite basada en la opción seleccionada ("mismo" o "siguiente")
             let fechaLimiteCalculada = null;
-            const hoy = new Date(); // Fecha actual del sistema
+            const hoy = new Date(); 
 
-            if (this.formulario.dia_limite === '0') {
+            if (this.formulario.dia_limite === '0' || this.formulario.dia_limite === 0) {
                 fechaLimiteCalculada = hoy.toISOString().split('T')[0];
-            } else if (this.formulario.dia_limite === '1') {
+            } else if (this.formulario.dia_limite === '1' || this.formulario.dia_limite === 1) {
                 hoy.setDate(hoy.getDate() + 1);
                 fechaLimiteCalculada = hoy.toISOString().split('T')[0];
             }
 
-            // 2. Preparar el payload integrado
             const payload = {
                 ...this.formulario,
-                
-                // Sobrescribimos o ajustamos los campos que necesitan parseo para la BD
                 dias_semana: Array.isArray(this.formulario.dias_semana) 
-                             ? this.formulario.dias_semana.join(',') 
-                             : this.formulario.dias_semana,
-                             
-                dia_limite: fechaLimiteCalculada, // Envía la fecha calculada en formato YYYY-MM-DD
-                
+                            ? this.formulario.dias_semana.join(',') 
+                            : this.formulario.dias_semana,
+                dia_limite: fechaLimiteCalculada,
                 catalogos: this.catalogosSeleccionados.map(c => ({
                     id: c.id,
                     orden: c.orden 
                 }))
             };
 
-            console.log("Datos a guardar:", payload);
+            console.log("Datos a guardar validados:", payload);
 
             const response = await savePlantillaConteo(payload, null);
             
             if (response && response.status === 'success') {
-                alert("Plantilla guardada con éxito.");
-           
+                this.mostrarAlerta({
+                    tipo: 'success',
+                    titulo: '¡Guardado exitoso!',
+                    mensaje: 'La plantilla de conteo se ha guardado correctamente.',
+                    textoBoton: 'Aceptar',
+                    onConfirm: async () => {
+                        await this.cargarLista(); 
+                        this.mostrarPanel = false;
+                    }
+                });
             } else {
-                alert("No se pudo guardar la plantilla: " + (response.message || "Error desconocido"));
+                this.mostrarAlerta({
+                    tipo: 'danger',
+                    titulo: 'Error al guardar',
+                    mensaje: 'No se pudo guardar la plantilla: ' + (response.message || 'Error desconocido'),
+                    textoBoton: 'Cerrar'
+                });
             }
 
         } catch (error) {
             console.error("Error crítico al guardar:", error);
-            alert("Error de conexión con el servidor. Revisa la consola.");
+            this.mostrarAlerta({
+                tipo: 'danger',
+                titulo: 'Error de conexión',
+                mensaje: 'Ocurrió un error al conectar con el servidor. Por favor, intenta de nuevo.',
+                textoBoton: 'Cerrar'
+            });
         } finally {
             this.isLoading = false; 
         }
@@ -233,9 +322,24 @@ Alpine.data('plantillasApp', () => ({
     },
 
     iniciarEdicionNueva() {
-        if (!this.formulario.nombre || !this.formulario.store) {
-            console.warn("Faltan campos obligatorios");
+        if (!this.formulario.nombre || !this.formulario.store || !this.formulario.user_id) {
+            this.mostrarAlerta({
+                tipo: 'warning',
+                titulo: 'Campos obligatorios incompletos',
+                mensaje: 'No puedes dejar espacios vacíos en los campos obligatorios (Nombre de la plantilla y Almacén). Por favor, complétalos para poder avanzar.',
+                textoBoton: 'Entendido'
+            });
+            return; 
         }
+        
+        const modalElement = document.getElementById('modalNuevaPlantilla');
+        if (modalElement && typeof bootstrap !== 'undefined') {
+            const modalInstance = bootstrap.Modal.getInstance(modalElement) || bootstrap.Modal.getOrCreateInstance(modalElement);
+            if (modalInstance) {
+                modalInstance.hide();
+            }
+        }
+
         this.mostrarPanel = true; 
     },
 
@@ -246,23 +350,27 @@ Alpine.data('plantillasApp', () => ({
             return 'PC-01'; 
         }
 
-        const ultimoRegistro = this.listaPlantillas[0];
-        const ultimoCodigo = ultimoRegistro.codigo; 
+        let maxNum = 0;
 
-        if (ultimoCodigo) {
-            const codigoLimpio = ultimoCodigo.replace(/\s+/g, '').toUpperCase();
-            
-            if (codigoLimpio.startsWith('PC-')) {
-                const numeroActual = parseInt(codigoLimpio.split('-')[1], 10);
+        // Recorremos todas las plantillas para encontrar el número más alto existente
+        this.listaPlantillas.forEach(plantilla => {
+            const codigo = plantilla.codigo;
+            if (codigo) {
+                const codigoLimpio = codigo.replace(/\s+/g, '').toUpperCase();
                 
-                if (!isNaN(numeroActual)) {
-                    const nextNum = numeroActual + 1;
-                    return `PC-${String(nextNum).padStart(2, '0')}`; 
+                if (codigoLimpio.startsWith('PC-')) {
+                    const numeroActual = parseInt(codigoLimpio.split('-')[1], 10);
+                    
+                    if (!isNaN(numeroActual) && numeroActual > maxNum) {
+                        maxNum = numeroActual;
+                    }
                 }
             }
-        }
+        });
 
-        return 'PC-01';
+        // Si ya existen PC-01 y PC-02, maxNum será 2, por lo tanto el siguiente será PC-03
+        const nextNum = maxNum + 1;
+        return `PC-${String(nextNum).padStart(2, '0')}`;
     },
 
     prepararNuevaPlantilla() {
@@ -291,27 +399,81 @@ Alpine.data('plantillasApp', () => ({
 
 
     formatearDetalle(item) {
-        if (item.status === 0 || item.status === false || item.status === '0') {
-            return 'Inactiva';
+        // Verificamos si dias_semana existe y es un arreglo antes de usar .join()
+        let diasFormateados = '';
+        if (item.dias_semana) {
+            if (Array.isArray(item.dias_semana)) {
+                diasFormateados = item.dias_semana.join(', ');
+            } else if (typeof item.dias_semana === 'string') {
+                diasFormateados = item.dias_semana.split(',').join(', ');
+            }
         }
 
-        const almacen = item.store || 'Sin almacén';
-        let frecuenciaTexto = '';
+        // Retornas tu estructura de texto combinada con los días ya seguros
+        return `1 · ${item.frecuencia || 'Sin frecuencia'} · límite ${item.hora_limite || 'N/A'} ${diasFormateados ? '· ' + diasFormateados : ''}`;
+    },
 
-        if (item.frecuencia === 'Diario') {
-            frecuenciaTexto = 'diario';
-        } else if (item.frecuencia === 'Semanal') {
-            frecuenciaTexto = (item.dias_semana && item.dias_semana.length > 0) 
-                ? item.dias_semana.join(', ').toLowerCase() 
-                : 'semanal';
-        } else if (item.frecuencia === 'Mensual') {
-            frecuenciaTexto = item.dia_mes ? `día ${item.dia_mes}` : 'mensual';
+
+    // Método para cambiar la frecuencia y ajustar los campos automáticamente
+    cambiarFrecuencia(frecuencia) {
+        this.formulario.frecuencia = frecuencia;
+        
+        if (frecuencia === 'Diario') {
+            this.formulario.dias_semana = ['L', 'Ma', 'Mi', 'J', 'V', 'S', 'D'];
+            this.formulario.dia_mes = '';
+        } else if (frecuencia === 'Semanal') {
+            this.formulario.dias_semana = ['S'];
+            this.formulario.dia_mes = '';
+        } else if (frecuencia === 'Mensual' || frecuencia === 'Trimestral') {
+            this.formulario.dias_semana = [];
+            this.formulario.dia_mes = '1'; 
+        }
+    },
+
+    toggleDia(dia) {
+        if (this.formulario.frecuencia === 'Mensual' || this.formulario.frecuencia === 'Trimestral') return;
+
+        if (this.formulario.frecuencia === 'Semanal') {
+            this.formulario.dias_semana = [dia];
         } else {
-            frecuenciaTexto = item.frecuencia ? item.frecuencia.toLowerCase() : '';
+            if (this.formulario.dias_semana.includes(dia)) {
+                this.formulario.dias_semana = this.formulario.dias_semana.filter(d => d !== dia);
+            } else {
+                this.formulario.dias_semana.push(dia);
+            }
         }
+    },
 
-        const horaLimite = item.hora_limite ? item.hora_limite.substring(0, 5) : '--:--';
-        return `${almacen} · ${frecuenciaTexto} · límite ${horaLimite}`;
+    // Métodos de Alertas
+    mostrarAlerta({ tipo = 'warning', titulo = '', mensaje = '', textoBoton = 'Aceptar', onConfirm = null }) {
+        this.alerta = { tipo, titulo, mensaje, textoBoton, onConfirm };
+        
+        const modalElement = document.getElementById('modalAlertaGeneral');
+        if (modalElement && typeof bootstrap !== 'undefined') {
+            const modalInstance = bootstrap.Modal.getOrCreateInstance(modalElement);
+            modalInstance.show();
+        }
+    },
+
+    confirmarAccion() {
+        if (typeof this.alerta.onConfirm === 'function') {
+            this.alerta.onConfirm();
+        }
+        const modalElement = document.getElementById('modalAlertaGeneral');
+        if (modalElement && typeof bootstrap !== 'undefined') {
+            const modalInstance = bootstrap.Modal.getInstance(modalElement);
+            if (modalInstance) modalInstance.hide();
+        }
+    },
+
+    cerrarAlertaUnica() {
+        const modalElement = document.getElementById('modalAlertaGeneral');
+        if (modalElement && typeof bootstrap !== 'undefined') {
+            const modalInstance = bootstrap.Modal.getInstance(modalElement);
+            if (modalInstance) {
+                modalInstance.hide();
+            }
+        }
     },
 
     

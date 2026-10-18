@@ -1,20 +1,140 @@
 import Alpine from 'https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/module.esm.js';
 
+import { 
+    fetchConteoDetalle,
+    fetchItems,
+    fetchPlantillasConteo,
+    fetchStores,
+    fetchUsuarios,
+    fetchConteoDtls
+} from './api_consulta_conteo.js'; 
+
+
 Alpine.data('inventoryApp', () => ({
     
     searchQuery: '',
     statusFilter: 'Todos',
-    selectedCount: null,
+    selectedPlantilla: null,
+
+    plantillas: [],
+    detalleConteo:[],
+    users:[],
+    item:[],
     
-    init() {
-        console.log("¡Alpine inicializado correctamente!");
-        if (this.counts.length > 0) {
-            this.selectedCount = this.counts[0];
+    async init() {
+        await this.getPlantillasConteo();
+        
+    },
+
+    //* GETS
+    async getPlantillasConteo() {
+        try {
+            const response = await fetchPlantillasConteo();
+            
+            this.plantillas = response.map(p => ({
+                id: p.id,
+                codigo: p.codigo,
+                nombre: p.nombre,
+                store: p.store,
+                user_id: p.user_id,
+                username: p.username,
+                status: this.statusFormat(p.status), 
+                frecuencia: p.frecuencia,
+                dias_semana: p.dias_semana,
+                dia_mes: p.dia_mes || '', 
+                vigencia: p.vigencia,
+                hora_apertura: p.hora_apertura,
+                hora_limite: p.hora_limite,
+                dia_limite: p.dia_limite,
+                bloquear_vencer_limite: p.bloquear_vencer_limite,
+                permitir_buscar_fuera_catalogo: p.permitir_buscar_fuera_catalogo,
+                mostrar_existencia_teorica: p.mostrar_existencia_teorica,
+                products: p.productos || []
+            }));
+
+            console.log("Plantillas normalizadas:", this.plantillas);
+        } catch (error) {
+            console.error("Error al obtener las plantillas de conteo:", error);
         }
     },
 
+    async getConteoDtls(id) {
+        try {
+            const response = await fetchConteoDtls(id);
+            const detalleCrudo = response || [];
+
+            this.detalleConteo = detalleCrudo.map(item => ({
+                id: item.id,
+                plantillaId: item.plantilla_id,
+                itemId: item.item_id,
+                conteo: Number(item.conteo) || 0,
+                sku: item.sku || '',
+                description: item.nombre || '',
+                categoria: item.categoria || 'GENERAL'
+            }));
+            
+            const detallePuro = JSON.parse(JSON.stringify(this.detalleConteo));
+            console.log("Datos limpios sin Proxy:", detallePuro);
+
+        } catch (error) {
+            console.error("Error al obtener los detalles del conteo:", error);
+        }
+    },
+   
+
+    //* AUX-GETS
+   
+
+    
+    
+    selectCount(plantilla) {
+        
+        this.selectedPlantilla = plantilla;
+        
+        this.selectedId = plantilla.id; 
+        console.log(plantilla.id)
+        this.getConteoDtls(plantilla.id);
+    },
+
+    statusFormat(status) {
+        const statusTaser = {
+            0: "Sin revisar",
+            1: "Incompleto",
+            2: "Completo",
+        };
+        return statusTaser[status] || "Desconocido";
+    },
+
+    getStatusBadgeClass(status) {
+        switch(status) {
+            case 'Completo': return 'badge-soft-success';
+            case 'Incompleto': return 'badge-soft-warning';
+            default: return 'badge-soft-secondary';
+        }
+    },
+
+    formatDate(dateStr) {
+        if (!dateStr) return '';
+        const date = new Date(dateStr + 'T00:00:00');
+        return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
+    },
+
+    get filteredCounts() {
+
+        return this.plantillas.filter(p => {
+            const query = this.searchQuery.toLowerCase();
+            const matchesQuery = query === '' ||
+                p.nombre.toLowerCase().includes(query)
+                p.codigo.toLowerCase().includes(query)
+                p.status.toLowerCase().includes(query)
+
+            const matchesStatus = this.statusFilter === 'Todos' || p.status === this.statusFilter;
+            return matchesQuery && matchesStatus;
+        });
+    },
+
     resetSelection() {
-        this.selectedCount = null;
+        this.selectedPlantilla = null;
     },
 
     counts: [
@@ -74,42 +194,52 @@ Alpine.data('inventoryApp', () => ({
         }
     ],
 
-    get filteredCounts() {
-        return this.counts.filter(c => {
-            const query = this.searchQuery.toLowerCase();
-            const matchesQuery = query === '' || 
-                c.title.toLowerCase().includes(query) ||
-                c.code.toLowerCase().includes(query) ||
-                c.status.toLowerCase().includes(query);
-                
-            const matchesStatus = this.statusFilter === 'Todos' || c.status === this.statusFilter;
-            
-            return matchesQuery && matchesStatus;
-        });
-    },
-
-    selectCount(count) {
-        this.selectedCount = count;
-        console.log("hola");
-    },
+    //* MUESTREO DE PRODUCTOS:
 
     getGroupedProducts() {
-        if (!this.selectedCount) return {};
-        return this.selectedCount.products.reduce((acc, p) => {
-            if (!acc[p.category]) acc[p.category] = [];
-            acc[p.category].push(p);
-            return acc;
-        }, {});
+        const groups = {};
+        
+        this.detalleConteo.forEach(product => {
+            const cat = product.categoria || 'GENERAL';
+            
+            if (!groups[cat]) {
+                groups[cat] = [];
+            }
+            groups[cat].push(product);
+        });
+        
+        return groups;
     },
 
     calculateTotalValue() {
-        if (!this.selectedCount) return 0;
-        return this.selectedCount.products.reduce((acc, p) => acc + (p.qty * p.price), 0);
+        if (!this.selectedPlantilla) return 0;
+        return this.selectedPlantilla.products.reduce((acc, p) => acc + (p.qty * p.price), 0);
     },
 
     formatCurrency(val) {
         return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
     },
+
+
+    openCategories: {},
+
+    toggleCategory(categoryName) {
+        this.openCategories[categoryName] = this.openCategories[categoryName] === undefined ? false : !this.openCategories[categoryName];
+    },
+
+    isCategoryOpen(categoryName) {
+        return this.openCategories[categoryName] !== false; // Por defecto abiertas
+    }
+    
+
+    
+
+    
+    /*
+
+    
+
+    
 
     formatDate(dateStr) {
         if (!dateStr) return '';
@@ -123,7 +253,35 @@ Alpine.data('inventoryApp', () => ({
             case 'Incompleto': return 'badge-soft-warning';
             default: return 'badge-soft-secondary';
         }
-    }
+    },
+
+        // Función para aplanar las filas de categorías y productos
+    getFlattenedRows() {
+        let rows = [];
+        let grouped = this.getGroupedProducts(); // Asume que esta función ya agrupa por categoría
+        
+        for (let category in grouped) {
+            // 1. Fila de la categoría
+            rows.push({ 
+                type: 'category', 
+                name: category, 
+                psCount: grouped[category].length 
+            });
+            
+            // 2. Filas de los productos de esa categoría
+            grouped[category].forEach(product => {
+                rows.push({ 
+                    type: 'product', 
+                    category: category, 
+                    data: product 
+                });
+            });
+        }
+        return rows;
+    },*/
+
+    // Estado y control para contraer/expandir categorías
+    
 }));
 
 // ¡CRUCIAL! Esto enciende el motor de Alpine para archivos modulares (ESM)
