@@ -29,14 +29,43 @@
                 La plantilla define el almacén a contar, los catálogos de items que se enlistan, la fecha y hora límite de captura y la frecuencia del conteo.
             </p>
 
-            <div class="position-relative">
+            <!-- Barra de Búsqueda -->
+            <div class="position-relative mb-3">
                 <span class="search-icon-wrapper">
                     <i class="bi bi-search"></i>
                 </span>
                 <input type="text" 
                         class="form-control form-control-soft input-with-icon w-100" 
-                        placeholder="Buscar plantilla" 
+                        placeholder="Buscar plantilla o almacén..." 
                         x-model="busqueda">
+            </div>
+
+            <!-- Botones de Filtro Rápido por Estado -->
+            <div class="d-flex flex-wrap gap-2 align-items-center">
+                
+                <button type="button" class="btn btn-sm px-3" 
+                        :class="filtroEstado === 'todos' ? 'btn-dark' : 'btn-light border text-secondary'" 
+                        @click="filtroEstado = 'todos'">
+                    Todos
+                </button>
+
+                <button type="button" class="btn btn-sm px-3" 
+                        :class="filtroEstado === 'proximos' ? 'btn-warning text-dark fw-bold' : 'btn-light border text-secondary'" 
+                        @click="filtroEstado = 'proximos'">
+                    Próximos a vencer
+                </button>
+
+                <button type="button" class="btn btn-sm px-3" 
+                        :class="filtroEstado === 'pendientes' ? 'btn-dark' : 'btn-light border text-secondary'" 
+                        @click="filtroEstado = 'pendientes'">
+                    Pendientes
+                </button>
+
+                <button type="button" class="btn btn-sm px-3" 
+                        :class="filtroEstado === 'vencidos' ? 'btn-danger text-white' : 'btn-light border text-secondary'" 
+                        @click="filtroEstado = 'vencidos'">
+                    Vencidos
+                </button>
             </div>
         </div>
 
@@ -55,14 +84,41 @@
                     </thead>
                     <tbody>
                         <!-- Iteración de Plantillas -->
-                        <template x-for="plantilla in plantillasFiltradas" :key="plantilla.id">
-                            <tr :class="{'selected-row': plantillaSeleccionada === plantilla.id}" 
-                                @click="seleccionarPlantilla(plantilla)">
-                                
-                                <!-- Columna Checkbox Cuadrado -->
-                                <td class="text-center">
-                                    <div class="custom-square-check"></div>
-                                </td>
+                        <template x-for="plantilla in plantillas.filter(p => {
+                                // 1. Filtro por texto (nombre, almacén o descripción)
+                                const textoMatch = p.nombre.toLowerCase().includes(busqueda.toLowerCase()) || 
+                                                p.almacen.toLowerCase().includes(busqueda.toLowerCase()) || 
+                                                p.descripcion.toLowerCase().includes(busqueda.toLowerCase());
+
+                                // 2. Filtro por Estado
+                                let estadoMatch = true;
+                                if (filtroEstado === 'proximos') estadoMatch = (p.estadoFiltro === 'proximos');
+                                if (filtroEstado === 'pendientes') estadoMatch = (p.estadoFiltro === 'pendientes');
+                                if (filtroEstado === 'vencidos') estadoMatch = (p.estadoFiltro === 'vencidos');
+
+                                return textoMatch && estadoMatch;
+                            })" :key="plantilla.id">
+                            
+                            <tr @click="if (!plantilla.bloqueada && !plantilla.inactiva) { plantillaSeleccionada = (plantillaSeleccionada && plantillaSeleccionada.id === plantilla.id) ? null : plantilla; }"
+                                class="align-middle"
+                                :class="{
+                                    'table-active': plantillaSeleccionada && plantillaSeleccionada.id === plantilla.id,
+                                    'opacity-50 bg-light cursor-not-allowed': plantilla.bloqueada || plantilla.inactiva,
+                                    'cursor-pointer': !plantilla.bloqueada && !plantilla.inactiva
+                                }"
+                                style="user-select: none;">
+
+                                <!-- Columna Checkbox / Radio -->
+                                <td class="align-middle text-center">
+                                    <input type="checkbox" 
+                                        class="form-check-input cursor-pointer" 
+                                        :checked="plantillaSeleccionada && plantillaSeleccionada.id === plantilla.id"
+                                        @click.stop
+                                        @change="if (!plantilla.bloqueada && !plantilla.inactiva) { plantillaSeleccionada = $event.target.checked ? plantilla : null; }"
+                                        :disabled="plantilla.bloqueada || plantilla.inactiva" 
+                                        :title="plantilla.bloqueada ? 'Esta plantilla está vencida y tiene bloqueada la captura' : ''"
+                                        :style="(plantillaSeleccionada && plantillaSeleccionada.id === plantilla.id) ? 'background-color: #212529; border-color: #212529; accent-color: #212529;' : ''">
+                                </td>                                
 
                                 <!-- Columna Plantilla -->
                                 <td>
@@ -84,48 +140,64 @@
                                 <!-- Columna Frecuencia -->
                                 <td class="align-middle">
                                     <div class="fs-7" :class="plantilla.inactiva ? 'text-muted opacity-50' : ''">
-                                        <template x-if="plantilla.diasFrecuencia && plantilla.diasFrecuencia.length > 0">
-                                            
-                                            <div style="display: grid; grid-template-columns: repeat(3, 28px); gap: 4px;">
-                                                <template x-for="dia in plantilla.diasFrecuencia" :key="dia">
-                                                    
-                                                    <span class="badge rounded-1 border px-0 py-1 fw-normal w-100"
-                                                        :class="plantilla.inactiva ? 'bg-transparent text-muted border-secondary' : 'bg-white text-secondary border-secondary-subtle'" 
-                                                        x-text="dia"
-                                                        style="text-align: center;">
+                                        
+                                        <!--? DIARIO -->
+                                        <template x-if="plantilla.frecuenciaRaw.toLowerCase().includes('diario')">
+                                            <div class="d-inline-flex justify-content-center">
+                                                <div style="display: grid; grid-template-columns: repeat(3, 28px); gap: 4px;">
+                                                    <template x-for="dia in plantilla.diasFrecuencia" :key="dia">
+                                                        <span class="badge rounded-1 border px-0 py-1 fw-normal w-100 bg-white text-secondary border-secondary-subtle" 
+                                                            x-text="dia"
+                                                            style="text-align: center;">
+                                                        </span>
+                                                    </template>
+                                                </div>
+                                            </div>
+                                        </template>
+
+                                        <!--? SEMANAL -->  
+                                        <template x-if="plantilla.frecuenciaRaw.toLowerCase().includes('semanal')">
+                                            <div class="d-inline-flex flex-column align-items-center gap-1">
+                                                <template x-for="diaNombre in plantilla.diasFrecuencia" :key="diaNombre">
+                                                    <span class="badge bg-white text-secondary border border-secondary-subtle px-3 py-1.5 fs-7 fw-normal" 
+                                                        x-text="diaNombre">
                                                     </span>
-                                                    
                                                 </template>
                                             </div>
-                                            
+                                        </template>
+
+                                        <!--? MENSUAL o TRIMESTRAL -->
+                                        <template x-if="['Mensual', 'mensual', 'Trimestral', 'trimestral'].includes(plantilla.frecuenciaRaw)">
+                                            <span class="fs-7 fw-semibold text-secondary" x-text="plantilla.infoAdicional"></span>
                                         </template>
                                     </div>
                                 </td>
+
                                 <!-- Columna Límite de Captura -->
                                 <td class="align-middle">
                                     <template x-if="plantilla.limiteCaptura">
                                         <div class="d-flex flex-column fs-7" :class="plantilla.inactiva ? 'text-muted opacity-50' : ''">
                                             
                                             <!-- HORA -->
-                                            <div class="d-flex align-items-center gap-2">
-                                                <span class="fw-medium"
-                                                    :class="(plantilla.alertaRoja || plantilla.estaVencida) ? 'text-danger fw-bold' : 'text-body'"
-                                                    x-text="plantilla.limiteCaptura.hora">
-                                                </span>
+                                            <div class="d-flex flex-column align-end">
+                                                <!-- Hora límite con color dinámico (amarillo, negro o rojo) -->
+                                                <span :class="plantilla.claseColor" class="fw-bold" x-text="plantilla.limiteCaptura.hora"></span>
                                                 
-                                                <!-- GAFETE -->
+                                                <!-- Fecha o texto Hoy/Mañana -->
+                                                <span :class="plantilla.claseColor" class="fs-7" x-text="plantilla.limiteCaptura.fecha"></span>
+                                                
+                                                <!-- Cronómetro / Tiempo restante (Solo para los que NO están vencidos) -->
+                                                <template x-if="!plantilla.estaVencida && plantilla.limiteCaptura.tiempoRestante">
+                                                    <span class="fs-8 text-muted mt-1 fw-semibold" x-text="plantilla.limiteCaptura.tiempoRestante"></span>
+                                                </template>
+
+                                                <!-- Etiqueta de Vencido (Solo para los vencidos) -->
                                                 <template x-if="plantilla.estaVencida">
-                                                    <span class="badge bg-danger rounded-1" style="font-size: 0.65em; padding: 0.25em 0.4em;">
-                                                        Vencido
-                                                    </span>
+                                                    <span class="badge bg-danger fs-8 mt-1">Vencido</span>
                                                 </template>
                                             </div>
 
-                                            <!-- FECHA: -->
-                                            <span style="font-size: 0.85em;" 
-                                                :class="(plantilla.alertaRoja || plantilla.estaVencida) ? 'text-danger opacity-75' : 'text-secondary'" 
-                                                x-text="plantilla.limiteCaptura.fecha">
-                                            </span>
+                                            
                                             
                                         </div>
                                     </template>

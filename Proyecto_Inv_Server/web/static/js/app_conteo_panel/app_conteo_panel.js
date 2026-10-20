@@ -10,9 +10,11 @@ import {
 Alpine.data('conteoApp', () => ({
     busqueda: '',
     plantillaSeleccionada: null,
+    plantillasSeleccionadas: [],
     plantillas: [],
     fechaConteo: '',
     isLoading: true,
+    filtroEstado: 'todos',
 
     async init() {
         const hoy = new Date();
@@ -28,9 +30,36 @@ Alpine.data('conteoApp', () => ({
             fetchStores()
         ]);
             
-        this.plantillas = this.mapearPlantillas(rawData, storesData);
-       
-        
+        let plantillasMapeadas = this.mapearPlantillas(rawData, storesData);
+
+        // 1. Ordenamos: Vigentes primero (del más próximo al más lejano), Vencidos al final
+        plantillasMapeadas.sort((a, b) => {
+            if (a.estaVencida && !b.estaVencida) return 1;
+            if (!a.estaVencida && b.estaVencida) return -1;
+            if (a.fechaLimiteObjeto && b.fechaLimiteObjeto) {
+                return a.fechaLimiteObjeto - b.fechaLimiteObjeto;
+            }
+            return 0;
+        });
+
+        // 2. Asignar la clase de color basada en el orden y estado
+        // Dentro de tu init() o mapeo:
+        let encontradoPrimerVigente = false;
+        plantillasMapeadas.forEach(item => {
+            if (item.estaVencida) {
+                item.claseColor = 'text-danger';
+                item.estadoFiltro = 'vencidos';
+            } else if (!encontradoPrimerVigente) {
+                item.claseColor = 'text-warning fw-bold';
+                item.estadoFiltro = 'proximos';
+                encontradoPrimerVigente = true;
+            } else {
+                item.claseColor = 'text-dark';
+                item.estadoFiltro = 'pendientes';
+            }
+        });
+
+        this.plantillas = plantillasMapeadas;
         this.isLoading = false;
     },
 
@@ -38,10 +67,7 @@ Alpine.data('conteoApp', () => ({
         return datosApi.map(item => {
             
             // -- Buscar el nombre del almacén por su ID --
-            // Comparamos el ID del almacén (s.id) con el ID que trae la plantilla (item.store)
             const almacenEncontrado = storesData.find(s => s.id === item.store);
-            
-            // Si lo encuentra, usamos el nombre (s.store), si no, dejamos un texto de respaldo
             const nombreAlmacen = almacenEncontrado ? almacenEncontrado.store : `Almacén ID: ${item.store}`;
 
             // -- A. Formatear la descripción --
@@ -54,66 +80,154 @@ Alpine.data('conteoApp', () => ({
                 descripcion = `${categorias} · ${totalItems} items`;
             }
 
-            // -- B. Formatear la frecuencia --
+            // -- B. Formatear la frecuencia y días/info adicional --
             let frecuenciaTexto = this.capitalizar(item.frecuencia);
             let diasArray = []; 
+            let infoAdicional = '';
 
-            if (item.frecuencia === 'Diario' && item.dias_semana) {
-                diasArray = item.dias_semana.split(','); // Convertimos "L,Ma,Mi..." a ['L', 'Ma', 'Mi'...]
-            } else if (item.frecuencia === 'Mensual' && item.dia_mes) {
-                frecuenciaTexto += ` · día ${item.dia_mes}`;
-            }
+            const freqLower = (item.frecuencia || '').toLowerCase();
 
-            // -- C. Formatear Límite de Captura y Alertas --
-            let limiteObj = null;
-            let esAlertaRoja = false;
-            let estaVencida = false;
-
-            if (item.dia_limite && item.hora_limite) {
-                // 1. Separar y formatear la fecha
-                const [year, month, day] = item.dia_limite.split('-');
-                const fechaLatina = `${day}/${month}/${year}`;
-                const horaLimpia = item.hora_limite.substring(0, 5); // Ej. "11:00"
-
-                // 2. Comprobar si ya venció (comparamos la fecha/hora límite vs AHORA)
-                const limiteDateTime = new Date(`${item.dia_limite}T${item.hora_limite}`);
-                const ahora = new Date();
-                
-                if (limiteDateTime < ahora) {
-                    estaVencida = true; // ¡El tiempo ya expiró!
-                }
-
-                // 3. Determinar si es "Hoy"
-                const hoyStr = ahora.getFullYear() + '-' + 
-                            String(ahora.getMonth() + 1).padStart(2, '0') + '-' + 
-                            String(ahora.getDate()).padStart(2, '0');
-                const textoFecha = (item.dia_limite === hoyStr) ? 'Hoy' : fechaLatina;
-
-                limiteObj = {
-                    fecha: textoFecha,
-                    hora: horaLimpia
+            if (freqLower.includes('diario') && item.dias_semana) {
+                // Para diario conservamos las abreviaturas (L, Ma, Mi, etc.)
+                diasArray = item.dias_semana.split(',').map(d => d.trim());
+            } else if (freqLower.includes('semanal') && item.dias_semana) {
+                // Para semanal convertimos a nombre completo
+                const mapaDiasCompletos = { 
+                    'L': 'Lunes', 'Ma': 'Martes', 'Mi': 'Miércoles', 
+                    'J': 'Jueves', 'V': 'Viernes', 'S': 'Sábado', 'D': 'Domingo' 
                 };
-                
-                // Si bloquear_vencer_limite es 1 o si ya venció, encendemos la alerta visual
-                esAlertaRoja = item.bloquear_vencer_limite === 1 || estaVencida; 
+                diasArray = item.dias_semana.split(',').map(d => mapaDiasCompletos[d.trim()] || d.trim());
+            } else if (freqLower.includes('mensual') && item.dia_mes !== null && item.dia_mes !== undefined) {
+                infoAdicional = `Día ${item.dia_mes} del mes`;
+            } else if (freqLower.includes('trimestral') && item.dia_mes !== null && item.dia_mes !== undefined) {
+                infoAdicional = `Día ${item.dia_mes} (Trimestral)`;
             }
 
-
-
-
+            // -- C. Obtener cálculo de vigencia, alertas y la fecha objeto --
+            const { limiteObj, esAlertaRoja, estaVencida, fechaLimiteObjeto } = this.calcularVigenciaCaptura(item);
+            const estaBloqueada = estaVencida && (parseInt(item.bloquear_vencer_limite, 10) === 1);
             return {
                 id: item.id,
                 nombre: item.nombre,
                 descripcion: descripcion,
                 almacen: nombreAlmacen, 
                 frecuencia: frecuenciaTexto,
+                frecuenciaRaw: item.frecuencia,
                 diasFrecuencia: diasArray,
+                infoAdicional: infoAdicional,
                 limiteCaptura: limiteObj,
                 alertaRoja: esAlertaRoja,
                 estaVencida: estaVencida,
+                bloqueada: estaBloqueada,
+                fechaLimiteObjeto: fechaLimiteObjeto, // <--- Aquí se incluye correctamente
                 inactiva: item.status === 0
             };
         });
+    },
+
+    //* Filtro de Limites de Captura
+    calcularVigenciaCaptura(item) {
+        if (!item.hora_limite || item.dia_limite === null || item.dia_limite === undefined) {
+            return { limiteObj: null, esAlertaRoja: false, estaVencida: false, fechaLimiteObjeto: null };
+        }
+
+        const ahora = new Date();
+        const offsetDias = parseInt(item.dia_limite, 10) || 0; 
+
+        let fechaBaseConteo = new Date();
+
+        if ((item.frecuencia === 'Semanal' || item.frecuencia === 'semanal') && item.dias_semana) {
+            const mapaDias = { 'D': 0, 'L': 1, 'Ma': 2, 'Mi': 3, 'J': 4, 'V': 5, 'S': 6 };
+            const diasProgramados = item.dias_semana.split(',').map(d => mapaDias[d.trim()]).filter(d => d !== undefined);
+            
+            if (diasProgramados.length > 0) {
+                const diaHoy = ahora.getDay();
+                let diferenciaDias = 0;
+                if (!diasProgramados.includes(diaHoy)) {
+                    const proximoDia = diasProgramados.find(d => d >= diaHoy) ?? diasProgramados[0];
+                    diferenciaDias = (proximoDia - diaHoy + 7) % 7;
+                }
+                fechaBaseConteo.setDate(ahora.getDate() + diferenciaDias);
+            }
+        } else if ((item.frecuencia === 'Mensual' || item.frecuencia === 'mensual' || item.frecuencia === 'Trimestral' || item.frecuencia === 'trimestral') && item.dia_mes) {
+            fechaBaseConteo.setDate(parseInt(item.dia_mes, 10));
+        }
+
+        const fechaLimiteCalculada = new Date(fechaBaseConteo);
+        fechaLimiteCalculada.setDate(fechaBaseConteo.getDate() + offsetDias);
+
+        const [horas, minutos] = item.hora_limite.split(':');
+        fechaLimiteCalculada.setHours(parseInt(horas, 10), parseInt(minutos, 10), 0, 0);
+
+        const estaVencida = fechaLimiteCalculada < ahora;
+
+        let textoFecha = '';
+        const hoyStr = ahora.toDateString();
+        const manana = new Date(ahora);
+        manana.setDate(ahora.getDate() + 1);
+
+        if (fechaLimiteCalculada.toDateString() === hoyStr) {
+            textoFecha = 'Hoy';
+        } else if (fechaLimiteCalculada.toDateString() === manana.toDateString()) {
+            textoFecha = 'Mañana';
+        } else {
+            const diaStr = String(fechaLimiteCalculada.getDate()).padStart(2, '0');
+            const mesStr = String(fechaLimiteCalculada.getMonth() + 1).padStart(2, '0');
+            const anoStr = fechaLimiteCalculada.getFullYear();
+            textoFecha = `${diaStr}/${mesStr}/${anoStr}`;
+        }
+
+        const horaLimpia = item.hora_limite.substring(0, 5);
+
+        // --- CÁLCULO DEL TIEMPO RESTANTE SEGÚN FRECUENCIA Y PLAZO ---
+        let tiempoRestante = '';
+        if (!estaVencida) {
+            const diffMs = fechaLimiteCalculada - ahora;
+            const diffSegundos = Math.floor(diffMs / 1000);
+            const diffMinutos = Math.floor(diffSegundos / 60);
+            const diffHoras = Math.floor(diffMinutos / 60);
+            const diffDias = Math.floor(diffHoras / 24);
+
+            const freqLower = (item.frecuencia || '').toLowerCase();
+
+            if (freqLower.includes('semanal')) {
+                tiempoRestante = `${diffDias} Día/s restantes`;
+            } else if (freqLower.includes('mensual')) {
+                const diffSemanas = Math.max(1, Math.floor(diffDias / 7));
+                tiempoRestante = `${diffSemanas} Semana/s restantes`;
+            } else if (freqLower.includes('trimestral')) {
+                const diffMeses = Math.max(1, Math.floor(diffDias / 30));
+                tiempoRestante = `${diffMeses} Mese/s restantes`;
+            } else {
+                // Diario u otros
+                if (diffDias >= 1) {
+                    tiempoRestante = `${diffDias} día/s restante`;
+                } else if (diffHoras >= 1) {
+                    const h = String(diffHoras).padStart(2, '0');
+                    const m = String(diffMinutos % 60).padStart(2, '0');
+                    tiempoRestante = `${h}:${m} Horas restantes`;
+                } else {
+                    const m = String(diffMinutos).padStart(2, '0');
+                    const s = String(diffSegundos % 60).padStart(2, '0');
+                    tiempoRestante = `${m}:${s} min restantes`;
+                }
+            }
+        }
+
+        const limiteObj = {
+            fecha: textoFecha,
+            hora: horaLimpia,
+            tiempoRestante: tiempoRestante
+        };
+        
+        const esAlertaRoja = item.bloquear_vencer_limite === 1 || estaVencida;
+
+        return {
+            limiteObj,
+            esAlertaRoja,
+            estaVencida,
+            fechaLimiteObjeto: fechaLimiteCalculada
+        };
     },
 
     // Helper para poner en mayúscula la primera letra (ej. "CARNES" -> "Carnes")
@@ -144,6 +258,9 @@ Alpine.data('conteoApp', () => ({
     },
 
     seleccionarPlantilla(plantilla) {
+        if (plantilla.bloqueada) {
+            return;
+        }
         if (!plantilla.inactiva) {
             // Si hacemos clic en la plantilla que ya está seleccionada, la des-seleccionamos
             if (this.plantillaSeleccionada === plantilla.id) {

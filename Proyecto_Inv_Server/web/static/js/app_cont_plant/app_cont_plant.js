@@ -198,12 +198,12 @@ Alpine.data('plantillasApp', () => ({
         // Si es Mensual o Trimestral, debe haber ingresado el día del mes
         if ((this.formulario.frecuencia === 'Mensual' || this.formulario.frecuencia === 'Trimestral' || 
             this.formulario.frecuencia === 'mensual' || this.formulario.frecuencia === 'trimestral') && !this.formulario.dia_mes) {
-            this.mostrarAlerta({
-                tipo: 'warning',
-                titulo: 'Día del mes requerido',
-                mensaje: 'Por favor, especifica el día del mes en que se debe realizar el conteo.',
-                textoBoton: 'Entendido'
-            });
+                this.mostrarAlerta({
+                    tipo: 'warning',
+                    titulo: 'Día del mes requerido',
+                    mensaje: 'Por favor, especifica el día del mes en que se debe realizar el conteo.',
+                    textoBoton: 'Entendido'
+                });
             return;
         }
 
@@ -234,22 +234,17 @@ Alpine.data('plantillasApp', () => ({
         this.isLoading = true; 
         
         try {
-            let fechaLimiteCalculada = null;
-            const hoy = new Date(); 
-
-            if (this.formulario.dia_limite === '0' || this.formulario.dia_limite === 0) {
-                fechaLimiteCalculada = hoy.toISOString().split('T')[0];
-            } else if (this.formulario.dia_limite === '1' || this.formulario.dia_limite === 1) {
-                hoy.setDate(hoy.getDate() + 1);
-                fechaLimiteCalculada = hoy.toISOString().split('T')[0];
-            }
+            const valorDiaLimite = this.formulario.dia_limite;
+            const offsetDiaLimite = (valorDiaLimite !== null && valorDiaLimite !== undefined && valorDiaLimite !== '') 
+                                    ? parseInt(valorDiaLimite, 10) 
+                                    : 0; 
 
             const payload = {
                 ...this.formulario,
                 dias_semana: Array.isArray(this.formulario.dias_semana) 
                             ? this.formulario.dias_semana.join(',') 
                             : this.formulario.dias_semana,
-                dia_limite: fechaLimiteCalculada,
+                dia_limite: offsetDiaLimite, 
                 catalogos: this.catalogosSeleccionados.map(c => ({
                     id: c.id,
                     orden: c.orden 
