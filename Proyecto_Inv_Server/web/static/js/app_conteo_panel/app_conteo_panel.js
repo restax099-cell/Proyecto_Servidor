@@ -249,10 +249,13 @@ Alpine.data('conteoApp', () => ({
     },
 
     get textoAlmacenSeleccionado() {
-        if(!this.plantillaSeleccionada) return '';
-        const plan = this.plantillas.find(p => p.id === this.plantillaSeleccionada);
-        if(plan && !plan.inactiva) {
-            return `${plan.almacen} · definido por la plantilla`;
+        if (!this.plantillaSeleccionada) return '';
+        //console.log(this.plantillaSeleccionada)
+        // Accedemos directamente al objeto de la plantilla seleccionada
+        const plan = this.plantillaSeleccionada;
+        
+        if (plan && !plan.inactiva) {
+            return `${plan.almacen} · ${plan.frecuencia}`;
         }
         return '';
     },
@@ -279,8 +282,9 @@ Alpine.data('conteoApp', () => ({
     },
 
     iniciarConteo() {
+
         if (!this.plantillaSeleccionada) return;
-        window.location.href = `/cont-panel-detalle/${this.plantillaSeleccionada}/`;
+        window.location.href = `/cont-panel-detalle/${this.plantillaSeleccionada.id}/`;
     }
 }));
 
