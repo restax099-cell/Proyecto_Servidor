@@ -108,6 +108,7 @@ Alpine.data('conteoApp', () => ({
             const estaBloqueada = estaVencida && (parseInt(item.bloquear_vencer_limite, 10) === 1);
             return {
                 id: item.id,
+                status: item.status,
                 nombre: item.nombre,
                 descripcion: descripcion,
                 almacen: nombreAlmacen, 

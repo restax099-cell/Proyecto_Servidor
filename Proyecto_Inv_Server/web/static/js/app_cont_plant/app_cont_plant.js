@@ -32,7 +32,7 @@ Alpine.data('plantillasApp', () => ({
         bloquear_vencer_limite: 1,
         permitir_buscar_fuera_catalogo: 1,
         mostrar_existencia_teorica: 0,
-        responsables: '' // Lo dejamos como string vacío porque el select ya no es "multiple"
+        responsables: ''
     },
 
     // --- 2. ESTADO DE LOS CATÁLOGOS ---
@@ -80,7 +80,7 @@ Alpine.data('plantillasApp', () => ({
         return this.catalogosSeleccionados.some(c => c.id === idCategoria);
     },
 
-    // --- 5. MÉTODOS DE API (GET) ---
+    //* GET
     async cargarLista() {
         this.listaPlantillas = await fetchPlantillasConteo(this.textoBusqueda);
         
@@ -151,6 +151,7 @@ Alpine.data('plantillasApp', () => ({
         }
     },
 
+    //* Setter
     // --- 6. MÉTODO DE GUARDADO (POST) ---
     async guardarPlantilla() {
         // --- 1. VALIDACIÓN AMARILLA (WARNING): Validar ABSOLUTAMENTE TODOS los campos obligatorios ---

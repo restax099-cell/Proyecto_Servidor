@@ -4,7 +4,8 @@ import {
     fetchConteoDetalle,
     fetchItems,
     fetchStores,
-    setCount
+    setCount,
+    savePlantillaConteo,
 } from './api_conteo.js'; 
 
 Alpine.data('detalleConteoApp', (plantillaId) => ({
@@ -12,7 +13,7 @@ Alpine.data('detalleConteoApp', (plantillaId) => ({
     filtro: 'Todos',
     isLoading: true,
 
-    // --- 1. DATOS DEL ENCABEZADO ---
+    // --- DATOS DEL ENCABEZADO ---
     encabezado: {
         nombre: 'Cargando...',
         almacen: 'Cargando...',
@@ -21,11 +22,22 @@ Alpine.data('detalleConteoApp', (plantillaId) => ({
         fecha: ''
     },
 
-    // --- 2. DATOS DE LA TABLA ---
+    // --- DATOS DE LA TABLA ---
     categorias: [], 
+
+    // --- Modals ---
+    alerta: {
+        tipo: 'warning', 
+        titulo: '',
+        mensaje: '',
+        textoBoton: 'Aceptar',
+        accionCallback: null
+    },
+    modalInstancia: null,
 
     async init() {
         this.isLoading = true;
+        this.modalInstancia = new bootstrap.Modal(document.getElementById('modalAlertaGeneral'));
         
         const hoy = new Date();
         this.encabezado.fecha = hoy.toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -179,8 +191,8 @@ Alpine.data('detalleConteoApp', (plantillaId) => ({
     },
 
 
-    //* INPUTS
-    async guardarConteo(estado = 'Borrador') {
+    //* Seters
+    guardarConteo(estado = 'Borrador') {
         let itemsCapturados = [];
 
         this.categorias.forEach(categoria => {
@@ -194,18 +206,24 @@ Alpine.data('detalleConteoApp', (plantillaId) => ({
             });
         });
 
-        if (itemsCapturados.length === 0) {
-            alert("No hay ningún ítem con cantidad capturada para guardar.");
-            return;
+        // Si se intenta cerrar o guardar y no hay nada
+        if (itemsCapturados.length === 0 && estado !== 'Cerrado') {
+            this.mostrarAlerta('warning', 'Sin datos', 'No hay ningún ítem con cantidad capturada para guardar.', 'Aceptar');
+            return null;
         }
 
         const idReal = plantillaId || parseInt(window.location.pathname.split('/').filter(Boolean).pop());
 
-        const payload = {
+        return {
             conteo_plantilla_id: idReal,
             estado: estado,
             items: itemsCapturados
         };
+    },
+
+    async btnGuardarConteo() {
+        const payload = this.guardarConteo('Borrador');
+        if (!payload) return;
 
         this.isLoading = true; 
 
@@ -213,23 +231,99 @@ Alpine.data('detalleConteoApp', (plantillaId) => ({
             const data = await setCount(payload);
 
             if (data.status === 'success') {
-                alert(`¡Éxito! ${data.message} (${data.registros_afectados} ítems guardados)`);
-                
-                if (estado === 'Cerrado') {
-                }
+                this.mostrarAlerta(
+                    'success',
+                    '¡Guardado exitoso!',
+                    `${data.message} (${data.registros_afectados} ítems guardados correctamente).`,
+                    'Aceptar'
+                );
             } else {
                 console.error("Error del backend:", data.error);
-                alert("Error al guardar: " + data.error);
+                this.mostrarAlerta('danger', 'Error al guardar', data.error, 'Cerrar');
             }
         } catch (error) {
-            console.error("ERROR al intentar guardar el borrador:", error);
-            alert("Ocurrió un error de conexión al intentar guardar.");
+            console.error("ERROR al intentar guardar:", error);
+            this.mostrarAlerta('danger', 'Error de conexión', 'Ocurrió un error al intentar conectar con el servidor.', 'Cerrar');
         } finally {
             this.isLoading = false;
         }
     },
 
-    //* OUTPUTS
+    // --- 3. ACCIÓN: Cerrar Conteo (Con Modal de Confirmación previo) ---
+    btnCerrarConteo() {
+        // Validación obligatoria: Verificar que no queden pendientes antes de cerrar
+        let hayPendientes = false;
+        this.categorias.forEach(categoria => {
+            categoria.items.forEach(item => {
+                if (item.estado === 'Pendiente') {
+                    hayPendientes = true;
+                }
+            });
+        });
+
+        if (hayPendientes) {
+            this.mostrarAlerta(
+                'warning',
+                'Ítems pendientes',
+                'No puedes cerrar el conteo porque hay artículos sin contar. Usa el botón "Marcar en cero los pendientes" o captúralos antes de continuar.',
+                'Entendido'
+            );
+            return;
+        }
+
+        // Si pasa la validación, lanzamos el modal de confirmación que pediste
+        this.mostrarAlerta(
+            'confirm', // Tipo confirm para habilitar el botón Cancelar y diseño adecuado
+            '¿Cerrar conteo definitivamente?',
+            'Advertencia: Si desea cerrar el conteo definitivamente NO podrá volver a editarlo. ¿Desea continuar?',
+            'Confirmar', // Texto del botón de acción
+            async () => {
+                // Esta función callback solo se ejecuta si el usuario presiona "Confirmar"
+                const payload = this.guardarConteo('Cerrado');
+                if (!payload) return;
+
+                const idReal = payload.conteo_plantilla_id;
+                this.isLoading = true;
+
+                try {
+                    // A. Guardamos los ítems con estado Cerrado
+                    const dataConteo = await setCount(payload);
+
+                    if (dataConteo.status === 'success') {
+                        
+                        // B. Actualizamos el estatus de la plantilla a 2
+                        const payloadPlantilla = {
+                            id: idReal,
+                            status: 2
+                        };
+
+                        await savePlantillaConteo(payloadPlantilla);
+
+                        // C. Mostramos el modal de éxito final con redirección al hacer clic
+                        this.mostrarAlerta(
+                            'success',
+                            '¡Actualizado!',
+                            'Se actualizó y cerró el conteo perfectamente.',
+                            'Aceptar',
+                            () => {
+                                window.location.href = '/cont-panel/';
+                            }
+                        );
+                    } else {
+                        console.error("Error del backend:", dataConteo.error);
+                        this.mostrarAlerta('danger', 'Error al cerrar', dataConteo.error, 'Cerrar');
+                    }
+                } catch (error) {
+                    console.error("ERROR al intentar cerrar el conteo:", error);
+                    this.mostrarAlerta('danger', 'Error de conexión', 'Ocurrió un error al intentar cerrar el conteo.', 'Cerrar');
+                } finally {
+                    this.isLoading = false;
+                }
+            }
+        );
+    },
+
+    //* Geters
     async cargarCantidadesGuardadas() {
         // 1. Extraemos el ID directamente de la URL de forma segura para evitar ReferenceErrors
         const idReal = parseInt(window.location.pathname.split('/').filter(Boolean).pop());
@@ -274,6 +368,38 @@ Alpine.data('detalleConteoApp', (plantillaId) => ({
         //console.log(`5. ¡Listo! Se inyectaron ${inyectados} cantidades y los estados fueron actualizados.`);
     },
 
+    //* Acciones
+    marcarPendientesEnCero() {
+        this.categorias.forEach(categoria => {
+            categoria.items.forEach(item => {
+                if (item.estado === 'Pendiente' || item.cantidad === null || item.cantidad === '' || item.cantidad === undefined) {
+                    item.cantidad = 0;
+                    this.actualizarEstado(item); 
+                }
+            });
+        });
+    },
+
+    //* MODALS
+    mostrarAlerta(tipo, titulo, mensaje, textoBoton = 'Aceptar', callback = null) {
+        this.alerta.tipo = tipo;
+        this.alerta.titulo = titulo;
+        this.alerta.mensaje = mensaje;
+        this.alerta.textoBoton = textoBoton;
+        this.alerta.accionCallback = callback;
+        this.modalInstancia.show();
+    },
+
+    cerrarAlertaUnica() {
+        this.modalInstancia.hide();
+    },
+
+    confirmarAccion() {
+        if (typeof this.alerta.accionCallback === 'function') {
+            this.alerta.accionCallback();
+        }
+        this.modalInstancia.hide();
+    },
 
     // --- PROPIEDADES COMPUTADAS Y MÉTODOS ---
     get totalItems() {

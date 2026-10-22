@@ -16,6 +16,9 @@ export function getCookie(name) {
     return cookieValue;
 }
 
+
+//* GETS
+
 export async function fetchStores() {
     const url = `/api/conteo/get-stores/`;
     
@@ -113,6 +116,8 @@ export async function fetchItems(filters = {}, page = 1, signal) {
     return await fetchData(url, signal);
 }
 
+
+//* SETS
 export async function setCount(payload) {
     const url = '/api/conteo/set-conteo-detalle/'; 
     
@@ -131,5 +136,28 @@ export async function setCount(payload) {
         console.error("Error de red en saveCountApi:", error);
         throw error; 
     }
+}
+
+export async function savePlantillaConteo(payload, signal) {
+    const csrftoken = getCookie('csrftoken');
+    
+    const url = '/api/conteo/set-conteo-plantilla/'; 
+
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken 
+        },
+        body: JSON.stringify(payload),
+        signal: signal
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Error HTTP: ${response.status}`);
+    }
+
+    return await response.json();
 }
 

@@ -129,7 +129,6 @@
 
 
 <!-- MODAL GENERAL DE ALERTAS Y CONFIRMACIONES -->
-<!-- MODAL GENERAL DE ALERTAS Y CONFIRMACIONES -->
 <div class="modal fade" id="modalAlertaGeneral" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered modal-sm">
         <!-- MODIFICACIÓN AQUÍ: Sombra grande, borde sutil y sombra difuminada más intensa -->
@@ -178,18 +177,21 @@
                 <p class="text-muted small mb-4" x-text="alerta.mensaje"></p>
 
                 <!-- BOTONES DE ACCIÓN -->
+                <!-- BOTONES -->
                 <div class="d-flex justify-content-center gap-2">
+                    <!-- Botón Cancelar (Aparece en tipo 'confirm') -->
                     <template x-if="alerta.tipo === 'confirm'">
-                        <button type="button" class="btn btn-sm btn-light border px-3" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-sm btn-outline-danger px-3" data-bs-dismiss="modal">Cancelar</button>
                     </template>
 
+                    <!-- Botón de Acción Dinámico -->
                     <button type="button" 
                             class="btn btn-sm px-4 fw-medium text-white" 
                             :class="{
                                 'btn-warning text-dark': alerta.tipo === 'warning',
                                 'btn-danger': alerta.tipo === 'danger',
-                                'btn-success': alerta.tipo === 'success',
-                                'btn-primary': alerta.tipo === 'confirm'
+                                'btn-success': alerta.tipo === 'success' || alerta.tipo === 'confirm',
+                                'btn-primary': false
                             }"
                             @click="alerta.tipo === 'confirm' || alerta.tipo === 'success' ? confirmarAccion() : cerrarAlertaUnica()"
                             x-text="alerta.textoBoton">

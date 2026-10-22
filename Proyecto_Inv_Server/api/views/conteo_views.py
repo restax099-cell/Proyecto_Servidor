@@ -84,41 +84,40 @@ def set_conteo_plantilla(request):
     try:
         data = request.data
         
-        #? 1. Extraer los datos generales
+        #? ID para actualización (Si viene en None o 0, creará una plantilla nueva)
+        plantilla_id = data.get('id')
+        
         codigo = data.get('codigo')
         nombre = data.get('nombre')
-        store = int(data.get('store', 1))
+        store = int(data.get('store')) if data.get('store') is not None else None
         
         user_id = data.get('user_id')
+        status = int(data.get('status')) if data.get('status') is not None else None
         
-        status = int(data.get('status', 1))
-        
-        #? Frecuencia y Fechas
         frecuencia = data.get('frecuencia')
         dias_semana = data.get('dias_semana') 
         dia_mes = data.get('dia_mes')
         vigencia = data.get('vigencia')
         
-        #? Límites
         hora_apertura = data.get('hora_apertura')
         hora_limite = data.get('hora_limite')
         dia_limite = data.get('dia_limite')
         
-        #? Configuraciones (Asegurando que sean 1 o 0 para MariaDB)
-        bloquear_vencer = int(data.get('bloquear_vencer_limite', 1))
-        permitir_buscar = int(data.get('permitir_buscar_fuera_catalogo', 1))
-        mostrar_existencia = int(data.get('mostrar_existencia_teorica', 0))
+        bloquear_vencer = int(data.get('bloquear_vencer_limite')) if data.get('bloquear_vencer_limite') is not None else None
+        permitir_buscar = int(data.get('permitir_buscar_fuera_catalogo')) if data.get('permitir_buscar_fuera_catalogo') is not None else None
+        mostrar_existencia = int(data.get('mostrar_existencia_teorica')) if data.get('mostrar_existencia_teorica') is not None else None
 
-        #? 2. Empaquetar el arreglo de catálogos en un string JSON
-        catalogos_list = data.get('catalogos', [])
-        catalogos_json = json.dumps(catalogos_list) if catalogos_list else None
+        catalogos_list = data.get('catalogos', None)
+        catalogos_json = json.dumps(catalogos_list) if catalogos_list is not None else None
 
         with connection.cursor() as cursor:
+            # Ahora enviamos 17 parámetros (incluyendo plantilla_id al inicio)
             cursor.execute("""
                 CALL sp_insert_conteo_plantilla(
-                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
                 )
             """, [
+                plantilla_id,
                 codigo, nombre, store, user_id, status, frecuencia, dias_semana, dia_mes, 
                 vigencia, hora_apertura, hora_limite, dia_limite,
                 bloquear_vencer, permitir_buscar, mostrar_existencia,
@@ -130,16 +129,15 @@ def set_conteo_plantilla(request):
 
         return JsonResponse({
             "status": "success",
-            "message": "Plantilla guardada correctamente.",
+            "message": "Plantilla procesada correctamente.",
             "id_plantilla": id_insertado
-        }, status=201)
+        }, status=200)
 
     except Exception as e:
         return JsonResponse({
             "status": "error",
             "error": f"Error de BD: {str(e)}"
         }, status=500)
-
 
 #? CONSULTA DE PLANTILLAS
 def _consultar_plantillas_db(search_query=''):
