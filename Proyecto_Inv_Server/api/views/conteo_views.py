@@ -274,6 +274,7 @@ def get_conteo_detalle(request):
 def get_conteo_dtls(request):
     try:
         plantilla_id = request.GET.get('id')
+        fecha = request.GET.get('fecha')
 
         if not plantilla_id:
             return JsonResponse({
@@ -281,25 +282,30 @@ def get_conteo_dtls(request):
                 "error": "ID de plantilla no proporcionado"
             }, status=400)
 
+        if not fecha:
+            return JsonResponse({
+                "status": "error", 
+                "error": "Fecha no proporcionada"
+            }, status=400)
+
         detalles = []
         with connection.cursor() as cursor:
-            cursor.execute("CALL sp_get_conteo_dtls(%s)", [plantilla_id])
+            # Ejecutamos el SP pasando ambos parámetros: ID y Fecha
+            cursor.execute("CALL sp_get_conteo_dtls(%s, %s)", [plantilla_id, fecha])
             columns = [col[0] for col in cursor.description]
    
             for row in cursor.fetchall():
                 fila = dict(zip(columns, row))
               
-                if 'detalle_id' in fila and fila['detalle_id'] is not None:
-                    fila['detalle_id'] = int(fila['detalle_id'])
-                if 'conteo_plantilla_id' in fila and fila['conteo_plantilla_id'] is not None:
-                    fila['conteo_plantilla_id'] = int(fila['conteo_plantilla_id'])
+                if 'id' in fila and fila['id'] is not None:
+                    fila['id'] = int(fila['id'])
+                if 'plantilla_id' in fila and fila['plantilla_id'] is not None:
+                    fila['plantilla_id'] = int(fila['plantilla_id'])
                 if 'item_id' in fila and fila['item_id'] is not None:
                     fila['item_id'] = int(fila['item_id'])
                 if 'conteo' in fila and fila['conteo'] is not None:
                     fila['conteo'] = float(fila['conteo'])
                 
-                
-                    
                 detalles.append(fila)
 
         return JsonResponse({
@@ -312,4 +318,3 @@ def get_conteo_dtls(request):
             "status": "error",
             "error": f"Error de BD: {str(e)}"
         }, status=500)
-

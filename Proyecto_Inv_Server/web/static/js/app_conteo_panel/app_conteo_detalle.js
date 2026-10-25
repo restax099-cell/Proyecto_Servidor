@@ -192,45 +192,27 @@ Alpine.data('detalleConteoApp', (plantillaId) => ({
 
 
     //* Seters
-    guardarConteo(estado = 'Borrador') {
-        let itemsCapturados = [];
-
-        this.categorias.forEach(categoria => {
-            categoria.items.forEach(item => {
-                if (item.cantidad !== null && item.cantidad !== '') {
-                    itemsCapturados.push({
-                        item_id: item.id,
-                        conteo: parseFloat(item.cantidad)
-                    });
-                }
-            });
-        });
-
-        // Si se intenta cerrar o guardar y no hay nada
-        if (itemsCapturados.length === 0 && estado !== 'Cerrado') {
-            this.mostrarAlerta('warning', 'Sin datos', 'No hay ningún ítem con cantidad capturada para guardar.', 'Aceptar');
-            return null;
-        }
-
-        const idReal = plantillaId || parseInt(window.location.pathname.split('/').filter(Boolean).pop());
-
-        return {
-            conteo_plantilla_id: idReal,
-            estado: estado,
-            items: itemsCapturados
-        };
-    },
-
     async btnGuardarConteo() {
         const payload = this.guardarConteo('Borrador');
         if (!payload) return;
 
+        const idReal = payload.conteo_plantilla_id;
         this.isLoading = true; 
 
         try {
+            // A. Guardamos los ítems del borrador
             const data = await setCount(payload);
 
             if (data.status === 'success') {
+                
+                if (idReal) {
+                    const payloadPlantilla = {
+                        id: idReal,
+                        status: 2
+                    };
+                    await savePlantillaConteo(payloadPlantilla);
+                }
+
                 this.mostrarAlerta(
                     'success',
                     '¡Guardado exitoso!',
@@ -249,7 +231,76 @@ Alpine.data('detalleConteoApp', (plantillaId) => ({
         }
     },
 
-    // --- 3. ACCIÓN: Cerrar Conteo (Con Modal de Confirmación previo) ---
+    btnCerrarConteo() {
+        let hayPendientes = false;
+        this.categorias.forEach(categoria => {
+            categoria.items.forEach(item => {
+                if (item.estado === 'Pendiente') {
+                    hayPendientes = true;
+                }
+            });
+        });
+
+        if (hayPendientes) {
+            this.mostrarAlerta(
+                'warning',
+                'Ítems pendientes',
+                'No puedes cerrar el conteo porque hay artículos sin contar. Usa el botón "Marcar en cero los pendientes" o captúralos antes de continuar.',
+                'Entendido'
+            );
+            return;
+        }
+
+        this.mostrarAlerta(
+            'confirm',
+            '¿Cerrar conteo definitivamente?',
+            'Advertencia: Si desea cerrar el conteo definitivamente NO podrá volver a editarlo. ¿Desea continuar?',
+            'Confirmar',
+            async () => {
+                const payload = this.guardarConteo('Cerrado');
+                if (!payload) return;
+
+                const idReal = payload.conteo_plantilla_id;
+                this.isLoading = true;
+
+                try {
+                    // A. Guardamos los ítems
+                    const dataConteo = await setCount(payload);
+
+                    if (dataConteo.status === 'success') {
+                        
+                        // B. Actualizamos el estatus de la plantilla a 3 (Cerrado con éxito)
+                        const payloadPlantilla = {
+                            id: idReal,
+                            status: 3
+                        };
+
+                        await savePlantillaConteo(payloadPlantilla);
+
+                        // C. Mostramos el modal de éxito final con redirección
+                        this.mostrarAlerta(
+                            'success',
+                            '¡Actualizado!',
+                            'Se actualizó y cerró el conteo perfectamente.',
+                            'Aceptar',
+                            () => {
+                                window.location.href = '/cont-panel/';
+                            }
+                        );
+                    } else {
+                        console.error("Error del backend:", dataConteo.error);
+                        this.mostrarAlerta('danger', 'Error al cerrar', dataConteo.error, 'Cerrar');
+                    }
+                } catch (error) {
+                    console.error("ERROR al intentar cerrar el conteo:", error);
+                    this.mostrarAlerta('danger', 'Error de conexión', 'Ocurrió un error al intentar cerrar el conteo.', 'Cerrar');
+                } finally {
+                    this.isLoading = false;
+                }
+            }
+        );
+    },
+
     btnCerrarConteo() {
         // Validación obligatoria: Verificar que no queden pendientes antes de cerrar
         let hayPendientes = false;
@@ -401,7 +452,7 @@ Alpine.data('detalleConteoApp', (plantillaId) => ({
         this.modalInstancia.hide();
     },
 
-    // --- PROPIEDADES COMPUTADAS Y MÉTODOS ---
+    //* --- PROPIEDADES COMPUTADAS Y MÉTODOS ---
     get totalItems() {
         return this.categorias.reduce((acc, cat) => acc + cat.items.length, 0);
     },
@@ -448,6 +499,8 @@ Alpine.data('detalleConteoApp', (plantillaId) => ({
             return { ...cat, itemsFiltrados: filtrados };
         });
     },
+
+    
 
     incrementar(item) {
         let val = parseFloat(item.cantidad);

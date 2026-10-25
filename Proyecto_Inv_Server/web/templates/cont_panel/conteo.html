@@ -85,15 +85,12 @@
                     <tbody>
                         <!-- Iteración de Plantillas -->
                         <template x-for="plantilla in plantillas.filter(p => {
-                                // 0. Ocultar plantillas con estatus 2 (Completadas / Cerradas)
-                                if (p.status === 2) return false;
+                                if (p.status === 3) return false;
 
-                                // 1. Filtro por texto (nombre, almacén o descripción)
                                 const textoMatch = p.nombre.toLowerCase().includes(busqueda.toLowerCase()) || 
                                                 p.almacen.toLowerCase().includes(busqueda.toLowerCase()) || 
                                                 p.descripcion.toLowerCase().includes(busqueda.toLowerCase());
 
-                                // 2. Filtro por Estado
                                 let estadoMatch = true;
                                 if (filtroEstado === 'proximos') estadoMatch = (p.estadoFiltro === 'proximos');
                                 if (filtroEstado === 'pendientes') estadoMatch = (p.estadoFiltro === 'pendientes');

@@ -24,18 +24,67 @@
     <div class="row g-3">
         
         <!-- COLUMNA IZQUIERDA: BANDEJA DE CONTEOS -->
+        <!-- COLUMNA IZQUIERDA: BANDEJA DE CONTEOS -->
         <div class="col-12 col-lg-4 col-xl-3">
             <div class="bg-white rounded-1 border border-secondary-subtle p-3 shadow-sm">
+
+                <!-- Pestañas Principales para alternar vistas -->
+                <!-- Pestañas Principales para alternar vistas (En línea / Row) -->
+                <!-- Pestañas Principales usando el sistema de rejilla de Bootstrap (Garantizado en Fila) -->
+                <div class="mb-3">
+                    <div class="row g-1">
+                        <div class="col-6">
+                            <button type="button" 
+                                    class="btn w-100 py-2 px-1 text-center rounded-1" 
+                                    :class="vistaActual === 'vigentes' ? 'active bg-dark text-white fw-bold shadow-sm' : 'text-dark bg-light fw-medium border'" 
+                                    @click="cambiarVista('vigentes')" 
+                                    style="font-size: 0.85rem;">
+                                <i class="lucide-calendar me-1"></i> Vigentes
+                            </button>
+                        </div>
+                        <div class="col-6">
+                            <button type="button" 
+                                    class="btn w-100 py-2 px-1 text-center rounded-1" 
+                                    :class="vistaActual === 'historial' ? 'active bg-dark text-white fw-bold shadow-sm' : 'text-dark bg-light fw-medium border'" 
+                                    @click="cambiarVista('historial')" 
+                                    style="font-size: 0.85rem;">
+                                <i class="lucide-history me-1"></i> Historial
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contenedor condicional para los Filtros de Historial -->
+                <template x-if="vistaActual === 'historial'">
+                    <div class="card p-2 mb-3 border border-secondary-subtle rounded-1 shadow-none bg-light">
+                        <div class="row g-2 align-items-center">
+                            <div class="col-12">
+                                <label class="form-label fs-8 text-muted mb-1 fw-bold" style="font-size: 0.7rem;">RANGO DE FECHAS</label>
+                            </div>
+                            <div class="col-md-5">
+                                <input type="date" class="form-control form-control-sm" x-model="filtroFechaInicio">
+                            </div>
+                            <div class="col-md-5">
+                                <input type="date" class="form-control form-control-sm" x-model="filtroFechaFin">
+                            </div>
+                            <div class="col-md-2 d-flex align-items-end">
+                                <button class="btn btn-dark btn-sm w-100" @click="cargarHistorial()" title="Buscar en historial">
+                                    <i class="lucide-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </template>
                 
-                <!-- Buscador -->
+                <!-- Buscador común (aplica para ambas vistas o puedes adaptarlo) -->
                 <div class="mb-2">
                     <input type="text" 
                             class="form-control form-control-sm search-input rounded-1 px-3 py-2 fw-medium" 
-                            placeholder="Buscar por código, título o estado..." 
+                            placeholder="Buscar por código, título..." 
                             x-model="searchQuery">
                 </div>
 
-                <!-- Filtros por Estado (Pills) -->
+                <!-- Filtros por Estado (Pills) - Comunes o adaptados -->
                 <div class="d-flex gap-1 mb-3 overflow-x-auto pb-1" style="font-size: 0.72rem; scrollbar-width: none;">
                     <button type="button" 
                             class="btn btn-sm rounded-pill px-2 py-1 fw-bold text-nowrap border-0"
@@ -63,8 +112,8 @@
                     </button>
                 </div>
 
-                <!-- Lista de Conteos -->
-                <div class="conteos-list">
+                <!-- LISTA DE CONTEOS VIGENTES -->
+                <div class="conteos-list" x-show="vistaActual === 'vigentes'">
                     <template x-for="plantilla in filteredCounts" :key="plantilla.id">
                         <div class="count-card p-3 mb-2 rounded-1" 
                                 :class="{ 'active': selectedPlantilla && selectedPlantilla.id === plantilla.id }"
@@ -84,7 +133,33 @@
                     </template>
                     
                     <div x-show="filteredCounts.length === 0" class="text-center p-4 text-muted">
-                        <p class="small mb-0 fw-medium">No se encontraron conteos.</p>
+                        <p class="small mb-0 fw-medium">No se encontraron conteos vigentes.</p>
+                    </div>
+                </div>
+
+                <!-- LISTA DE HISTORIAL Y AUDITORÍA -->
+                <div class="conteos-list" x-show="vistaActual === 'historial'">
+                    <template x-for="hist in filteredHistorial" :key="hist.id">
+                        <div class="count-card p-3 mb-2 rounded-1" 
+                                :class="{ 'active': selectedHistorial && selectedHistorial.id === hist.id }"
+                                @click="selectHistorial(hist)">
+                            <div class="d-flex justify-content-between align-items-start mb-1">
+                                <h6 class="mb-0 fw-bold title-text" style="font-size: 1rem;" x-text="hist.codigo + ' · ' + hist.nombre"></h6>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                <!-- Mostramos la fecha específica en la que ocurrió esta ejecución histórica -->
+                                <span style="font-size: 0.95rem;" class="fw-medium date-text text-muted" x-text="formatDate(hist.fechaEjecucion)"></span>
+                                <span class="badge fw-bold px-2 py-1" 
+                                    :class="getStatusBadgeClass(hist.status)"
+                                    style="font-size: 0.75rem;"
+                                    x-text="hist.status">
+                                </span>
+                            </div>
+                        </div>
+                    </template>
+                    
+                    <div x-show="filteredHistorial.length === 0" class="text-center p-4 text-muted">
+                        <p class="small mb-0 fw-medium">No hay registros en el historial para este rango.</p>
                     </div>
                 </div>
 

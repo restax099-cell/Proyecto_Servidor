@@ -139,8 +139,8 @@ export async function fetchItems(filters = {}, page = 1, signal) {
 }
 
 
-export async function fetchConteoDtls(plantillaId) {
-    const url = `/api/conteo/get-conteo-dtls/?id=${plantillaId}`;
+export async function fetchConteoDtls(plantillaId, fecha) {
+    const url = `/api/conteo/get-conteo-dtls/?id=${plantillaId}&fecha=${fecha}`;
     
     try {
         const response = await fetch(url, {

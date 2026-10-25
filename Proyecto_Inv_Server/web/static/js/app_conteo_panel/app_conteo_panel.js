@@ -191,19 +191,9 @@ Alpine.data('conteoApp', () => ({
 
             const freqLower = (item.frecuencia || '').toLowerCase();
 
-            if (freqLower.includes('semanal')) {
-                tiempoRestante = `${diffDias} Día/s restantes`;
-            } else if (freqLower.includes('mensual')) {
-                const diffSemanas = Math.max(1, Math.floor(diffDias / 7));
-                tiempoRestante = `${diffSemanas} Semana/s restantes`;
-            } else if (freqLower.includes('trimestral')) {
-                const diffMeses = Math.max(1, Math.floor(diffDias / 30));
-                tiempoRestante = `${diffMeses} Mese/s restantes`;
-            } else {
-                // Diario u otros
-                if (diffDias >= 1) {
-                    tiempoRestante = `${diffDias} día/s restante`;
-                } else if (diffHoras >= 1) {
+            // REGLA GENERAL: Si los días son 0 (o menos de 1 día), NUNCA muestres 0 días, muestra horas/minutos
+            if (diffDias === 0) {
+                if (diffHoras >= 1) {
                     const h = String(diffHoras).padStart(2, '0');
                     const m = String(diffMinutos % 60).padStart(2, '0');
                     tiempoRestante = `${h}:${m} Horas restantes`;
@@ -211,6 +201,20 @@ Alpine.data('conteoApp', () => ({
                     const m = String(diffMinutos).padStart(2, '0');
                     const s = String(diffSegundos % 60).padStart(2, '0');
                     tiempoRestante = `${m}:${s} min restantes`;
+                }
+            } else {
+                // Si faltan 1 o más días, aplicamos el formato según su frecuencia
+                if (freqLower.includes('semanal')) {
+                    tiempoRestante = `${diffDias} Día/s restantes`;
+                } else if (freqLower.includes('mensual')) {
+                    const diffSemanas = Math.max(1, Math.floor(diffDias / 7));
+                    tiempoRestante = `${diffSemanas} Semana/s restantes`;
+                } else if (freqLower.includes('trimestral')) {
+                    const diffMeses = Math.max(1, Math.floor(diffDias / 30));
+                    tiempoRestante = `${diffMeses} Mese/s restantes`;
+                } else {
+                    // Diario u otros
+                    tiempoRestante = `${diffDias} día/s restante`;
                 }
             }
         }
@@ -280,6 +284,59 @@ Alpine.data('conteoApp', () => ({
         if (plantilla.inactiva) return 'text-muted';
         if (plantilla.alertaRoja) return 'text-danger fw-semibold'; // Clases de Bootstrap
         return '';
+    },
+
+    calcularTiempoRestante(fechaVigencia, horaLimite) {
+        const ahora = new Date();
+        // Construimos la fecha/hora límite combinando la vigencia y la hora
+        const [horas, minutos] = horaLimite.split(':');
+        const limite = new Date(fechaVigencia);
+        limite.setHours(parseInt(horas, 10), parseInt(minutos, 10), 0);
+
+        const diferenciaMs = limite - ahora;
+
+        if (diferenciaMs < 0) {
+            return "Vencido";
+        }
+
+        const segundosTotales = Math.floor(diferenciaMs / 1000);
+        const dias = Math.floor(segundosTotales / (3600 * 24));
+        const horasRestantes = Math.floor((segundosTotales % (3600 * 24)) / 3600);
+        const minutosRestantes = Math.floor((segundosTotales % 3600) / 60);
+
+        // LA REGLA QUE PEDISTE: Si los días son 0, no los muestres y enseña las horas
+        if (dias === 0) {
+            if (horasRestantes === 0) {
+                return `${minutosRestantes} Minutos restantes`;
+            }
+            return `${horasRestantes}:${minutosRestantes < 10 ? '0' : ''}${minutosRestantes} Horas restantes`;
+            // O si prefieres texto limpio tipo "11:02 Horas restantes" como en tu segundo ejemplo:
+        }
+
+        return `${dias} Día/s restantes`;
+    },
+
+    formatearTiempoRestante(diferenciaMs) {
+        if (diferenciaMs <= 0) return "Vencido";
+
+        const segundosTotales = Math.floor(diferenciaMs / 1000);
+        const dias = Math.floor(segundosTotales / (3600 * 24));
+        const horas = Math.floor((segundosTotales % (3600 * 24)) / 3600);
+        const minutos = Math.floor((segundosTotales % 3600) / 60);
+
+        // Si los días son mayores a 0, mostramos los días
+        if (dias > 0) {
+            return `${dias} Día/s restantes`;
+        }
+        
+        // Si los días son 0, omitimos los días y mostramos estrictamente las horas y minutos restantes
+        if (horas > 0) {
+            const minutosStr = minutos < 10 ? '0' + minutos : minutos;
+            return `${horas}:${minutosStr} Horas restantes`;
+        }
+
+        // Si queda menos de una hora
+        return `${minutos} Minutos restantes`;
     },
 
     iniciarConteo() {
