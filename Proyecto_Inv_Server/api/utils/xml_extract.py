@@ -60,13 +60,17 @@ def procesar_factura_completa(archivo_input):
         xml_str = ""
         # 1. Si es un string (ruta de archivo en disco)
         if isinstance(archivo_input, str):
-            with open(archivo_input, 'r', encoding='utf-8') as f:
+            with open(archivo_input, 'r', encoding='utf-8', errors='ignore') as f:
                 xml_str = f.read()
         # 2. Si es un objeto (StringIO desde la RAM de Django)
         else:
             xml_str = archivo_input.read()
-            # Opcional: regresar el cursor al inicio si se requiere releer
             archivo_input.seek(0)
+
+        # Limpieza robusta: eliminar caracteres basura o '?' iniciales antes de <?xml
+        idx = xml_str.find('<?xml')
+        if idx != -1:
+            xml_str = xml_str[idx:]
 
         xml_str = re.sub(r'&(?!(amp|lt|gt|quot|apos);)', '&amp;', xml_str)
             
@@ -74,7 +78,7 @@ def procesar_factura_completa(archivo_input):
         
         # Búsqueda flexible de raíz
         root = xml_data.get('cfdi:Comprobante') or xml_data.get('Comprobante')
-        if not root: return None, None, None, None
+        if not root: return None, None, None, None, None
 
         # Definición de nodos comunes
         complemento = root.get('cfdi:Complemento') or root.get('Complemento') or {}
@@ -84,12 +88,34 @@ def procesar_factura_completa(archivo_input):
         receptor = root.get('cfdi:Receptor') or root.get('Receptor') or {}
         
         uuid = tfd.get('@UUID')
-        if not uuid: return None, None, None, None
+        if not uuid: return None, None, None, None, None
+
+        # ---------------------------------------------------------
+        # Extracción de Serie y Folio Combinados
+        # ---------------------------------------------------------
+        serie = root.get('@Serie') or root.get('@serie') or ""
+        folio = root.get('@Folio') or root.get('@folio') or ""
+        serie = serie.strip()
+        folio = folio.strip()
+
+        if serie and folio:
+            serie_folio_combinado = f"{serie}-{folio}"
+        elif folio:
+            serie_folio_combinado = folio
+        elif serie:
+            serie_folio_combinado = serie
+        else:
+            serie_folio_combinado = "SIN_SERIE_NI_FOLIO"
 
         # ---------------------------------------------------------
         # A. RAW
         # ---------------------------------------------------------
-        data_raw = {'uuid': uuid, 'fecha': root.get('@Fecha'), 'xmlcontent': xml_str}
+        data_raw = {
+            'uuid': uuid, 
+            'fecha': root.get('@Fecha'), 
+            'xmlcontent': xml_str,
+            'folio': serie_folio_combinado
+        }
 
         # ---------------------------------------------------------
         # B. SUPPLIERS
@@ -275,29 +301,23 @@ def procesar_factura_completa(archivo_input):
         return data_raw, data_suppliers, data_totals, conceptos_list
     except Exception as e:
         print(f"Error procesando {archivo_input}: {e}") # Debug util
-        return None, None, None, None
-
+        return None, None, None, None, None
 
 def tarea_subir_archivo(archivo):
     conn = None
     nombre_archivo = getattr(archivo, 'name', str(archivo))
     
     try:
-        #print(f"🔍 [DEBUG] Analizando archivo: {nombre_archivo}")
-        raw, supp, tots, conc = procesar_factura_completa(archivo)
+        raw, supp, tots, conc = procesar_factura_completa(archivo)[:4]
         
         # Validación básica de lectura
         if not raw or not raw.get('uuid') or not raw['uuid'].strip():
-            #print(f"❌ [DEBUG] Falló procesar_factura_completa. Retornó vacío.")
             return False
 
         uuid_candidato = raw['uuid']
-        #print(f"📄 [DEBUG] UUID Extraído: '{uuid_candidato}'")
 
         if not uuid_candidato or not uuid_candidato.strip():
-            #print(f"⚠️ [DEBUG] Salto: UUID inválido o vacío.")
             return False
-
 
         conn = mysql.connector.connect(**DB_CONFIG)
         cursor = conn.cursor()
@@ -307,31 +327,24 @@ def tarea_subir_archivo(archivo):
 
         row = cursor.fetchone()
         if row:
-            #print(f"🛑 [DEBUG] La BD dice que YA EXISTE. ID encontrado: {row[0]}")
             return False
-        else:
-            pass
-            #print(f"✅ [DEBUG] El UUID es nuevo, procediendo a insertar...")
         
         if not conc or len(conc) == 0:
             raise Exception("⛔ ALERTA CRÍTICA: Se leyó el XML pero no tiene conceptos. Abortando.")
 
-      
-     
         conn.autocommit = False # Transacción manual importante
       
         try:
-    
             cursor.callproc('sp_vlx_insert_cfdi_raw', [
                 limpiar_valor(raw['uuid']), 
                 limpiar_valor(raw['fecha']), 
                 limpiar_valor(raw['xmlcontent']), 
+                limpiar_valor(raw['folio']), # <-- Folio integrado en el SP
                 0, ''
             ])
             # Limpiar buffer de resultados del procedimiento
             for res in cursor.stored_results(): res.fetchall()
 
-        
             cursor.callproc('sp_insert_suppliers', [
                 limpiar_valor(supp['uuid']), limpiar_valor(supp['rfc_emisor']), limpiar_valor(supp['nombre_emisor']),
                 limpiar_valor(supp['regimen_fiscal']), limpiar_valor(supp['rfc_receptor']), limpiar_valor(supp['nombre_receptor']),
@@ -342,7 +355,6 @@ def tarea_subir_archivo(archivo):
             ])
             for res in cursor.stored_results(): res.fetchall()
 
-         
             cursor.callproc('sp_insert_total_data', [
                 limpiar_valor(tots['uuid']), 
                 limpiar_valor(tots['base']),        
@@ -359,7 +371,6 @@ def tarea_subir_archivo(archivo):
             ])
             for res in cursor.stored_results(): res.fetchall()
 
-            
             sql_conceptos = """
                 INSERT INTO vlx_data_xml (
                     uuid, no_concepto, clave_prod_serv, clave_unidad, cantidad, unidad, 
@@ -392,26 +403,22 @@ def tarea_subir_archivo(archivo):
             cursor.executemany(sql_conceptos, lote_datos)
 
             conn.commit()
-            #print(f"✅ ¡ÉXITO! UUID: {raw['uuid']}")
             return True
 
         except mysql.connector.IntegrityError as e:
                 conn.rollback() 
-                
                 if e.errno == 1062:
-                    #print(f"🔒 [DEBUG] Bloqueado por DB (IntegrityError 1062 - Duplicado).")
                     return False 
                 else:
-                    #print(f"❌ Error de integridad extraño en {archivo.name}: {e}")
                     raise e
                 
     except Exception as e:
         if conn: conn.rollback()
-        #print(f"\n❌ [ERROR CRÍTICO] {nombre_archivo}: {e}")
         return False
     
     finally:
-        if conn: conn.close() 
+        if conn: conn.close()
+
 
 def main_extract(lista_xmls_ram, request=None, MAX_WORKERS=15):
     total = len(lista_xmls_ram)

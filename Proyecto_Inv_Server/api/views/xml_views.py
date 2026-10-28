@@ -160,12 +160,12 @@ def get_cfdi_consultas(request):
     p_nombre_receptor = request.query_params.get('nombre_receptor', None)
     p_rfc_receptor = request.query_params.get('rfc_receptor', None)
 
-    # Control
+    # Control y Filtros Adicionales
     p_tipo_comprobante = request.query_params.get('tipo_comprobante', None)
     p_metodo_pago = request.query_params.get('metodo_pago', None)
     p_forma_pago = request.query_params.get('forma_pago', None)
     p_uuid = request.query_params.get('uuid', None)
-
+    p_folio = request.query_params.get('folio', None) # <--- Captura del parámetro folio
 
     p_ordering = request.query_params.get('ordering', '-id') 
 
@@ -173,31 +173,9 @@ def get_cfdi_consultas(request):
     p_sort_col = p_ordering
 
     if p_ordering and p_ordering.startswith('-'):
-        p_sort_dir = 'DESC'
-        p_sort_col = p_ordering[1:] 
+            p_sort_dir = 'DESC'
+            p_sort_col = p_ordering[1:] 
     
-
-    params = [
-        p_fecha_desde,
-        p_fecha_hasta,
-        p_importe_min,
-        p_importe_max,
-        p_search_term,
-        p_search_emisor,
-        p_search_receptor,
-        p_nombre_emisor,
-        p_rfc_emisor,
-        p_nombre_receptor,
-        p_rfc_receptor,
-        p_tipo_comprobante,
-        p_metodo_pago,
-        p_forma_pago,
-        None,
-        p_sort_col,
-        p_sort_dir,
-        p_limit,
-        p_offset
-    ]
 
     try:
         if p_uuid:
@@ -205,6 +183,12 @@ def get_cfdi_consultas(request):
             if p_uuid == "":
                 p_uuid = None
 
+        if p_folio:
+            p_folio = p_folio.strip()
+            if p_folio == "":
+                p_folio = None
+
+        # Si se consulta estrictamente por UUID
         if p_uuid:
             params = [
                 None, None, None, None, 
@@ -212,9 +196,8 @@ def get_cfdi_consultas(request):
                 None, None,       
                 None, None, None, None, 
                 None, None, None, 
-                
                 p_uuid,          
-                
+                None,            # p_folio se anula si se busca directo por UUID específico
                 'id', 'ASC',     
                 1, 0              
             ]
@@ -225,38 +208,38 @@ def get_cfdi_consultas(request):
             if p_ordering and p_ordering.startswith('-'):
                 p_sort_dir = 'DESC'
                 p_sort_col = p_ordering[1:]
-
+                
+            
             params = [
-                request.query_params.get('fecha_desde', None),     
-                request.query_params.get('fecha_hasta', None),      
-                request.query_params.get('importe_min', None),     
-                request.query_params.get('importe_max', None),     
-                
-                request.query_params.get('search_term', None),     
-                request.query_params.get('search_emisor', None),   
-                request.query_params.get('search_receptor', None), 
-                
-                request.query_params.get('nombre_emisor', None),   
-                request.query_params.get('rfc_emisor', None),     
-                request.query_params.get('nombre_receptor', None), 
-                request.query_params.get('rfc_receptor', None),    
-                
-                request.query_params.get('tipo_comprobante', None),
-                request.query_params.get('metodo_pago', None),    
-                request.query_params.get('forma_pago', None),       
-                
-                None,              
-                
-                p_sort_col,         
-                p_sort_dir,
-                p_limit,            
-                p_offset           
-            ]
+                    p_fecha_desde,
+                    p_fecha_hasta,
+                    p_importe_min,
+                    p_importe_max,
+                    p_search_term,
+                    p_search_emisor,
+                    p_search_receptor,
+                    p_nombre_emisor,
+                    p_rfc_emisor,
+                    p_nombre_receptor,
+                    p_rfc_receptor,
+                    p_tipo_comprobante,
+                    p_metodo_pago,
+                    p_forma_pago,
+                    None,
+                    p_folio,
+                    p_sort_col,
+                    p_sort_dir,
+                    p_limit,
+                    p_offset
+                ]
+
+            
   
         #!----------------------------------------------------------------------------------------!#
 
         with connection.cursor() as cursor:
-            sql_query = "CALL sp_get_cfdi_consultas(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"
+            # SQL actualizado con 20 placeholders (%s) correspondientes a los 20 parámetros del SP
+            sql_query = "CALL sp_get_cfdi_consultas(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"
             cursor.execute(sql_query, params)
             
             count_result = cursor.fetchone()
@@ -272,8 +255,7 @@ def get_cfdi_consultas(request):
         })
 
     except Exception as e:
-        return Response({"error": "Error BD", "detalle": str(e)}, status=500)
-    
+        return Response({"error": "Error BD", "detalle": str(e)}, status=500)    
 
 #? API del Historial de Precios
 @csrf_exempt
@@ -395,3 +377,10 @@ def get_import_progress(request):
         'total': total
     })
 
+
+
+
+
+
+
+   

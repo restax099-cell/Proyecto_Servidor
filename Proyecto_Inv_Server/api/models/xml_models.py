@@ -11,6 +11,7 @@ from django.db import models
 class VlxSatCfdiRaw(models.Model):
     id = models.BigAutoField(primary_key=True)
     uuid = models.CharField(max_length=100, blank=True, null=True)
+    folio = models.CharField(max_length=200, blank=True, null=True)
     fecha = models.DateTimeField(blank=True, null=True)
     xmlcontent = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(blank=True, null=True)

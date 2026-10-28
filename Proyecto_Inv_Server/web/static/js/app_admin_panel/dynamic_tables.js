@@ -121,7 +121,7 @@ export function buildDynamicTable(data, theadId, tbodyId,onSortCallback) {
         case 'id':
           cell.innerHTML = `
             <strong class="d-block">${item.id || 'N/A'}</strong>
-            <small class="text-muted">${item.uuid || 'N/A'}</small>
+            <small class="text-muted">${item.folio || 'N/A'}</small>
           `;
           break;
 
@@ -302,7 +302,7 @@ export function buildDynamicTableGastos(data, theadId, tbodyId, onSortCallback) 
         case 'id':
           cell.innerHTML = `
             <strong class="d-block">${item.id || 'N/A'}</strong>
-            <small class="text-muted">${item.uuid || 'N/A'}</small>
+            <small class="text-muted">${item.folio || 'N/A'}</small>
           `;
           break;
         //? --- FECHA --

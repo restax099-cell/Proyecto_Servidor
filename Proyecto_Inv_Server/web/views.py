@@ -27,6 +27,8 @@ def conceptos_panel(request, uuid):
     raw_data = VlxSatCfdiRaw.objects.filter(uuid=uuid).first()
     supplier_data = VlxSuppliers.objects.filter(uuid=uuid).first()
 
+    folio_value = raw_data.folio if raw_data and hasattr(raw_data, 'folio') else 'S/F'
+
     header_data = {
         'emisor': supplier_data.nombre_emisor if supplier_data else 'N/A',
         'rfc_emisor': supplier_data.rfc_emisor if supplier_data else 'N/A',
@@ -52,11 +54,11 @@ def conceptos_panel(request, uuid):
 
     context = {
         'uuid': uuid,
+        'folio': folio_value, 
         'header_data': header_data
     }
     
     return render(request, 'admin_panel_xml/conceptos_panel.html', context)
-
 
 #* ----------- SECCION WEB HISTORIAL DE PRECIOS ----------- *#
 @login_required
