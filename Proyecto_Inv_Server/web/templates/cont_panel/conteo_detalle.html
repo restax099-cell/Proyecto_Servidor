@@ -21,7 +21,7 @@
             </template>
         </div>
         <div class="d-flex gap-2">
-            <button class="btn btn-outline-secondary" @click="guardarConteo('Borrador')">
+            <button class="btn btn-outline-secondary" @click="btnGuardarConteo('Borrador')">
                 Guardar borrador
             </button>
             <button class="btn btn-primary-dark">Cerrar conteo</button>
@@ -240,6 +240,10 @@
             Los botones + / − ajustan de uno en uno; el número central se puede escribir directamente (acepta decimales según la unidad).
         </div>
         <div class="d-flex gap-2">
+            <!-- Botón para marcar pendientes o vacíos en cero -->
+            <button class="btn btn-outline-secondary" @click="marcarPendientesEnCero()">
+                Marcar en cero los pendientes
+            </button>
             <button class="btn btn-outline-secondary" @click="btnGuardarConteo()">
                 Guardar borrador
             </button>

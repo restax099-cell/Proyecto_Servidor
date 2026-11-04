@@ -24,7 +24,7 @@ Alpine.data('detalleConteoApp', (plantillaId) => ({
 
     // --- DATOS DE LA TABLA ---
     categorias: [], 
-
+    plantilla_id_act: 0,
     // --- Modals ---
     alerta: {
         tipo: 'warning', 
@@ -59,44 +59,63 @@ Alpine.data('detalleConteoApp', (plantillaId) => ({
 
     // Función dedicada exclusivamente a preparar la plantilla y el encabezado
     async cargarDatosPlantilla() {
-        // Extraer ID robustamente
-        const idReal = plantillaId || parseInt(window.location.pathname.split('/').filter(Boolean).pop());
+        try {
+            // 1. Extraer ID robustamente de la URL
+            const idReal = parseInt(window.location.pathname.split('/').filter(Boolean).pop());
+            this.plantilla_id_act = idReal;
 
-        if (!idReal || isNaN(idReal)) {
-            throw new Error("No se encontró el ID de la plantilla en la URL");
+            if (!idReal || isNaN(idReal)) {
+                throw new Error("No se encontró el ID de la plantilla en la URL");
+            }
+
+            // 2. Descargar plantillas y almacenes simultáneamente
+            const [plantillas, almacenes] = await Promise.all([
+                fetchPlantillasConteo(),
+                fetchStores()
+            ]);
+
+            const plantillaActual = plantillas.find(p => p.id === idReal);
+
+            if (!plantillaActual) {
+                this.encabezado.nombre = 'Plantilla no encontrada';
+                this.encabezado.almacen = '---';
+                this.encabezado.capturo = '---';
+                return;
+            }
+
+            // 3. Validar el estatus de la plantilla (3 = Completado, 4 = Vencido)
+            // Puedes ajustar esta bandera según si deseas bloquear la pantalla o avisar
+            const estatusActual = parseInt(plantillaActual.status);
+            if (estatusActual === 3 || estatusActual === 4) {
+                console.warn("Este conteo ya se encuentra completado o vencido.");
+                // Opcional: podrías activar una bandera en tu componente, ej: this.esSoloLectura = true;
+            }
+
+            // 4. Poblar el encabezado
+            this.encabezado.nombre = plantillaActual.nombre;
+            this.encabezado.capturo = plantillaActual.username || 'Admin';
+
+            if (plantillaActual.hora_limite) {
+                this.encabezado.limite = `Límite hoy ${plantillaActual.hora_limite.substring(0,5)}`;
+            }
+            
+            // 5. ALMACEN
+            const almacenData = almacenes.find(a => a.id == plantillaActual.store);
+            this.encabezado.almacen = almacenData 
+                ? almacenData.store 
+                : `Almacén ID: ${plantillaActual.store}`;
+            
+            // 6. Cargar la estructura de ítems primero
+            await this.cargarItems(plantillaActual);
+
+            // 7. CARGAR CANTIDADES GUARDADAS (Solo si está en estatus activo 1 o 2)
+            if (estatusActual === 1 || estatusActual === 2) {
+                await this.cargarCantidadesGuardadas();
+            }
+
+        } catch (error) {
+            console.error("Error al cargar los datos de la plantilla:", error);
         }
-
-        // Descargar plantillas y almacenes simultáneamente
-        const [plantillas, almacenes] = await Promise.all([
-            fetchPlantillasConteo(),
-            fetchStores()
-        ]);
-
-        const plantillaActual = plantillas.find(p => p.id === idReal);
-
-        if (!plantillaActual) {
-            this.encabezado.nombre = 'Plantilla no encontrada';
-            this.encabezado.almacen = '---';
-            this.encabezado.capturo = '---';
-            return;
-        }
-
-        // Poblar el encabezado
-        this.encabezado.nombre = plantillaActual.nombre;
-        this.encabezado.capturo = plantillaActual.username || 'Admin';
-
-        if (plantillaActual.hora_limite) {
-            this.encabezado.limite = `Límite hoy ${plantillaActual.hora_limite.substring(0,5)}`;
-        }
-        
-        // ALMACEN
-        const almacenData = almacenes.find(a => a.id == plantillaActual.store);
-
-        this.encabezado.almacen = almacenData 
-            ? almacenData.store 
-            : `Almacén ID: ${plantillaActual.store}`;
-        
-        await this.cargarItems(plantillaActual);
     },
 
     async cargarItems(plantillaActual) {
@@ -192,6 +211,63 @@ Alpine.data('detalleConteoApp', (plantillaId) => ({
 
 
     //* Seters
+    guardarConteo(estadoConteo = 'Borrador') {
+        // Obtenemos el ID de la plantilla actual de forma robusta
+        const plantillaId = this.plantillaActualId || parseInt(window.location.pathname.split('/').filter(Boolean).pop());
+
+        if (!plantillaId || isNaN(plantillaId)) {
+            this.mostrarAlerta(
+                'warning',
+                'Identificador no encontrado',
+                'No se pudo identificar el ID de la plantilla de conteo actual.',
+                'Entendido'
+            );
+            return null;
+        }
+
+        let itemsAEnviar = [];
+
+        // Recorremos las categorías y sus ítems
+        if (this.categorias && Array.isArray(this.categorias)) {
+            this.categorias.forEach(categoria => {
+                if (categoria.items && Array.isArray(categoria.items)) {
+                    categoria.items.forEach(item => {
+                        // Solo incluimos el ítem si tiene un valor de cantidad capturado (evitamos los nulos/vacíos)
+                        if (item.cantidad !== null && item.cantidad !== undefined && item.cantidad !== '') {
+                            let cantidadNum = parseFloat(item.cantidad);
+                            if (!isNaN(cantidadNum)) {
+                                itemsAEnviar.push({
+                                    item_id: item.id,
+                                    conteo: cantidadNum
+                                });
+                            }
+                        }
+                    });
+                }
+            });
+        }
+
+        // Validación extra: si no hay nada capturado y se intenta guardar como borrador o cerrado
+        if (itemsAEnviar.length === 0 && estadoConteo === 'Cerrado') {
+            this.mostrarAlerta(
+                'warning',
+                'Sin ítems capturados',
+                'No hay ningún artículo con cantidad contada para procesar.',
+                'Entendido'
+            );
+            return null;
+        }
+
+        // Armamos el payload exacto
+        const payload = {
+            conteo_plantilla_id: plantillaId,
+            estado: estadoConteo,
+            items: itemsAEnviar
+        };
+
+        return payload;
+    },
+
     async btnGuardarConteo() {
         const payload = this.guardarConteo('Borrador');
         if (!payload) return;
@@ -301,103 +377,35 @@ Alpine.data('detalleConteoApp', (plantillaId) => ({
         );
     },
 
-    btnCerrarConteo() {
-        // Validación obligatoria: Verificar que no queden pendientes antes de cerrar
-        let hayPendientes = false;
-        this.categorias.forEach(categoria => {
-            categoria.items.forEach(item => {
-                if (item.estado === 'Pendiente') {
-                    hayPendientes = true;
-                }
-            });
-        });
-
-        if (hayPendientes) {
-            this.mostrarAlerta(
-                'warning',
-                'Ítems pendientes',
-                'No puedes cerrar el conteo porque hay artículos sin contar. Usa el botón "Marcar en cero los pendientes" o captúralos antes de continuar.',
-                'Entendido'
-            );
-            return;
-        }
-
-        // Si pasa la validación, lanzamos el modal de confirmación que pediste
-        this.mostrarAlerta(
-            'confirm', // Tipo confirm para habilitar el botón Cancelar y diseño adecuado
-            '¿Cerrar conteo definitivamente?',
-            'Advertencia: Si desea cerrar el conteo definitivamente NO podrá volver a editarlo. ¿Desea continuar?',
-            'Confirmar', // Texto del botón de acción
-            async () => {
-                // Esta función callback solo se ejecuta si el usuario presiona "Confirmar"
-                const payload = this.guardarConteo('Cerrado');
-                if (!payload) return;
-
-                const idReal = payload.conteo_plantilla_id;
-                this.isLoading = true;
-
-                try {
-                    // A. Guardamos los ítems con estado Cerrado
-                    const dataConteo = await setCount(payload);
-
-                    if (dataConteo.status === 'success') {
-                        
-                        // B. Actualizamos el estatus de la plantilla a 2
-                        const payloadPlantilla = {
-                            id: idReal,
-                            status: 2
-                        };
-
-                        await savePlantillaConteo(payloadPlantilla);
-
-                        // C. Mostramos el modal de éxito final con redirección al hacer clic
-                        this.mostrarAlerta(
-                            'success',
-                            '¡Actualizado!',
-                            'Se actualizó y cerró el conteo perfectamente.',
-                            'Aceptar',
-                            () => {
-                                window.location.href = '/cont-panel/';
-                            }
-                        );
-                    } else {
-                        console.error("Error del backend:", dataConteo.error);
-                        this.mostrarAlerta('danger', 'Error al cerrar', dataConteo.error, 'Cerrar');
-                    }
-                } catch (error) {
-                    console.error("ERROR al intentar cerrar el conteo:", error);
-                    this.mostrarAlerta('danger', 'Error de conexión', 'Ocurrió un error al intentar cerrar el conteo.', 'Cerrar');
-                } finally {
-                    this.isLoading = false;
-                }
-            }
-        );
-    },
-
     //* Geters
     async cargarCantidadesGuardadas() {
-        // 1. Extraemos el ID directamente de la URL de forma segura para evitar ReferenceErrors
+        // 1. Extraemos el ID directamente de la URL de forma segura
         const idReal = parseInt(window.location.pathname.split('/').filter(Boolean).pop());
         
-        //console.log("1. ID detectado en la URL:", idReal);
-
-        // 2. Llamamos a tu API
+        // 2. Llamamos a tu API para obtener los detalles
         const detalles = await fetchConteoDetalle(idReal);
         
-        //console.log("2. Datos recibidos de la BD:", detalles);
-        
         if (!detalles || detalles.length === 0) {
-            //console.log("3. El historial está vacío. Se quedan en 0.");
             return; 
         }
 
-        // 3. Mapeo de cantidades
+        // Obtener la fecha actual del sistema en formato YYYY-MM-DD para comparar
+        const hoyStr = new Date().toISOString().split('T')[0];
+
+        // 3. Mapeo de cantidades con validación de ciclo/fecha
         const mapaCantidades = {};
         detalles.forEach(detalle => {
+            // Si el detalle incluye la fecha de captura, validamos que pertenezca al día de hoy.
+            // Si la fecha es de un día anterior (ciclo pasado que no se limpió), se ignora.
+            if (detalle.fecha_captura) {
+                const fechaCapturaStr = detalle.fecha_captura.split('T')[0].split(' ')[0]; // Extrae 'YYYY-MM-DD'
+                if (fechaCapturaStr !== hoyStr) {
+                    return; // Ignoramos este registro viejo para que empiece limpio
+                }
+            }
+
             mapaCantidades[detalle.item_id] = detalle.conteo;
         });
-        
-        //console.log("4. Mapa de cantidades procesado:", mapaCantidades);
 
         // 4. Inyección en Alpine 
         let inyectados = 0;
@@ -415,8 +423,6 @@ Alpine.data('detalleConteoApp', (plantillaId) => ({
                 }
             });
         });
-        
-        //console.log(`5. ¡Listo! Se inyectaron ${inyectados} cantidades y los estados fueron actualizados.`);
     },
 
     //* Acciones
