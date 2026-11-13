@@ -1,9 +1,12 @@
 {% extends 'admin_panel_xml/base_admin_panel.html' %}
 {% load static %}
-{% load humanize %} {% block title %}Detalle de CFDI - {{ uuid }}{% endblock %}
+{% load humanize %} 
+
+{% block title %}Detalle de CFDI - {{ uuid }}{% endblock %}
 
 {% block content_panel %}
-<div class="container-fluid my-4">
+<!-- Contenedor principal vinculado a la app de Alpine -->
+<div class="container-fluid my-4" x-data="conceptosApp">
     
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div class="d-flex align-items-center gap-2">
@@ -13,10 +16,10 @@
                 Version: {{ header_data.version_cfdi }}
             </span>
         </div>
-      
     </div>
 
-    <div id="info-conceptos" data-uuid="{{ uuid }}"></div>
+    <!-- Elemento oculto que lee el UUID para inicializar la carga en el script -->
+    <div id="info-conceptos" data-uuid="{{ uuid }}" style="display: none;"></div>
 
     {% if header_data %}
         <div class="row mb-3">
@@ -125,20 +128,64 @@
             No se encontró la información de encabezado para el UUID: <strong>{{ uuid }}</strong>.
         </div>
     {% endif %}
+
+    <!-- Sección de Conceptos Reactiva -->
     <h6 class="mb-2">Conceptos</h6>
     <div class="card shadow-sm border-0">
         <div class="table-responsive">
             <table class="table table-sm table-hover table-striped table-bordered mb-0">
-                <thead id="thead-conceptos" class="table-dark">
-                    </thead>
-                <tbody id="tbody-conceptos">
+                <thead class="table-dark">
                     <tr>
-                        <td colspan="100%" class="text-center p-4">
-                            <div class="spinner-border" role="status">
-                                <span class="visually-hidden">Cargando...</span>
-                            </div>
-                        </td>
+                        <th class="py-3 px-3">#</th>
+                        <th class="py-3 px-3">Descripción</th>
+                        <th class="py-3 px-3">Clave SAT</th>
+                        <th class="py-3 px-3">Clave Unidad</th>
+                        <th class="py-3 px-3">Cantidad</th>
+                        <th class="py-3 px-3">Valor Unitario</th>
+                        <th class="py-3 px-3">Descuento</th>
+                        <th class="py-3 px-3">Tasa</th>
+                        <th class="py-3 px-3">Importe</th>
+                        <th class="py-3 px-3">IVA</th>
+                        <th class="py-3 px-3">Total</th>
                     </tr>
+                </thead>
+                <tbody>
+                    <!-- Spinner mientras carga la API -->
+                    <template x-if="isLoading">
+                        <tr>
+                            <td colspan="11" class="text-center p-4">
+                                <div class="spinner-border" role="status">
+                                    <span class="visually-hidden">Cargando...</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </template>
+
+                    <!-- Iteración de conceptos con Alpine.js -->
+                    <template x-for="(item, index) in conceptos" :key="index">
+                        <tr>
+                            <td class="px-3" x-text="index + 1"></td>
+                            <td class="px-3" x-text="item.descripcion || 'No definido'"></td>
+                            <td class="px-3" x-text="item.clave_prod_serv || 'N/A'"></td>
+                            <td class="px-3" x-text="item.clave_unidad || 'N/A'"></td>
+                            <td class="px-3" x-text="item.cantidad || 0"></td>
+                            <td class="px-3" x-text="formatMoney(item.valor_unitario)"></td>
+                            <td class="px-3" x-text="formatMoney(item.descuento)"></td>
+                            <td class="px-3" x-text="formatPercent(item.tasa_cuota)"></td>
+                            <td class="px-3" x-text="formatMoney(item.importeCalculado)"></td>
+                            <td class="px-3" x-text="formatMoney(item.ivaCalculado)"></td>
+                            <td class="px-3 fw-bold" x-text="formatMoney(item.totalCalculado)"></td>
+                        </tr>
+                    </template>
+
+                    <!-- Mensaje si está vacío -->
+                    <template x-if="!isLoading && conceptos.length === 0">
+                        <tr>
+                            <td colspan="11" class="text-center text-muted p-4">
+                                Este CFDI no tiene conceptos registrados.
+                            </td>
+                        </tr>
+                    </template>
                 </tbody>
             </table>
         </div>
@@ -146,7 +193,7 @@
 </div>
 {% endblock %}
 
-
 {% block extra_scripts %}
-    <script type="module" src="{% static 'js/app_admin_panel/conceptos_panel.js' %}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module" src="{% static 'js/app_admin_panel/conceptos_cfdi.js' %}"></script>
 {% endblock %}

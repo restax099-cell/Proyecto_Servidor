@@ -132,130 +132,60 @@ def get_all_total_data_xml(request):
 @csrf_exempt
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
-@renderer_classes([JSONRenderer]) 
+@renderer_classes([JSONRenderer])
 def get_cfdi_consultas(request):
+    qp = request.query_params
 
     try:
-        p_limit = int(request.query_params.get('limit', 50))
-        p_offset = int(request.query_params.get('offset', 0))
+        limit = int(qp.get('limit', 50))
+        offset = int(qp.get('offset', 0))
     except ValueError:
         return Response({"error": "limit y offset deben ser números."}, status=400)
 
-    # Parametros básicos
-    p_fecha_desde = request.query_params.get('fecha_desde', None)
-    p_fecha_hasta = request.query_params.get('fecha_hasta', None)
-    p_importe_min = request.query_params.get('importe_min', None)
-    p_importe_max = request.query_params.get('importe_max', None)
-    
-    # 1. Buscador Global
-    p_search_term = request.query_params.get('search_term', None)
+    def get_param(key):
+        val = qp.get(key)
+        return val.strip() if isinstance(val, str) and val.strip() != "" else None
 
-    # 2. Buscadores de Grupo
-    p_search_emisor = request.query_params.get('search_emisor', None)
-    p_search_receptor = request.query_params.get('search_receptor', None)
+    uuid = get_param('uuid')
 
-    # 3. Filtros Específicos
-    p_nombre_emisor = request.query_params.get('nombre_emisor', None)
-    p_rfc_emisor = request.query_params.get('rfc_emisor', None)
-    p_nombre_receptor = request.query_params.get('nombre_receptor', None)
-    p_rfc_receptor = request.query_params.get('rfc_receptor', None)
+    if uuid:
+        params = [None] * 14 + [uuid, None, 'id', 'ASC', 1, 0]
+    else:
+        ordering = get_param('ordering') or '-id'
+        sort_dir = 'DESC' if ordering.startswith('-') else 'ASC'
+        sort_col = ordering.lstrip('-')
 
-    # Control y Filtros Adicionales
-    p_tipo_comprobante = request.query_params.get('tipo_comprobante', None)
-    p_metodo_pago = request.query_params.get('metodo_pago', None)
-    p_forma_pago = request.query_params.get('forma_pago', None)
-    p_uuid = request.query_params.get('uuid', None)
-    p_folio = request.query_params.get('folio', None) # <--- Captura del parámetro folio
+        filter_keys = [
+            'fecha_desde', 'fecha_hasta', 'importe_min', 'importe_max',
+            'search_term', 'search_emisor', 'search_receptor',
+            'nombre_emisor', 'rfc_emisor', 'nombre_receptor', 'rfc_receptor',
+            'tipo_comprobante', 'metodo_pago', 'forma_pago',
+            'uuid', 'folio'
+        ]
 
-    p_ordering = request.query_params.get('ordering', '-id') 
-
-    p_sort_dir = 'ASC'
-    p_sort_col = p_ordering
-
-    if p_ordering and p_ordering.startswith('-'):
-            p_sort_dir = 'DESC'
-            p_sort_col = p_ordering[1:] 
-    
+        params = [get_param(k) for k in filter_keys] + [sort_col, sort_dir, limit, offset]
 
     try:
-        if p_uuid:
-            p_uuid = p_uuid.strip()
-            if p_uuid == "":
-                p_uuid = None
-
-        if p_folio:
-            p_folio = p_folio.strip()
-            if p_folio == "":
-                p_folio = None
-
-        # Si se consulta estrictamente por UUID
-        if p_uuid:
-            params = [
-                None, None, None, None, 
-                None,            
-                None, None,       
-                None, None, None, None, 
-                None, None, None, 
-                p_uuid,          
-                None,            # p_folio se anula si se busca directo por UUID específico
-                'id', 'ASC',     
-                1, 0              
-            ]
-        else:
-            p_ordering = request.query_params.get('ordering', '-id') 
-            p_sort_dir = 'ASC'
-            p_sort_col = p_ordering
-            if p_ordering and p_ordering.startswith('-'):
-                p_sort_dir = 'DESC'
-                p_sort_col = p_ordering[1:]
-                
-            
-            params = [
-                    p_fecha_desde,
-                    p_fecha_hasta,
-                    p_importe_min,
-                    p_importe_max,
-                    p_search_term,
-                    p_search_emisor,
-                    p_search_receptor,
-                    p_nombre_emisor,
-                    p_rfc_emisor,
-                    p_nombre_receptor,
-                    p_rfc_receptor,
-                    p_tipo_comprobante,
-                    p_metodo_pago,
-                    p_forma_pago,
-                    None,
-                    p_folio,
-                    p_sort_col,
-                    p_sort_dir,
-                    p_limit,
-                    p_offset
-                ]
-
-            
-  
-        #!----------------------------------------------------------------------------------------!#
-
         with connection.cursor() as cursor:
-            # SQL actualizado con 20 placeholders (%s) correspondientes a los 20 parámetros del SP
-            sql_query = "CALL sp_get_cfdi_consultas(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"
-            cursor.execute(sql_query, params)
-            
+            placeholders = ", ".join(["%s"] * len(params))
+            cursor.execute(f"CALL sp_get_cfdi_consultas({placeholders});", params)
+
             count_result = cursor.fetchone()
             total_count = count_result[0] if count_result else 0
-            
-            cursor.nextset() 
+
+            cursor.nextset()
             results = dictfetchall(cursor)
 
         return Response({
             'total_count': total_count,
-            'total_pages': math.ceil(total_count / p_limit) if total_count > 0 and p_limit > 0 else 1,
+            'total_pages': math.ceil(total_count / limit) if total_count > 0 and limit > 0 else 1,
             'results': results
         })
 
     except Exception as e:
-        return Response({"error": "Error BD", "detalle": str(e)}, status=500)    
+        return Response({"error": "Error BD", "detalle": str(e)}, status=500)
+
+
 
 #? API del Historial de Precios
 @csrf_exempt

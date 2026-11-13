@@ -1,100 +1,186 @@
 {% extends 'admin_panel_xml/base_admin_panel.html' %}
-{% block title %}Panel Administrativo{% endblock %}
+{% block title %}Panel Administrativo - Gastos{% endblock %}
 
 {% block content_panel %}   
-    <div class="container-fluid my-4">
+<div class="container-fluid my-4" x-data="cfdiApp">
 
-        <header class="d-flex justify-content-between align-items-center mb-3">
-            <h2 class="h4 mb-0">CFDI's PANEL RECIBIDOS</h2>
-            <a href="{% url 'web:emitidos_panel' %}" class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1">
-                <i class="bi "></i> 
-                CFDI's PANEL EMITIDOS
-            </a>
-        </header>
+    <header class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="h4 mb-0">CFDI's PANEL</h2>
+        
+    </header>
 
-        <div class="row mb-3">
-            <div class="col-md-8 col-lg-9 mb-2 mb-md-0">
-                <div class="input-group">
-                    <span class="input-group-text bg-white border-end-0">
-                        <i class="bi bi-search"></i>
-                    </span>
-                    <input type="text" id="searchPanel" class="form-control border-start-0" placeholder="Buscar CFDI's...">
+    <!-- Controles de búsqueda y filtros -->
+    <div class="row mb-3">
+        <div class="col-md-8 col-lg-9 mb-2 mb-md-0">
+            <div class="input-group">
+                <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+                <input type="text" id="searchPanel" class="form-control border-start-0" 
+                    placeholder="Buscar por Folio o Descripción de Conceptos..."
+                    x-model="searchTerm" 
+                    @input="onSearchChange()">
+                
+                <span class="input-group-text bg-white" x-show="isLoading" style="display: none;">
+                    <span class="spinner-border spinner-border-sm text-primary" role="status" aria-hidden="true"></span>
+                </span>
+            </div>
+        </div>
+        <div class="col-md-4 col-lg-3 d-grid">
+            <button class="btn btn-outline-secondary w-100" type="button" @click="openOffcanvas()">
+                <i class="bi bi-filter"></i> Filtro
+            </button>
+        </div>
+    </div>
 
-                    <span class="input-group-text d-none" id="search-spinner">
-                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                    </span>
+    <!-- Search Emisor y Receptor -->
+    <div class="row mb-3">
+        <div class="col-md-8 col-lg-9">
+            <div class="row g-2">
+                <!-- Emisor -->
+                <div class="col-md-6">
+                    <div class="input-group input-group-sm">
+                        <button class="btn btn-outline-secondary bg-white border-end-0 text-secondary" type="button" 
+                                @click="searchAdminEmisor()" title="Buscar DAMALIJE como Emisor">
+                            <i class="bi bi-building"></i>
+                        </button>
+                        <input type="text" class="form-control border-start-0" 
+                            placeholder="Filtrar por Emisor (Nombre o RFC)..."
+                            x-model="searchEmisor" 
+                            @input.debounce.300ms="onEmisorSearchChange()">
+                        <button class="btn btn-outline-secondary" type="button" x-show="searchEmisor" @click="clearEmisor()" style="display: none;">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+                </div>
+                <!-- Receptor -->
+                <div class="col-md-6">
+                    <div class="input-group input-group-sm">
+                        <button class="btn btn-outline-secondary bg-white border-end-0 text-secondary" type="button" 
+                                @click="searchAdminReceptor()" title="Buscar DAMALIJE como Receptor">
+                            <i class="bi bi-person"></i>
+                        </button>
+                        <input type="text" class="form-control border-start-0" 
+                            placeholder="Filtrar por Receptor (Nombre o RFC)..."
+                            x-model="searchReceptor" 
+                            @input.debounce.300ms="onReceptorSearchChange()">
+                        <button class="btn btn-outline-secondary" type="button" x-show="searchReceptor" @click="clearReceptor()" style="display: none;">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
-            
-            <div class="col-md-4 col-lg-3 d-grid">
-                <button class="btn btn-outline-secondary w-100" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasFiltros" aria-controls="offcanvasFiltros">
-                    <i class="bi bi-filter"></i>
-                    Filtro
-                </button>
-            </div>
         </div>
+    </div>
 
-        <div class="d-flex justify-content-end align-items-center gap-2 p-3">
-            <label for="rowsPerPageSelect" class="form-label text-nowrap mb-0">Filas por pág:</label>
-            <select class="form-select form-select-sm" id="rowsPerPageSelect_top" style="width: auto;">
-                <option value="25">25</option>
-                <option value="50" selected>50</option>
-                <option value="100">100</option>
-            </select>
-            <button class="btn btn-outline-secondary btn-sm" id="btnPrevPage_top" disabled>
-                &laquo;
-            </button>
-            <span class="text-nowrap">
-                Página
-                <input type="number" class="form-control form-control-sm" id="pageInput_top" value="1" min="1" style="width: 70px; display: inline-block;">
-                de <span id="totalPagesLabel_top">1</span>
-            </span>
-            <button class="btn btn-outline-secondary btn-sm" id="btnNextPage_top">
-                &raquo;
-            </button>
-        </div>
+    <!-- Paginación superior -->
+    <div class="d-flex justify-content-end align-items-center gap-2 p-3">
+        <label class="form-label text-nowrap mb-0">Filas por pág:</label>
+        <select class="form-select form-select-sm" id="rowsPerPageSelect_top" style="width: auto;">
+            <option value="25">25</option>
+            <option value="50" selected>50</option>
+            <option value="100">100</option>
+        </select>
+        <button class="btn btn-outline-secondary btn-sm" id="btnPrevPage_top" disabled>&laquo;</button>
+        <span class="text-nowrap">
+            Página <input type="number" class="form-control form-control-sm" id="pageInput_top" value="1" min="1" style="width: 70px; display: inline-block;">
+            de <span id="totalPagesLabel_top">1</span>
+        </span>
+        <button class="btn btn-outline-secondary btn-sm" id="btnNextPage_top">&raquo;</button>
+    </div>
 
+    <!-- TABLA PRINCIPAL CON ALPINE -->
+    <div class="card shadow-sm border-0">
+        <div class="table-responsive">
+            <table class="table table-hover table-striped align-middle mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th scope="col" class="py-3 px-3 sortable-th" @click="sortBy('id')">ID <span x-text="getSortIcon('id')"></span></th>
+                        <th scope="col" class="py-3 px-3 sortable-th" @click="sortBy('fecha')">Fecha <span x-text="getSortIcon('fecha')"></span></th>
+                        <th scope="col" class="py-3 px-3 sortable-th" @click="sortBy('emisor')">Emisor <span x-text="getSortIcon('emisor')"></span></th>
+                        <th scope="col" class="py-3 px-3 sortable-th" @click="sortBy('receptor')">Receptor <span x-text="getSortIcon('receptor')"></span></th>
+                        <th scope="col" class="py-3 px-3 sortable-th" @click="sortBy('uso_cfdi')">Uso CFDI <span x-text="getSortIcon('uso_cfdi')"></span></th>
+                        <th scope="col" class="py-3 px-3 sortable-th" @click="sortBy('importe')">Importe <span x-text="getSortIcon('importe')"></span></th>
+                        <th scope="col" class="py-3 px-3 sortable-th" @click="sortBy('total')">Totales <span x-text="getSortIcon('total')"></span></th>
+                        <th scope="col" class="py-3 px-3 sortable-th" @click="sortBy('detalle_pago')">Detalle Pago <span x-text="getSortIcon('detalle_pago')"></span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Spinner de carga -->
+                    <template x-if="isLoading">
+                        <tr>
+                            <td colspan="8" class="text-center p-5">
+                                <div class="spinner-border text-primary" role="status"></div>
+                                <div class="mt-2 text-muted">Cargando datos...</div>
+                            </td>
+                        </tr>
+                    </template>
 
-        <div class="card shadow-sm border-0">
-            <div class="table-responsive">
-                <table class="table table-hover table-striped align-middle mb-0">
-                    <thead class="table-dark" id="thead-panel">
-                        </thead>
-                    <tbody id="tbody-panel">
-                        </tbody>
-                </table>
-            </div>
-        </div> 
+                    <!-- Sin resultados -->
+                    <template x-if="!isLoading && results.length === 0">
+                        <tr>
+                            <td colspan="8" class="text-center p-4 text-muted">No se encontraron resultados.</td>
+                        </tr>
+                    </template>
 
-
-        <div class="d-flex justify-content-end align-items-center gap-2 p-3">
-            <label for="rowsPerPageSelect" class="form-label text-nowrap mb-0">Filas por pág:</label>
-            <select class="form-select form-select-sm" id="rowsPerPageSelect_down" style="width: auto;">
-                <option value="25">25</option>
-                <option value="50" selected>50</option>
-                <option value="100">100</option>
-            </select>
-            <button class="btn btn-outline-secondary btn-sm" id="btnPrevPage_down" disabled>
-                &laquo;
-            </button>
-            <span class="text-nowrap">
-                Página
-                <input type="number" class="form-control form-control-sm" id="pageInput_down" value="1" min="1" style="width: 70px; display: inline-block;">
-                de <span id="totalPagesLabel_down">1</span>
-            </span>
-            <button class="btn btn-outline-secondary btn-sm" id="btnNextPage_down">
-                &raquo;
-            </button>
+                    <!-- Iteración de registros -->
+                    <template x-for="item in results" :key="item.uuid || item.id">
+                        <tr style="cursor: pointer;" @click="goToDetail(item.uuid)">
+                            <!-- ID / Folio -->
+                            <td class="px-3">
+                                <strong class="d-block" x-text="item.id || 'N/A'"></strong>
+                                <small class="text-muted" x-text="item.folio || 'N/A'"></small>
+                            </td>
+                            <!-- Fecha -->
+                            <td class="px-3">
+                                <strong class="d-block text-nowrap" x-text="formatDate(item.fecha)"></strong>
+                            </td>
+                            <!-- Emisor -->
+                            <td class="px-3">
+                                <strong class="d-block" x-text="item.emisor || 'N/A'"></strong>
+                                <small class="text-muted" x-text="item.rfc_emisor || 'N/A'"></small>
+                            </td>
+                            <!-- Receptor -->
+                            <td class="px-3">
+                                <strong class="d-block" x-text="item.receptor || 'N/A'"></strong>
+                                <small class="text-muted d-block" x-text="item.rfc_receptor || 'N/A'"></small>
+                                <small class="text-muted d-block" x-text="item.uso_cfdi || 'N/A'"></small>
+                            </td>
+                            <!-- Uso CFDI -->
+                            <td class="px-3">
+                                <strong class="text-muted d-block" x-text="item.uso_cfdi || 'N/A'"></strong>
+                            </td>
+                            <!-- Importe -->
+                            <td class="px-3">
+                                <strong class="d-block" x-text="formatMoney(item.importe)"></strong>
+                                <small class="text-muted" x-text="item.moneda || 'N/A'"></small>
+                            </td>
+                            <!-- Total -->
+                            <td class="px-3">
+                                <strong class="d-block" x-text="formatMoney(item.total)"></strong>
+                                <small class="text-muted" x-text="formatMoney(item.sub_total)"></small>
+                            </td>
+                            <!-- Detalle Pago -->
+                            <td class="px-3">
+                                <strong class="d-block" x-text="formatTipo(item.tipo_comprobante)"></strong>
+                                <small class="text-muted d-block" x-text="formatMetodo(item.metodo_pago)"></small>
+                                <small class="text-muted d-block" x-text="formatFormaPago(item.forma_pago)"></small>
+                            </td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
         </div>
     </div>
     
     {% include 'admin_panel_xml/filtros_panel.html' %}
 
-
+</div>
 {% endblock %}
-
 
 {% block extra_scripts %}
     {% load static %}
-    <script type="module" src="{% static 'js/app_admin_panel/gastos.js' %}"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module" src="{% static 'js/app_admin_panel/app_cfdi.js' %}"></script>
+
+    
 {% endblock %}
