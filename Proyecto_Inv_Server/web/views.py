@@ -7,17 +7,13 @@ def home(request):
     return render(request, "index.html")
 
 #* ----------- SECCION WEB PANEL ADMINISTRATIVO (CONSULTAS) ----------- *#
-@login_required
-def emitidos_panel(request):
-    return render(request, 'admin_panel_xml/emitidos_panel.html')
-
 
 @login_required
-def recibidos_panel(request):
-    return render(request, 'admin_panel_xml/recibidos_panel.html')
+def cfdi_panel(request):
+    return render(request, 'cfdi_panel/cfdi_panel.html')
 
 @login_required
-def conceptos_panel(request, uuid):
+def conceptos_cfdi(request, uuid):
     """
     Esta vista renderiza la página de detalle.
     Busca los datos de forma flexible (no falla si falta uno).

@@ -1,4 +1,4 @@
-{% extends 'admin_panel_xml/base_admin_panel.html' %}
+{% extends 'cfdi_panel/base_cfdi.html' %}
 {% block title %}Panel Administrativo - Gastos{% endblock %}
 
 {% block content_panel %}   
@@ -171,7 +171,7 @@
         </div>
     </div>
     
-    {% include 'admin_panel_xml/filtros_panel.html' %}
+    {% include 'cfdi_panel/filtros_cfdi.html' %}
 
 </div>
 {% endblock %}
@@ -180,7 +180,7 @@
     {% load static %}
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script type="module" src="{% static 'js/app_admin_panel/app_cfdi.js' %}"></script>
+    <script type="module" src="{% static 'js/app_cfdi_panel/app_cfdi.js' %}"></script>
 
     
 {% endblock %}
