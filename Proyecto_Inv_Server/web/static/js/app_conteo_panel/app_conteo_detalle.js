@@ -385,35 +385,34 @@ Alpine.data('detalleConteoApp', (plantillaId) => ({
         // 2. Llamamos a tu API para obtener los detalles
         const detalles = await fetchConteoDetalle(idReal);
         
+        console.log("Detalles obtenidos de la API:", detalles); // <-- Revisa esto en la consola del navegador
+        
         if (!detalles || detalles.length === 0) {
             return; 
         }
 
-        // Obtener la fecha actual del sistema en formato YYYY-MM-DD para comparar
-        const hoyStr = new Date().toISOString().split('T')[0];
-
-        // 3. Mapeo de cantidades con validación de ciclo/fecha
+        // 3. Mapeo de cantidades asegurando que la clave sea numérica
         const mapaCantidades = {};
         detalles.forEach(detalle => {
-            // Si el detalle incluye la fecha de captura, validamos que pertenezca al día de hoy.
-            // Si la fecha es de un día anterior (ciclo pasado que no se limpió), se ignora.
-            if (detalle.fecha_captura) {
-                const fechaCapturaStr = detalle.fecha_captura.split('T')[0].split(' ')[0]; // Extrae 'YYYY-MM-DD'
-                if (fechaCapturaStr !== hoyStr) {
-                    return; // Ignoramos este registro viejo para que empiece limpio
-                }
-            }
+            // Convertimos a número para evitar problemas de tipos (ej. "565" vs 565)
+            const itemIdNum = parseInt(detalle.item_id, 10);
+            const conteoNum = parseFloat(detalle.conteo);
 
-            mapaCantidades[detalle.item_id] = detalle.conteo;
+            if (!isNaN(itemIdNum) && !isNaN(conteoNum)) {
+                mapaCantidades[itemIdNum] = conteoNum;
+            }
         });
+
+        console.log("Mapa de cantidades construido:", mapaCantidades); // <-- Revisa que aparezca el item_id 565 aquí
 
         // 4. Inyección en Alpine 
         let inyectados = 0;
         this.categorias.forEach(categoria => {
             categoria.items.forEach(item => {
-                if (mapaCantidades[item.id] !== undefined) {
-                    
-                    item.cantidad = mapaCantidades[item.id];
+                const currentIdNum = parseInt(item.id, 10);
+                
+                if (mapaCantidades[currentIdNum] !== undefined) {
+                    item.cantidad = mapaCantidades[currentIdNum];
                     
                     if (typeof this.actualizarEstado === 'function') {
                         this.actualizarEstado(item);
@@ -423,6 +422,8 @@ Alpine.data('detalleConteoApp', (plantillaId) => ({
                 }
             });
         });
+
+        console.log(`Se inyectaron ${inyectados} cantidades guardadas en la interfaz.`);
     },
 
     //* Acciones
