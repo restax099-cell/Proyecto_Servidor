@@ -15,6 +15,11 @@ Alpine.data('conceptosApp', () => ({
         if (infoDiv && infoDiv.dataset.uuid) {
             this.uuid = infoDiv.dataset.uuid;
             await this.loadConceptos();
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const conceptoHighlight = urlParams.get('highlight_concepto');
+            if (conceptoHighlight) {
+            }
         } else {
             console.error('No se pudo encontrar el UUID en la página.');
             this.isLoading = false;

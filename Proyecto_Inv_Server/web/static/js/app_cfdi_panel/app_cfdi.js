@@ -53,43 +53,13 @@ Alpine.data('cfdiApp', () => ({
         this.results = [];
         try {
             const responseData = await fetchCfdiConsultas({}, 90000, 0, this.ordering);
-            
             if (responseData && responseData.results) {
-                const facturas = responseData.results;
-                
-                this.allResults = facturas;
-                this.applyFiltersAndSearch();
-                this.isLoading = false; 
-
-                const tamanoLote = 15;
-                for (let i = 0; i < facturas.length; i += tamanoLote) {
-                    const lote = facturas.slice(i, i + tamanoLote);
-                    
-                    await Promise.all(lote.map(async (factura) => {
-                        if (!factura.uuid) return;
-                        try {
-                            const conceptos = await fetchXmlData(factura.uuid);
-                            if (Array.isArray(conceptos)) {
-                                factura.conceptos_texto = conceptos
-                                    .map(c => c.descripcion || '')
-                                    .join(' ');
-                            } else {
-                                factura.conceptos_texto = '';
-                            }
-                        } catch (e) {
-                            factura.conceptos_texto = '';
-                        }
-                    }));
-                }
-
-                if (this.searchTerm.trim() !== '') {
-                    this.applyFiltersAndSearch();
-                }
-                
-                console.log("¡Todos los conceptos han sido cargados y combinados en memoria!");
+                this.allResults = responseData.results;
+                this.applyFiltersAndSearch(); 
             }
         } catch (error) {
             console.error("Error al cargar datos iniciales:", error);
+        } finally {
             this.isLoading = false;
         }
     },
