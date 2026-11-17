@@ -169,11 +169,9 @@ function funClic(elemento) {
 }
 
 function redirigirAContexto(nombre, uuid, esGasto = false) {
-    const nombreLimpio = encodeURIComponent(nombre);
-    const pagina = esGasto ? '/gastos-panel/' : '/emitidos-panel/';
-    const parametro = esGasto ? 'nombre_emisor' : 'nombre_receptor';
+    if (!uuid) return;
     
-    const urlDestino = `${pagina}?${parametro}=${nombreLimpio}&highlight_uuid=${uuid}`;
+    const urlDestino = `/cfdi-panel/conceptos/${uuid}/`;
 
     window.open(urlDestino, '_blank', 'noopener,noreferrer');
 }

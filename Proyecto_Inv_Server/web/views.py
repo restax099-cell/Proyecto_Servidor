@@ -54,7 +54,7 @@ def conceptos_cfdi(request, uuid):
         'header_data': header_data
     }
     
-    return render(request, 'admin_panel_xml/conceptos_panel.html', context)
+    return render(request, 'cfdi_panel/conceptos_cfdi.html', context)
 
 #* ----------- SECCION WEB HISTORIAL DE PRECIOS ----------- *#
 @login_required
