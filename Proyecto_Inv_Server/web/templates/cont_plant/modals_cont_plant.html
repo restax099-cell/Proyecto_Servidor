@@ -179,8 +179,8 @@
                 <!-- BOTONES DE ACCIÓN -->
                 <!-- BOTONES -->
                 <div class="d-flex justify-content-center gap-2">
-                    <!-- Botón Cancelar (Aparece en tipo 'confirm') -->
-                    <template x-if="alerta.tipo === 'confirm'">
+                    <!-- Botón Cancelar (Aparece si es tipo confirm o si se solicita mostrarCancelar) -->
+                    <template x-if="alerta.tipo === 'confirm' || alerta.mostrarCancelar">
                         <button type="button" class="btn btn-sm btn-outline-danger px-3" data-bs-dismiss="modal">Cancelar</button>
                     </template>
 
@@ -190,10 +190,9 @@
                             :class="{
                                 'btn-warning text-dark': alerta.tipo === 'warning',
                                 'btn-danger': alerta.tipo === 'danger',
-                                'btn-success': alerta.tipo === 'success' || alerta.tipo === 'confirm',
-                                'btn-primary': false
+                                'btn-success': alerta.tipo === 'success' || alerta.tipo === 'confirm'
                             }"
-                            @click="alerta.tipo === 'confirm' || alerta.tipo === 'success' ? confirmarAccion() : cerrarAlertaUnica()"
+                            @click="(alerta.tipo === 'confirm' || alerta.tipo === 'success' || alerta.mostrarCancelar) ? confirmarAccion() : cerrarAlertaUnica()"
                             x-text="alerta.textoBoton">
                     </button>
                 </div>

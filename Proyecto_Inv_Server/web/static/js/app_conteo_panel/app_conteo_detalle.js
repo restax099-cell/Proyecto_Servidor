@@ -211,8 +211,7 @@ Alpine.data('detalleConteoApp', (plantillaId) => ({
 
 
     //* Seters
-    guardarConteo(estadoConteo = 'Borrador') {
-        // Obtenemos el ID de la plantilla actual de forma robusta
+    guardarConteo(estadoConteo = 2) {
         const plantillaId = this.plantillaActualId || parseInt(window.location.pathname.split('/').filter(Boolean).pop());
 
         if (!plantillaId || isNaN(plantillaId)) {
@@ -227,12 +226,11 @@ Alpine.data('detalleConteoApp', (plantillaId) => ({
 
         let itemsAEnviar = [];
 
-        // Recorremos las categorías y sus ítems
         if (this.categorias && Array.isArray(this.categorias)) {
             this.categorias.forEach(categoria => {
                 if (categoria.items && Array.isArray(categoria.items)) {
                     categoria.items.forEach(item => {
-                        // Solo incluimos el ítem si tiene un valor de cantidad capturado (evitamos los nulos/vacíos)
+                        // Si el usuario escribió un número válido
                         if (item.cantidad !== null && item.cantidad !== undefined && item.cantidad !== '') {
                             let cantidadNum = parseFloat(item.cantidad);
                             if (!isNaN(cantidadNum)) {
@@ -241,14 +239,23 @@ Alpine.data('detalleConteoApp', (plantillaId) => ({
                                     conteo: cantidadNum
                                 });
                             }
+                        } 
+                        // Si el ítem se limpió
+                        else if (item._estabaGuardado || item.cantidad === null || item.cantidad === '') {
+                            itemsAEnviar.push({
+                                item_id: item.id,
+                                conteo: null 
+                            });
                         }
                     });
                 }
             });
         }
 
-        // Validación extra: si no hay nada capturado y se intenta guardar como borrador o cerrado
-        if (itemsAEnviar.length === 0 && estadoConteo === 'Cerrado') {
+        // Si mandan 3 o 'Cerrado' validamos que haya ítems
+        const esCerrado = estadoConteo === 3 || estadoConteo === 'Cerrado';
+
+        if (itemsAEnviar.length === 0 && esCerrado) {
             this.mostrarAlerta(
                 'warning',
                 'Sin ítems capturados',
@@ -258,37 +265,25 @@ Alpine.data('detalleConteoApp', (plantillaId) => ({
             return null;
         }
 
-        // Armamos el payload exacto
-        const payload = {
+        return {
             conteo_plantilla_id: plantillaId,
-            estado: estadoConteo,
+            status: esCerrado ? 3 : 2, // Manda 3 si es cerrado, 2 si es borrador
             items: itemsAEnviar
         };
-
-        return payload;
     },
 
     async btnGuardarConteo() {
-        const payload = this.guardarConteo('Borrador');
+        // 1. Generamos el payload pasando explícitamente el estatus 2 (Borrador)
+        const payload = this.guardarConteo(2);
         if (!payload) return;
 
-        const idReal = payload.conteo_plantilla_id;
         this.isLoading = true; 
 
         try {
-            // A. Guardamos los ítems del borrador
+            // Guardamos los ítems y actualizamos el estatus de la plantilla en una sola llamada limpia
             const data = await setCount(payload);
 
             if (data.status === 'success') {
-                
-                if (idReal) {
-                    const payloadPlantilla = {
-                        id: idReal,
-                        status: 2
-                    };
-                    await savePlantillaConteo(payloadPlantilla);
-                }
-
                 this.mostrarAlerta(
                     'success',
                     '¡Guardado exitoso!',
@@ -333,27 +328,18 @@ Alpine.data('detalleConteoApp', (plantillaId) => ({
             'Advertencia: Si desea cerrar el conteo definitivamente NO podrá volver a editarlo. ¿Desea continuar?',
             'Confirmar',
             async () => {
-                const payload = this.guardarConteo('Cerrado');
+                // 1. Generamos el payload pasando explícitamente el estatus 3 (Cerrado)
+                const payload = this.guardarConteo(3);
                 if (!payload) return;
 
-                const idReal = payload.conteo_plantilla_id;
                 this.isLoading = true;
 
                 try {
-                    // A. Guardamos los ítems
+                    // 2. Guardamos los ítems y cerramos la plantilla en una sola llamada limpia
                     const dataConteo = await setCount(payload);
 
                     if (dataConteo.status === 'success') {
-                        
-                        // B. Actualizamos el estatus de la plantilla a 3 (Cerrado con éxito)
-                        const payloadPlantilla = {
-                            id: idReal,
-                            status: 3
-                        };
-
-                        await savePlantillaConteo(payloadPlantilla);
-
-                        // C. Mostramos el modal de éxito final con redirección
+                        // 3. Mostramos el modal de éxito final con redirección
                         this.mostrarAlerta(
                             'success',
                             '¡Actualizado!',
@@ -375,6 +361,15 @@ Alpine.data('detalleConteoApp', (plantillaId) => ({
                 }
             }
         );
+    },
+
+    verificarLimiteCaptura(plantilla) {
+        const ahora = new Date();
+        const fechaLimite = new Date(plantilla.vigencia + 'T' + plantilla.hora_limite);
+        
+        if (ahora > fechaLimite && plantilla.bloquear_vencer_limite == 1) {
+            this.bloqueadoPorVencimiento = true;
+        }
     },
 
     //* Geters

@@ -81,51 +81,52 @@ def get_lista_catalogos(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def set_conteo_plantilla(request):
+    data = request.data
+
+    # Funciones cortas para evitar repetir condicionales
+    to_int = lambda k, default=None: int(data[k]) if data.get(k) not in (None, '') else default
+    to_bool = lambda k: int(bool(data[k])) if data.get(k) is not None else None
+
+    catalogos = data.get('catalogos')
+    catalogos_json = json.dumps(catalogos) if catalogos is not None else None
+
+    params = [
+        to_int('id'),
+        data.get('codigo'),
+        data.get('nombre'),
+        to_int('store'),
+        to_int('user_id'),
+        to_int('status'),
+        data.get('frecuencia'),
+        data.get('dias_semana'),
+        to_int('dia_mes'),
+        data.get('vigencia'),
+        data.get('hora_apertura'),
+        data.get('hora_limite'),
+        to_int('dia_limite'),
+        to_bool('bloquear_vencer_limite'),
+        to_bool('permitir_buscar_fuera_catalogo'),
+        to_bool('mostrar_existencia_teorica'),
+        catalogos_json,
+        to_int('actualizar_si_existe', 0)  
+    ]
+
     try:
-        data = request.data
-        
-        #? ID para actualización (Si viene en None o 0, creará una plantilla nueva)
-        plantilla_id = data.get('id')
-        
-        codigo = data.get('codigo')
-        nombre = data.get('nombre')
-        store = int(data.get('store')) if data.get('store') is not None else None
-        
-        user_id = data.get('user_id')
-        status = int(data.get('status')) if data.get('status') is not None else None
-        
-        frecuencia = data.get('frecuencia')
-        dias_semana = data.get('dias_semana') 
-        dia_mes = data.get('dia_mes')
-        vigencia = data.get('vigencia')
-        
-        hora_apertura = data.get('hora_apertura')
-        hora_limite = data.get('hora_limite')
-        dia_limite = data.get('dia_limite')
-        
-        bloquear_vencer = int(data.get('bloquear_vencer_limite')) if data.get('bloquear_vencer_limite') is not None else None
-        permitir_buscar = int(data.get('permitir_buscar_fuera_catalogo')) if data.get('permitir_buscar_fuera_catalogo') is not None else None
-        mostrar_existencia = int(data.get('mostrar_existencia_teorica')) if data.get('mostrar_existencia_teorica') is not None else None
-
-        catalogos_list = data.get('catalogos', None)
-        catalogos_json = json.dumps(catalogos_list) if catalogos_list is not None else None
-
         with connection.cursor() as cursor:
-            # Ahora enviamos 17 parámetros (incluyendo plantilla_id al inicio)
-            cursor.execute("""
-                CALL sp_insert_conteo_plantilla(
-                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
-                )
-            """, [
-                plantilla_id,
-                codigo, nombre, store, user_id, status, frecuencia, dias_semana, dia_mes, 
-                vigencia, hora_apertura, hora_limite, dia_limite,
-                bloquear_vencer, permitir_buscar, mostrar_existencia,
-                catalogos_json
-            ])
+            placeholders = ", ".join(["%s"] * len(params))
+            cursor.execute(f"CALL sp_insert_conteo_plantilla({placeholders});", params)
             
             row = cursor.fetchone()
             id_insertado = row[0] if row else None
+            estado = row[1] if row and len(row) > 1 else 'OK'
+
+        # Si el SP detectó código repetido y no venía confirmado
+        if estado == 'CODIGO_EXISTE':
+            return JsonResponse({
+                "status": "code_exists",
+                "estado": estado,
+                "message": "Esta plantilla ya está registrada con ese código."
+            }, status=200)
 
         return JsonResponse({
             "status": "success",
@@ -136,9 +137,9 @@ def set_conteo_plantilla(request):
     except Exception as e:
         return JsonResponse({
             "status": "error",
-            "error": f"Error de BD: {str(e)}"
+            "message": f"Error de BD: {str(e)}"
         }, status=500)
-
+        
 #? CONSULTA DE PLANTILLAS
 def _consultar_plantillas_db(search_query=''):
     """Función auxiliar que hace el trabajo rudo con la base de datos"""
@@ -194,9 +195,9 @@ def set_conteo_detalle(request):
     try:
         data = request.data
         
-        #? 1. Extraer los datos generales
+        #? 1. Extraer los datos generales y el estatus numérico (2 para borrador, 3 para cerrado)
         plantilla_id = data.get('conteo_plantilla_id')
-        estado_guardado = data.get('estado', 'Borrador')
+        status_plantilla = data.get('status', 2)
         
         #? 2. Extraer y empaquetar el arreglo de items en un string JSON
         items_list = data.get('items', [])
@@ -210,13 +211,14 @@ def set_conteo_detalle(request):
             
         json_items_string = json.dumps(items_list)
 
-        #? 3. Ejecutar el Stored Procedure
+        #? 3. Ejecutar el Stored Procedure con los 3 parámetros
         with connection.cursor() as cursor:
             cursor.execute("""
-                CALL sp_save_conteo_detalle(%s, %s)
+                CALL sp_save_conteo_detalle(%s, %s, %s)
             """, [
                 plantilla_id, 
-                json_items_string
+                json_items_string,
+                status_plantilla
             ])
             
             row = cursor.fetchone()
@@ -234,7 +236,6 @@ def set_conteo_detalle(request):
             "status": "error",
             "error": f"Error de BD: {str(e)}"
         }, status=500)
-
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])

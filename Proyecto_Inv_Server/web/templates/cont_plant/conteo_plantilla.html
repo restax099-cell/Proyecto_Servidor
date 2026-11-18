@@ -49,7 +49,7 @@
                     <template x-for="item in listaPlantillas" :key="item.id">
                         <div class="template-list-item" 
                             :class="{'active': plantillaActiva === item.id}"
-                            @click="seleccionarPlantilla(item)"">
+                            @click="seleccionarPlantilla(item)">
                             <div class="d-flex justify-content-between align-items-start mb-1">
                                 <!-- Cambiamos item.clave por item.codigo -->
                                 <span class="fw-bold fs-7 text-dark" x-text="`${item.codigo} · ${item.nombre}`"></span>

@@ -153,10 +153,8 @@ Alpine.data('plantillasApp', () => ({
 
     //* Setter
     // --- 6. MÉTODO DE GUARDADO (POST) ---
-    async guardarPlantilla() {
-        // --- 1. VALIDACIÓN AMARILLA (WARNING): Validar ABSOLUTAMENTE TODOS los campos obligatorios ---
-
-        // A. Datos Generales, Horarios y Vigencia
+    async guardarPlantilla(actualizarSiExiste = false) {
+        // --- 1. VALIDACIONES DE CAMPOS OBLIGATORIOS ---
         if (!this.formulario.nombre || !this.formulario.store || !this.formulario.user_id || 
             !this.formulario.hora_apertura || !this.formulario.hora_limite || !this.formulario.vigencia) {
             this.mostrarAlerta({
@@ -168,7 +166,6 @@ Alpine.data('plantillasApp', () => ({
             return;
         }
 
-        // B. Frecuencia y sus reglas específicas
         if (!this.formulario.frecuencia) {
             this.mostrarAlerta({
                 tipo: 'warning',
@@ -179,8 +176,7 @@ Alpine.data('plantillasApp', () => ({
             return;
         }
 
-        // Si la frecuencia es Semanal, debe seleccionar al menos un día de la semana
-        if (this.formulario.frecuencia === 'Semanal' || this.formulario.frecuencia === 'semanal') {
+        if (this.formulario.frecuencia.toLowerCase() === 'semanal') {
             const dias = Array.isArray(this.formulario.dias_semana) 
                         ? this.formulario.dias_semana 
                         : (this.formulario.dias_semana ? this.formulario.dias_semana.split(',') : []);
@@ -196,19 +192,16 @@ Alpine.data('plantillasApp', () => ({
             }
         }
 
-        // Si es Mensual o Trimestral, debe haber ingresado el día del mes
-        if ((this.formulario.frecuencia === 'Mensual' || this.formulario.frecuencia === 'Trimestral' || 
-            this.formulario.frecuencia === 'mensual' || this.formulario.frecuencia === 'trimestral') && !this.formulario.dia_mes) {
-                this.mostrarAlerta({
-                    tipo: 'warning',
-                    titulo: 'Día del mes requerido',
-                    mensaje: 'Por favor, especifica el día del mes en que se debe realizar el conteo.',
-                    textoBoton: 'Entendido'
-                });
+        if ((this.formulario.frecuencia.toLowerCase() === 'mensual' || this.formulario.frecuencia.toLowerCase() === 'trimestral') && !this.formulario.dia_mes) {
+            this.mostrarAlerta({
+                tipo: 'warning',
+                titulo: 'Día del mes requerido',
+                mensaje: 'Por favor, especifica el día del mes en que se debe realizar el conteo.',
+                textoBoton: 'Entendido'
+            });
             return;
         }
 
-        // C. Límite de Captura
         if (this.formulario.dia_limite === null || this.formulario.dia_limite === undefined || this.formulario.dia_limite === '') {
             this.mostrarAlerta({
                 tipo: 'warning',
@@ -219,7 +212,6 @@ Alpine.data('plantillasApp', () => ({
             return;
         }
 
-        // D. Catálogos Seleccionados
         if (!this.catalogosSeleccionados || this.catalogosSeleccionados.length === 0) {
             this.mostrarAlerta({
                 tipo: 'warning',
@@ -230,7 +222,7 @@ Alpine.data('plantillasApp', () => ({
             return;
         }
 
-        // --- FIN DE VALIDACIONES: SI PASA TODO, PROCEDE A GUARDAR ---
+        // --- FIN DE VALIDACIONES ---
 
         this.isLoading = true; 
         
@@ -249,13 +241,29 @@ Alpine.data('plantillasApp', () => ({
                 catalogos: this.catalogosSeleccionados.map(c => ({
                     id: c.id,
                     orden: c.orden 
-                }))
+                })),
+                actualizar_si_existe: actualizarSiExiste ? 1 : 0
             };
-
-            console.log("Datos a guardar validados:", payload);
 
             const response = await savePlantillaConteo(payload, null);
             
+            // Si el backend responde que el código ya está registrado
+            if (response && (response.status === 'code_exists' || response.estado === 'CODIGO_EXISTE')) {
+                this.isLoading = false;
+                this.mostrarAlerta({
+                    tipo: 'confirm', // Cambiado a 'confirm' para que gestione los dos botones nativamente
+                    mostrarCancelar: true,
+                    titulo: 'Advertencia',
+                    mensaje: 'Esta plantilla ya está registrada con otros datos, ¿está seguro que desea actualizar la plantilla actual?',
+                    textoBoton: 'Aceptar',
+                    onConfirm: async () => {
+                        // Esto solo se ejecuta si el usuario hace clic en ACEPTAR
+                        await this.guardarPlantilla(true);
+                    }
+                });
+                return;
+            }
+
             if (response && response.status === 'success') {
                 this.mostrarAlerta({
                     tipo: 'success',
@@ -393,7 +401,6 @@ Alpine.data('plantillasApp', () => ({
         // this.plantillaSeleccionada = true; 
     },
 
-
     formatearDetalle(item) {
         // Verificamos si dias_semana existe y es un arreglo antes de usar .join()
         let diasFormateados = '';
@@ -408,7 +415,6 @@ Alpine.data('plantillasApp', () => ({
         // Retornas tu estructura de texto combinada con los días ya seguros
         return `1 · ${item.frecuencia || 'Sin frecuencia'} · límite ${item.hora_limite || 'N/A'} ${diasFormateados ? '· ' + diasFormateados : ''}`;
     },
-
 
     // Método para cambiar la frecuencia y ajustar los campos automáticamente
     cambiarFrecuencia(frecuencia) {
@@ -452,13 +458,16 @@ Alpine.data('plantillasApp', () => ({
     },
 
     confirmarAccion() {
+        // Cierra el modal de Bootstrap programáticamente si es necesario
+        const modalEl = document.getElementById('modalAlertaGeneral');
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) {
+            modal.hide();
+        }
+
+        // Ejecuta la función asociada al aceptar si existe
         if (typeof this.alerta.onConfirm === 'function') {
             this.alerta.onConfirm();
-        }
-        const modalElement = document.getElementById('modalAlertaGeneral');
-        if (modalElement && typeof bootstrap !== 'undefined') {
-            const modalInstance = bootstrap.Modal.getInstance(modalElement);
-            if (modalInstance) modalInstance.hide();
         }
     },
 
